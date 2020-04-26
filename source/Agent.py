@@ -55,17 +55,20 @@ class Agent:
 				start = TranslateToGridPos(self.pos)
 			end = TranslateToGridPos(self.entryPoint.pos)
 			print "estar"
-			print start
-			print end
+			# print start
+			# print end
 			#if not self.pathCalculated:
-			self.myPath = PathFinding.thetastarv2(start,end)
+			self.myPath = PathFinding.astarv3(start,end)
 			
 			if self.oldEntryPoint != None:
+				print "inserting "+str(self.pos)
 				self.myPath.insert(0,self.pos)
 			
 			if self.entryPoint.pos != self.entryPoint.target.targetPoint:# and not self.pathCalculated:
+				print "appendix "+str(self.entryPoint.target.targetPoint)
 				self.myPath.append(self.entryPoint.target.targetPoint)
 			#self.pathCalculated = True
+			print "parat"
 			print self.myPath
 			self.pathIndex = 1
 			self.recalculateMoveDir()
@@ -75,8 +78,8 @@ class Agent:
 			print "movettggg"
 			#TODO: implement movement
 			#pa = Point3d(0,0,0)
-			print TranslateToGridPos(self.pos)
-			print TranslateToGridPos(self.entryPoint.pos)
+			# print TranslateToGridPos(self.pos)
+			# print TranslateToGridPos(self.entryPoint.pos)
 			print self.pathIndex
 			print self.myPath
 			destination  = self.myPath[self.pathIndex]
@@ -101,19 +104,19 @@ class Agent:
 			return self.pos
 	
 	def calculateNextTarget(self):
-		print "abalabalsuuuzzziii"
+		print "abalabalsuuuzzziccc"
 		availableTarget = [target for target in Agent.possibleTarget if target.available]
 		if self.target != None:
 			self.target.available = True
 		self.setTarget(availableTarget[random.randrange(len(availableTarget))])
 		entryPointL = []#[ep for ep in Agent.entryPointList if (ep.target.targetPoint == self.target)]
-		print Agent.entryPointList
+		# print Agent.entryPointList
 		for ep in Agent.entryPointList:
-			print ep.target
-			print self.target
+			# print ep.target
+			# print self.target
 			if ep.target == self.target:
 				entryPointL.append(ep)
-				print "appen"
+				# print "appen"
 		selectedEntry = 0
 		distanceMin = float(sys.maxint)
 		for (i,ep) in enumerate(entryPointL):
@@ -125,6 +128,7 @@ class Agent:
 		self.entryPoint = entryPointL[selectedEntry]
 		
 	def recalculateMoveDir(self):
+		print self.myPath
 		destination  = self.myPath[self.pathIndex]
 		self.moveDir = Vector3f.Subtract(Vector3f(destination.X,destination.Y,destination.Z),Vector3f(self.pos.X,self.pos.Y,self.pos.Z))
 		self.moveDir = Vector3f.Divide(self.moveDir,self.moveDir.Length*20)

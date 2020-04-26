@@ -21,6 +21,7 @@ class Node():
 		self.g = 0
 		self.h = 0
 		self.f = 0
+		self.isClosed = False
 
 	def equals(self, other):
 		if other == None:
@@ -241,6 +242,93 @@ def lineInSight(startX,startY,endX,endY):
 				return False
 	return True
 
+def astarv2(start, end):
+	"""Returns a list of tuples as a path from the given start to the given end in the given maze"""
+
+	allHailNode = [[None for i in range(len(Map.maze[0]))] for j in range(len(Map.maze))]
+	for i in range(len(Map.maze)):
+		for j in range(len(Map.maze[0])):
+			allHailNode[i][j] = Node(None, (i,j))
+	# Create start and end node
+	start_node = allHailNode[start[0]][start[1]]
+	start_node.makeSelfReference()
+	start_node.g = start_node.h = start_node.f = 0
+	end_node = allHailNode[end[0]][end[1]]
+	end_node.g = end_node.h = end_node.f = 0
+	
+	# Initialize both open and closed list
+	open_list = []
+	closed_list = []
+	
+	# Add the start node
+	open_list.append(start_node)
+	
+	# Loop until you find the end
+	while len(open_list) > 0:
+		# Get the current node
+		# find node with least f
+		current_node = open_list[0]
+		current_index = 0
+		# for index, item in enumerate(open_list):
+			# if item.f < current_node.f:
+				# current_node = item
+				# current_index = index
+		#print "take node at "+str(current_node.position[0]) +" "+str(current_node.position[1]) +" with f "+str(current_node.f)
+	
+		#pop from openlist and add to closed list
+		open_list.pop(current_index)
+		closed_list.append(current_node)
+		#print('evaluating ',current_node.position)
+		if current_node.equals(end_node):
+			#print('Path found')
+			return reconstructPathv2(current_node)
+			break
+	
+		#mazeStatus[current_node.position[0]][current_node.position[1]] == STATUS_CHECKED
+	
+		for new_position in [(0, -1), (0, 1), (-1, 0), (1, 0)]: #[(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]:
+			coord = (current_node.position[0]+new_position[0],current_node.position[1]+new_position[1])
+			nodeCheck = allHailNode[coord[0]][coord[1]]
+			if (coord[0] < 0) or (coord[1] < 0) or (coord[0] >= len(Map.maze)) or (coord[1] >= len(Map.maze[0])):
+				continue
+			if (Map.maze[coord[0]][coord[1]] == STATE_BLOCKED):
+				continue
+			if (Map.maze[coord[0]][coord[1]] == STATE_ENTRY and (coord[0] != end_node.position[0] or coord[1] != end_node.position[1])):
+				continue
+				
+			if not (nodeCheck in closed_list):
+				isOldNode = nodeCheck in open_list
+				if not isOldNode:
+					nodeCheck.g = sys.maxint
+				
+				# if lineInSight(current_node.parent.position[0],current_node.parent.position[1],nodeCheck.position[0],nodeCheck.position[1]):
+					# newG = current_node.parent.g + euclidian(current_node.parent.position,nodeCheck.position) + Map.additionalWeight[nodeCheck.position[0]][nodeCheck.position[1]]*Map.additionalWeight[nodeCheck.position[0]][nodeCheck.position[1]]
+					# if (newG < nodeCheck.g):
+						# #if nodeCheck.parent != None:
+							# #print "prev linesight parent " +str(nodeCheck.parent.position[0])+","+str(nodeCheck.parent.position[1])
+						# nodeCheck.g = newG
+						# nodeCheck.parent = current_node.parent
+						# #print "replacing linesight parent to " + str(nodeCheck.parent.position[0])+","+str(nodeCheck.parent.position[1])
+						# #TODO:: calculating f value!!!!!
+					# #print "awer "+str(len(Map.additionalWeight))+" "+str(len(Map.additionalWeight[0]))
+					# #print "nepor "+str(nodeCheck.position[0])+" "+str(nodeCheck.position[1])
+					# nodeCheck.f = nodeCheck.g + euclidian(nodeCheck.position,end)# + Map.additionalWeight[neighbor.position[0]][neighbor.position[1]]
+				# else:
+				newG = current_node.g + euclidian(current_node.position,nodeCheck.position) + Map.additionalWeight[nodeCheck.position[0]][nodeCheck.position[1]]*Map.additionalWeight[nodeCheck.position[0]][nodeCheck.position[1]]
+				if newG < nodeCheck.g:
+					#if nodeCheck.parent != None:
+						#print "prev unseen parent " +str(nodeCheck.parent.position[0])+","+str(nodeCheck.parent.position[1])
+					
+					nodeCheck.g = newG
+					nodeCheck.parent = current_node
+					#print "replacing unseen parent to " + str(nodeCheck.parent.position[0])+","+str(nodeCheck.parent.position[1])
+				nodeCheck.f = nodeCheck.g + euclidian(nodeCheck.position,end)# + Map.additionalWeight[neighbor.position[0]][neighbor.position[1]]
+				if not isOldNode:
+					InsertNode(nodeCheck,open_list)
+					#open_list.append(nodeCheck)
+					#print('add to open list ',neighbor.position)
+	return None
+
 def reconstructPath(node):
 	curNode = node
 	path = []
@@ -256,7 +344,263 @@ def reconstructPath(node):
 		path.insert(0,point)
 	return path
 
+# def reconstructPathv2(node):
+	# curNode = node
+	# path = []
+	# nodePath = []
+	# #path.append(curNode)
+	# #realPos = TranslateToRealPos(curNode.position)
+	# #point = Point3d(realPos[0],realPos[1],0)
+	# nodePath.insert(0,curNode)
+	# while not curNode.parent.equals(curNode):
+		# print ('mnode ',curNode.position)
+		# curNode = curNode.parent
+		# #realPos = TranslateToRealPos(curNode.position)
+		# #point = Point3d(realPos[0],realPos[1],0)
+		# nodePath.insert(0,curNode)
+	# nodePath = simplifyPath(nodePath)
+	# for node in nodePath:
+		# realPos = TranslateToRealPos(node.position)
+		# point = Point3d(realPos[0],realPos[1],0)
+		# path.append(point)
+	# return path
+
 def TranslateToRealPos(pos):
 	realX = Map.topPos.X + ((pos[0]*0.1) + 0.05)
 	realY = Map.topPos.Y - ((pos[1]*0.1) + 0.05)
 	return (realX,realY)
+
+def InsertNode(node,list):
+	listLen = len(list)
+	limitUp = listLen - 1
+	limitDown = 0
+	mid = 0
+	while (limitUp - limitDown) > 1:
+		mid = (limitUp - limitDown)/2
+		if list[mid].f > node.f:
+			limitUp = mid
+		else:
+			limitDown = mid
+	list.insert(mid,node)
+
+DIR_UP = 0
+DIR_UPRIGHT = DIR_UP + 1
+DIR_RIGHT = DIR_UPRIGHT + 1
+DIR_DOWNRIGHT = DIR_RIGHT + 1
+DIR_DOWN = DIR_DOWNRIGHT + 1
+DIR_DOWNLEFT = DIR_DOWN + 1
+DIR_LEFT = DIR_DOWNLEFT + 1
+DIR_UPLEFT = DIR_LEFT + 1
+
+def simplifyPath(path):
+	index = 0
+	curDir = getDir(path[index],path[index+1])
+	index+=1
+	sPath = []
+	sPath.append(path[0])
+	for p in path:
+		print p.position
+	while index < len(path) - 2:
+		nextDir = getDir(path[index],path[index+1])
+		print "compare "+str(path[index].position) +" to "+str(path[index+1].position)
+		print "curDir "+str(curDir)+" "+str(nextDir)
+		if curDir != nextDir:
+			sPath.append(path[index])
+			curDir = nextDir
+		index+=1
+	sPath.append(path[len(path)-1])
+	return sPath
+
+def getDir(nodeA,nodeB):
+	diffX = nodeB.position[0] - nodeA.position[0]
+	diffY = nodeB.position[1] - nodeA.position[1]
+	
+	if diffX > 0:
+		return DIR_UPRIGHT if diffY > 0 else (DIR_RIGHT if diffY == 0 else DIR_DOWNRIGHT)
+		
+	if diffX == 0:
+		return DIR_UP if diffY > 0 else DIR_DOWN
+		
+	if diffX < 0:
+		return DIR_UPLEFT if diffY > 0 else (DIR_LEFT if diffY == 0 else DIR_DOWNLEFT)
+
+def astarv3(start, end):
+	"""Returns a list of tuples as a path from the given start to the given end in the given maze"""
+
+	print "create node"
+	allHailNode = [[None for i in range(len(Map.maze[0]))] for j in range(len(Map.maze))]
+	for i in range(len(Map.maze)):
+		for j in range(len(Map.maze[0])):
+			allHailNode[i][j] = Node(None, (i,j))
+	print "done create node"
+	# Create start and end node
+	start_node = allHailNode[start[0]][start[1]]
+	start_node.makeSelfReference()
+	start_node.g = start_node.h = start_node.f = 0
+	end_node = allHailNode[end[0]][end[1]]
+	end_node.g = end_node.h = end_node.f = 0
+	
+	# Initialize both open and closed list
+	open_list = []
+	# closed_list = []
+	
+	# Add the start node
+	open_list.append(start_node)
+	
+	# Loop until you find the end
+	# iter = 0
+	while len(open_list) > 0:
+		current_node = open_list[0]
+		current_index = 0
+		#pop from openlist and add to closed list
+		open_list.pop(current_index)
+		current_node.isClosed = True
+		if current_node.equals(end_node):
+			#print('Path found')
+			# print "itecon "+str(iter)
+			return reconstructPathv2(current_node)
+			break
+	
+		for new_position in [(0, -1), (0, 1), (-1, 0), (1, 0)]: #[(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]:
+		# for new_position in [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]:
+			coord = (current_node.position[0]+new_position[0],current_node.position[1]+new_position[1])
+			if (coord[0] < 0) or (coord[1] < 0) or (coord[0] >= len(Map.maze)) or (coord[1] >= len(Map.maze[0])):
+				continue
+			if (Map.maze[coord[0]][coord[1]] == STATE_BLOCKED):
+				continue
+			if (Map.maze[coord[0]][coord[1]] == STATE_ENTRY and (coord[0] != end_node.position[0] or coord[1] != end_node.position[1])):
+				continue
+			# iter+=1
+			
+			# print "ceki "+str(coord)
+			nodeCheck = allHailNode[coord[0]][coord[1]]
+			if not (nodeCheck.isClosed):
+				isOldNode = nodeCheck in open_list
+				if not isOldNode:
+					nodeCheck.g = sys.maxint
+				newG = current_node.g + Map.additionalWeight[nodeCheck.position[0]][nodeCheck.position[1]]*Map.additionalWeight[nodeCheck.position[0]][nodeCheck.position[1]]# + euclidian(current_node.position,nodeCheck.position)
+				if newG < nodeCheck.g:
+					
+					nodeCheck.g = newG
+					nodeCheck.parent = current_node
+				nodeCheck.f = nodeCheck.g + euclidian(nodeCheck.position,end)
+				if not isOldNode:
+					InsertNode(nodeCheck,open_list)
+	# print "itecon "+str(iter)
+	return None
+
+def InsertNode(node,list):
+	#print "insert list len "+str(len(list))
+	#print "inserting "+str(node.position)
+	listLen = len(list)
+	limitUp = listLen - 1
+	limitDown = 0
+	mid = 0
+	while (limitUp - limitDown) > 1:
+		#print "cek lim "+str(limitUp)+" "+str(limitDown)
+		mid = (limitUp + limitDown)/2
+		#print "mid "+str(mid)
+		#print "compare "+str(list[mid].f)+" to "+str(node.f)
+		if list[mid].f > node.f:
+			limitUp = mid
+		else:
+			limitDown = mid
+	#print "insert at "+str(mid)
+	list.insert(mid,node)
+
+
+def reconstructPathv2(node):
+	curNode = node
+	path = []
+	nodePath = []
+	# realPos = TranslateToRealPos(curNode.position)
+	# point = Point3d(realPos[0],realPos[1],0)
+	# path.append(point)
+	nodePath.insert(0,curNode)
+	while not curNode.parent.equals(curNode):
+		# print ('mnode ',curNode.position)
+		curNode = curNode.parent
+		#realPos = TranslateToRealPos(curNode.position)
+		#point = Point3d(realPos[0],realPos[1],0)
+		nodePath.insert(0,curNode)
+	nodePath = simplifyPathv3(nodePath)
+	for node in nodePath:
+		realPos = TranslateToRealPos(node.position)
+		point = Point3d(realPos[0],realPos[1],0)
+		path.append(point)
+	# return nodePath
+	return path
+
+def simplifyPathv3(path):
+	index = len(path) - 2
+	while index > 0:
+		if lineInSightv2(path[index + 1].position[0],path[index + 1].position[1],path[index - 1].position[0],path[index - 1].position[1]):
+			path.remove(path[index])
+		# else:
+		index-=1
+	return path
+	
+BLOCKER_FREE = 0
+BLOCKER_IN = BLOCKER_FREE + 1
+BLOCKER_BETWEEN = BLOCKER_IN + 1
+BLOCKER_FIRST = BLOCKER_BETWEEN + 1
+BLOCKER_FIRST_FREE = BLOCKER_FIRST + 1
+def lineInSightv2(startX,startY,endX,endY):
+	#print "deva "+toExcel((startX,startY))+" "+toExcel((endX,endY))
+	#print "deva "+str(startX)+" "+str(startY)+" "+str(endX)+" "+str(endY)
+	diffX = (endX-startX)
+	diffY = (endY-startY)
+	dirX = 1 if diffX > 0 else -1#(endX-startX)>0?1:-1
+	dirY = 1 if diffY > 0 else -1
+	
+	diffX = abs(diffX)
+	diffY = abs(diffY)
+	
+	blockerState = BLOCKER_FREE
+	if (diffX >= diffY):
+		for i in range(diffX):
+			#print("check ",(startY + (diffY*i/diffX*dirY)),",",(startX + i*dirX)," is ",maze[startY + (diffY*i/diffX*dirY)][startX + i*dirX])
+			checkX = startY + (diffY*i/diffX*dirY)
+			checkY = startX + i*dirX
+			#print "ceka "+str(checkY)+" "+str(checkX)
+			#print "ceka "+toExcel((checkY,checkX))
+			if (Map.maze[checkY][checkX] == STATE_BLOCKED) or (Map.additionalWeight[checkY][checkX] > 10):
+				return False
+			if Map.additionalWeight[checkY][checkX] > 0:
+				if i == 0:
+					blockerState = BLOCKER_FIRST
+				elif blockerState == BLOCKER_FREE:
+					blockerState = BLOCKER_IN
+				elif blockerState == BLOCKER_FIRST_FREE:
+					blockerState = BLOCKER_BETWEEN
+					return False
+			elif blockerState == BLOCKER_FIRST:
+				blockerState = BLOCKER_FIRST_FREE
+			elif blockerState == BLOCKER_IN:
+				blockerState = BLOCKER_BETWEEN
+				return False
+	else:
+		for i in range(diffY):
+			checkX = startY + i*dirY
+			checkY = startX + (diffX*i/diffY*dirX)
+			#print "cekb "+toExcel((checkY,checkX))
+			# print "cekb "+str(checkY)+" "+str(checkX)
+			#print('check2 ',(startY + i*dirY),',',(startX + (diffX*i/diffY*dirX)),' is ',maze[startY + i*dirY][startX + (diffX*i/diffY*dirX)])
+			if Map.maze[checkY][checkX] == STATE_BLOCKED:
+				return False
+			if (Map.maze[checkY][checkX] == STATE_BLOCKED) or (Map.additionalWeight[checkY][checkX] > 10):
+				return False
+			if Map.additionalWeight[checkY][checkX] > 0:
+				if i == 0:
+					blockerState = BLOCKER_FIRST
+				elif blockerState == BLOCKER_FREE:
+					blockerState = BLOCKER_IN
+				elif blockerState == BLOCKER_FIRST_FREE:
+					blockerState = BLOCKER_BETWEEN
+					return False
+			elif blockerState == BLOCKER_FIRST:
+				blockerState = BLOCKER_FIRST_FREE
+			elif blockerState == BLOCKER_IN:
+				blockerState = BLOCKER_BETWEEN
+				return False
+	return True
