@@ -22,6 +22,7 @@ class Node():
 		self.h = 0
 		self.f = 0
 		self.isClosed = False
+		self.isOpen = False
 
 	def equals(self, other):
 		if other == None:
@@ -35,6 +36,7 @@ class Map():
 	topPos = None
 	maze = []
 	additionalWeight = []
+	liveBlock = []
 
 def thetastar(start, end):
 	"""Returns a list of tuples as a path from the given start to the given end in the given maze"""
@@ -424,7 +426,7 @@ def getDir(nodeA,nodeB):
 	if diffX < 0:
 		return DIR_UPLEFT if diffY > 0 else (DIR_LEFT if diffY == 0 else DIR_DOWNLEFT)
 
-def astarv3(start, end):
+def astarv3(start, end,liveBlocker = False):
 	"""Returns a list of tuples as a path from the given start to the given end in the given maze"""
 
 	print "create node"
@@ -446,6 +448,7 @@ def astarv3(start, end):
 	
 	# Add the start node
 	open_list.append(start_node)
+	start_node.isOpen = True
 	
 	# Loop until you find the end
 	# iter = 0
@@ -454,11 +457,12 @@ def astarv3(start, end):
 		current_index = 0
 		#pop from openlist and add to closed list
 		open_list.pop(current_index)
+		current_node.isOpen = False
 		current_node.isClosed = True
 		if current_node.equals(end_node):
 			#print('Path found')
 			# print "itecon "+str(iter)
-			return reconstructPathv2(current_node)
+			return reconstructPathv2(current_node,liveBlocker)
 			break
 	
 		for new_position in [(0, -1), (0, 1), (-1, 0), (1, 0)]: #[(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]:
@@ -470,15 +474,23 @@ def astarv3(start, end):
 				continue
 			if (Map.maze[coord[0]][coord[1]] == STATE_ENTRY and (coord[0] != end_node.position[0] or coord[1] != end_node.position[1])):
 				continue
+			
+			liveBlockerWeight = 0
+			if liveBlocker:
+				for block in Map.liveBlock:
+					diffTile = max(abs(coord[0] - block[0]),abs(coord[1] - block[1]))
+					if (diffTile < 5):
+						liveBlockerWeight = (5-diffTile)*5
+						break
 			# iter+=1
 			
 			# print "ceki "+str(coord)
 			nodeCheck = allHailNode[coord[0]][coord[1]]
 			if not (nodeCheck.isClosed):
-				isOldNode = nodeCheck in open_list
+				isOldNode = nodeCheck.isOpen
 				if not isOldNode:
 					nodeCheck.g = sys.maxint
-				newG = current_node.g + Map.additionalWeight[nodeCheck.position[0]][nodeCheck.position[1]]*Map.additionalWeight[nodeCheck.position[0]][nodeCheck.position[1]]# + euclidian(current_node.position,nodeCheck.position)
+				newG = current_node.g + (Map.additionalWeight[nodeCheck.position[0]][nodeCheck.position[1]]+liveBlockerWeight)**2# + euclidian(current_node.position,nodeCheck.position)
 				if newG < nodeCheck.g:
 					
 					nodeCheck.g = newG
@@ -507,9 +519,10 @@ def InsertNode(node,list):
 			limitDown = mid
 	#print "insert at "+str(mid)
 	list.insert(mid,node)
+	node.isOpen = True
 
 
-def reconstructPathv2(node):
+def reconstructPathv2(node,liveBlocker = False):
 	curNode = node
 	path = []
 	nodePath = []
@@ -523,7 +536,7 @@ def reconstructPathv2(node):
 		#realPos = TranslateToRealPos(curNode.position)
 		#point = Point3d(realPos[0],realPos[1],0)
 		nodePath.insert(0,curNode)
-	nodePath = simplifyPathv3(nodePath)
+	nodePath = simplifyPathv3(nodePath,liveBlocker)
 	for node in nodePath:
 		realPos = TranslateToRealPos(node.position)
 		point = Point3d(realPos[0],realPos[1],0)
@@ -531,10 +544,10 @@ def reconstructPathv2(node):
 	# return nodePath
 	return path
 
-def simplifyPathv3(path):
+def simplifyPathv3(path,liveBlocker = False):
 	index = len(path) - 2
 	while index > 0:
-		if lineInSightv2(path[index + 1].position[0],path[index + 1].position[1],path[index - 1].position[0],path[index - 1].position[1]):
+		if lineInSightv2(path[index + 1].position[0],path[index + 1].position[1],path[index - 1].position[0],path[index - 1].position[1],liveBlocker):
 			path.remove(path[index])
 		# else:
 		index-=1
@@ -545,7 +558,7 @@ BLOCKER_IN = BLOCKER_FREE + 1
 BLOCKER_BETWEEN = BLOCKER_IN + 1
 BLOCKER_FIRST = BLOCKER_BETWEEN + 1
 BLOCKER_FIRST_FREE = BLOCKER_FIRST + 1
-def lineInSightv2(startX,startY,endX,endY):
+def lineInSightv2(startX,startY,endX,endY,liveBlocker = False):
 	#print "deva "+toExcel((startX,startY))+" "+toExcel((endX,endY))
 	#print "deva "+str(startX)+" "+str(startY)+" "+str(endX)+" "+str(endY)
 	diffX = (endX-startX)
@@ -558,14 +571,20 @@ def lineInSightv2(startX,startY,endX,endY):
 	
 	blockerState = BLOCKER_FREE
 	if (diffX >= diffY):
-		for i in range(diffX):
+		for i in range(1,diffX):
 			#print("check ",(startY + (diffY*i/diffX*dirY)),",",(startX + i*dirX)," is ",maze[startY + (diffY*i/diffX*dirY)][startX + i*dirX])
 			checkX = startY + (diffY*i/diffX*dirY)
 			checkY = startX + i*dirX
 			#print "ceka "+str(checkY)+" "+str(checkX)
 			#print "ceka "+toExcel((checkY,checkX))
-			if (Map.maze[checkY][checkX] == STATE_BLOCKED) or (Map.additionalWeight[checkY][checkX] > 10):
+			if (Map.maze[checkY][checkX] == STATE_BLOCKED) or ((Map.additionalWeight[checkY][checkX] > 10)):
 				return False
+			if liveBlocker:
+				for block in Map.liveBlock:
+					if (abs(checkY - block[0]) < 3) and (abs(checkX - block[1]) < 3):
+						print "at live block "+str(checkY)+" "+str(checkX)
+						return False
+
 			if Map.additionalWeight[checkY][checkX] > 0:
 				if i == 0:
 					blockerState = BLOCKER_FIRST
@@ -580,16 +599,19 @@ def lineInSightv2(startX,startY,endX,endY):
 				blockerState = BLOCKER_BETWEEN
 				return False
 	else:
-		for i in range(diffY):
+		for i in range(1,diffY):
 			checkX = startY + i*dirY
 			checkY = startX + (diffX*i/diffY*dirX)
 			#print "cekb "+toExcel((checkY,checkX))
 			# print "cekb "+str(checkY)+" "+str(checkX)
 			#print('check2 ',(startY + i*dirY),',',(startX + (diffX*i/diffY*dirX)),' is ',maze[startY + i*dirY][startX + (diffX*i/diffY*dirX)])
-			if Map.maze[checkY][checkX] == STATE_BLOCKED:
+			if (Map.maze[checkY][checkX] == STATE_BLOCKED) or ((Map.additionalWeight[checkY][checkX] > 10)):
 				return False
-			if (Map.maze[checkY][checkX] == STATE_BLOCKED) or (Map.additionalWeight[checkY][checkX] > 10):
-				return False
+			if liveBlocker:
+				for block in Map.liveBlock:
+					if (abs(checkY - block[0]) < 3) and (abs(checkX - block[1]) < 3):
+						return False
+			
 			if Map.additionalWeight[checkY][checkX] > 0:
 				if i == 0:
 					blockerState = BLOCKER_FIRST
@@ -604,3 +626,12 @@ def lineInSightv2(startX,startY,endX,endY):
 				blockerState = BLOCKER_BETWEEN
 				return False
 	return True
+
+def IsBlocked(pos):
+	for blocker in Map.liveBlock:
+		if blocker[0] == pos [0] and blocker[1] == pos[1]:
+			continue
+		if abs(blocker[0] - pos[0]) < 5 and abs(blocker[1] - pos[1]) < 5:
+			return True
+	return False
+	
