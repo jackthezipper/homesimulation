@@ -15,10 +15,11 @@ PathFinding = reload(PathFinding)
 STATE_IDLE = 0
 STATE_MOVE = STATE_IDLE + 1
 STATE_WAIT = STATE_MOVE + 1
-
+errPause = False
 class Agent:
 	possibleTarget = []
 	entryPointList = []
+	hasErr = False
 	
 	def __init__(self,position,targetPoint,state = STATE_IDLE):
 		self.pos = position
@@ -32,7 +33,7 @@ class Agent:
 		self.myPath = None
 		self.pathIndex = 0
 		self.target = None
-		self.moveDir = Vector3f(0,0,0)
+		self.moveDir = Vector3f(0,1,0)
 		self.pathCalculated = False
 	
 	def setTarget(self,newTarget):
@@ -41,6 +42,10 @@ class Agent:
 		self.target.available = False
 	
 	def update(self):
+		# if Agent.hasErr:
+			# i = 0
+			# while i<10000:
+				# i+=1
 		if self.state != STATE_MOVE:
 			self.pathIndex = 1
 			if self.waitTime > 0:
@@ -75,22 +80,45 @@ class Agent:
 			self.state = STATE_MOVE
 			return self.pos
 		else:
-			print "movettggg"
+			print "movettgggx"
 			#TODO: implement movement
 			#pa = Point3d(0,0,0)
 			# print TranslateToGridPos(self.pos)
 			# print TranslateToGridPos(self.entryPoint.pos)
-			print self.pathIndex
-			print self.myPath
+			#print self.pathIndex
+			print len(self.myPath)
+			
 			destination  = self.myPath[self.pathIndex]
 			#self.moveDir = Vector3f.Subtract(Vector3f(destination.X,destination.Y,destination.Z),Vector3f(self.pos.X,self.pos.Y,self.pos.Z))
 			distance = self.pos.DistanceTo(destination)
 			
-			print str(self.pos) +"               "+ str(destination)
-			print distance
+			#print str(self.pos) +"               "+ str(destination)
+			#print distance
 			#print self.moveDir
 			
 			if distance > 0.1:
+				myGrid = TranslateToGridPos(self.pos)
+				if PathFinding.IsBlocked(myGrid):
+					print "kalukulatimo "+str(myGrid[0])+" "+str(myGrid[1])
+					# if self.pathIndex+1 < len(self.myPath):
+						# myNextDestGrid = TranslateToGridPos(self.myPath[self.pathIndex+1])
+					# else:
+						# myNextDestGrid = TranslateToGridPos(self.myPath[self.pathIndex])
+					myNextDestGrid = TranslateToGridPos(self.entryPoint.pos)
+					midPath = PathFinding.astarv3(myGrid,myNextDestGrid,True)
+					if self.entryPoint.pos != self.entryPoint.target.targetPoint:
+						print "appendix "+str(self.entryPoint.target.targetPoint)
+						midPath.append(self.entryPoint.target.targetPoint)
+					#del midPath[-1]
+					del self.myPath[self.pathIndex-1:]
+					#errPause = True
+					#print "ompat"
+					#print midPath
+					#return self.pos
+					self.myPath.extend(midPath)
+					# self.myPath[self.pathIndex:self.pathIndex] = midPath
+					# self.pathIndex+=1
+					self.recalculateMoveDir()
 				self.pos = rs.PointAdd(self.pos,self.moveDir)
 			else:
 				self.pos = destination
@@ -104,7 +132,7 @@ class Agent:
 			return self.pos
 	
 	def calculateNextTarget(self):
-		print "abalabalsuuuzzziccc"
+		#print "abalabalsuuuzzziccc"
 		availableTarget = [target for target in Agent.possibleTarget if target.available]
 		if self.target != None:
 			self.target.available = True
@@ -128,7 +156,7 @@ class Agent:
 		self.entryPoint = entryPointL[selectedEntry]
 		
 	def recalculateMoveDir(self):
-		print self.myPath
+		#print self.myPath
 		destination  = self.myPath[self.pathIndex]
 		self.moveDir = Vector3f.Subtract(Vector3f(destination.X,destination.Y,destination.Z),Vector3f(self.pos.X,self.pos.Y,self.pos.Z))
 		self.moveDir = Vector3f.Divide(self.moveDir,self.moveDir.Length*20)
@@ -137,7 +165,13 @@ def TranslateToGridPos(pos):
 	#print "aa"
 	#print pos
 	#print PathFinding.Map.topPos.GetType()
-	gridX = int(math.floor((pos.X - PathFinding.Map.topPos.X)/0.1))
-	gridY = int(math.floor((PathFinding.Map.topPos.Y - pos.Y)/0.1))
-	posGrid = (gridX,gridY)
+	try:
+		gridX = int(math.floor((pos.X - PathFinding.Map.topPos.X)/0.1))
+		gridY = int(math.floor((PathFinding.Map.topPos.Y - pos.Y)/0.1))
+		posGrid = (gridX,gridY)
+	except Exception as e:
+		print e
+		print pos
+		Agent.hasErr = True
+		posGrid = (0,0)
 	return posGrid
