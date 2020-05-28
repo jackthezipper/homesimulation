@@ -48,10 +48,10 @@
             <chunk name="Projection">
               <items count="2">
                 <item name="Target" type_name="gh_drawing_point" type_code="30">
-                  <X>114</X>
-                  <Y>-192</Y>
+                  <X>-28</X>
+                  <Y>-177</Y>
                 </item>
-                <item name="Zoom" type_name="gh_single" type_code="5">1.17647052</item>
+                <item name="Zoom" type_name="gh_single" type_code="5">0.5220064</item>
               </items>
             </chunk>
             <chunk name="Views">
@@ -604,7 +604,7 @@ import scriptcontext as sc
 import math
 import Rhino.Geometry as rg
 import sys
-from Rhino.Geometry import Point3d,Point
+from Rhino.Geometry import Point3d,Point,NurbsSurface
 
 cFPath = ghenv.Component.OnPingDocument().FilePath
 cpath = cFPath[0:cFPath.rfind('\\')+1]
@@ -625,36 +625,14 @@ STATE_FREE = 0
 STATE_BLOCKED = 1
 STATE_ENTRY = 2
 
-NEIGHBOR_CHECK = [
-    [-1,0],
-    [-1,1],
-    [0,1],
-    [1,1],
-    [1,0],
-    [1,-1],
-    [0,-1],
-    [-1,-1],
-    [-2,0],
-    [-2,1],
-    [-2,2],
-    [-1,2],
-    [0,2],
-    [1,2],
-    [2,2],
-    [2,1],
-    [2,0],
-    [2,-1],
-    [2,-2],
-    [1,-2],
-    [0,-2],
-    [-1,-2],
-    [-2,-2],
-    [-2,-1]
-    ]
+
 
 class MyComponent(component):
     
     def __init__(self):
+        self.NEIGHBOR_CHECK = []
+        self.NEIGHBOR_DIS = 2
+        self.WALL_DISTANCE = 0.2
         self.gridSize = 0.1
         self.grids = None
         self.gridInitialized = False
@@ -663,13 +641,24 @@ class MyComponent(component):
         self.entryPoint = []
         self.isRun = False
         self.additionalWeight = None
+        #self.polina = []
+    
+    def GenerateNeighborCheck(self):
+        self.NEIGHBOR_CHECK = []
+        for i in range(-self.NEIGHBOR_DIS,self.NEIGHBOR_DIS+1):
+            for j in range(-self.NEIGHBOR_DIS,self.NEIGHBOR_DIS+1):
+                if i == 0 and j == 0:
+                    continue
+                self.NEIGHBOR_CHECK.append((i,j))
         
     def InitializeGrid(self,area):
         import rhinoscriptsyntax as rs
+        self.GenerateNeighborCheck()
         
         entryPointObject = []
         targetPointObject = []
         
+        self.polina = []
         #get nurbscurve or rectangle
         rectArea = rs.coercecurve(area)
         
@@ -745,11 +734,11 @@ class MyComponent(component):
                 #print "World min:", bbox.Min
                 #print "World max:", bbox.Max
                 
-                xMin = int(((float(math.floor(bbox.Min.X/self.gridSize)) * self.gridSize) - gridStartX)/self.gridSize)
-                xMax = int(((float(math.ceil(bbox.Max.X/self.gridSize)) * self.gridSize) - gridStartX)/self.gridSize)
+                xMin = int(((float(math.floor((bbox.Min.X - self.WALL_DISTANCE)/self.gridSize)) * self.gridSize) - gridStartX)/self.gridSize)
+                xMax = int(((float(math.ceil((bbox.Max.X + self.WALL_DISTANCE)/self.gridSize)) * self.gridSize) - gridStartX)/self.gridSize)
                 #rh.DocObjects.CurveObject.Geometry.
-                yMin = int((gridStartY - (float(math.floor(bbox.Min.Y/self.gridSize)) * self.gridSize))/self.gridSize)
-                yMax = int((gridStartY - (float(math.ceil(bbox.Max.Y/self.gridSize)) * self.gridSize))/self.gridSize)
+                yMin = int((gridStartY - (float(math.floor((bbox.Min.Y - self.WALL_DISTANCE)/self.gridSize)) * self.gridSize))/self.gridSize)
+                yMax = int((gridStartY - (float(math.ceil((bbox.Max.Y + self.WALL_DISTANCE)/self.gridSize)) * self.gridSize))/self.gridSize)
             
                 for i in range(yMax,yMin+1):
                     for j in range(xMin,xMax+1):
@@ -760,60 +749,105 @@ class MyComponent(component):
                     #for oi in objectList:
                         #if oi.ObjectType == rh.DocObjects.ObjectType.Point:
                             #continue
-                        inter = rg.Intersect.Intersection.CurveCurve(oi.CurveGeometry,cRect.ToNurbsCurve(),0,0)
+                        #rh.Geometry.Rectangle3d.Po
+                        inter = rg.Intersect.Intersection.CurveCurve(oi.CurveGeometry,cRect.ToNurbsCurve(),self.WALL_DISTANCE,0)
                         if inter:
                             self.grids[j][i] = STATE_BLOCKED
-        for ep in self.entryPoint:
-            gridEpX = int(math.floor((ep.pos.X - gridStartX)/self.gridSize))
-            gridEpY = int(math.floor((gridStartY - ep.pos.Y)/self.gridSize))
+                            #self.polina.append(cRect)
+                            #sf = NurbsSurface.CreateFromCorners(rg.Point3d(gridStartX+(j*self.gridSize),gridStartY-(i*self.gridSize),0),rg.Point3d(gridStartX+((j+1)*self.gridSize),gridStartY-((i+1)*self.gridSize),0))
+                            
+        #for ep in self.entryPoint:
             
-            self.grids[gridEpX][gridEpY] = STATE_ENTRY
             """print ep
             print str(gridEpX)+" "+str(gridEpY)
             print str(len(self.grids))+" "+str(len(self.grids[0]))
             
             for fGrid in [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]:
                 self.grids[gridEpX+fGrid[0]][gridEpY+fGrid[1]] = STATE_FREE"""
-            print "aaaaaa"
-            for (epObject,ep) in zip(entryPointObject,self.entryPoint):
-                epGroupList = epObject.GetGroupList()
-                #print epGroupList
-                for (tObject,target) in zip(targetPointObject,self.possibleTarget):
-                    targetGroupList = tObject.GetGroupList()
-                    #print "taget"
-                    #print target.targetPoint
-                    #print targetGroupList
-                    counter = 0
-                    #target and entry point must have all their group similar
-                    for tGroup in targetGroupList:
-                        #print "tiger "+str(tGroup)
-                        for eGroup in epGroupList:
-                            #print "eger "+str(eGroup)
-                            if tGroup == eGroup:
-                                counter +=1
-                                break
-                    if counter == len(targetGroupList):
-                        ep.target = target
+            #print "aaaaaa"
+        print "maze pure"
+        for i in range(len(self.grids[0])):
+            s = ""
+            for j in range(len(self.grids)):
+                s+=(str(self.grids[j][len(self.grids[0]) - i -1])+" ")
+            print s
+        for (epObject,ep) in zip(entryPointObject,self.entryPoint):
+            gridEpX = int(math.floor((ep.pos.X - gridStartX)/self.gridSize))
+            gridEpY = int(math.floor((gridStartY - ep.pos.Y)/self.gridSize))
+            
+            self.grids[gridEpX][gridEpY] = STATE_ENTRY
+            epGroupList = epObject.GetGroupList()
+            #print epGroupList
+            #rh.DocObjects.PointObject.I
+            dir = rs.GetUserText(epObject,"Direction")
+            print "onggrid "+str(gridEpX)+","+str(gridEpY)
+            print dir
+            checker = int(self.WALL_DISTANCE*10) + 1
+            if dir == "LEFT":
+                for i in range(-1,-checker,-1):
+                    print "check grid "+str(gridEpX + i)+ "," +str(gridEpY)+" valero "+str(self.grids[gridEpX + i][gridEpY])
+                    if self.grids[gridEpX + i][gridEpY] == STATE_BLOCKED:
+                        self.grids[gridEpX + i][gridEpY] = STATE_FREE
+                    elif self.grids[gridEpX + i][gridEpY] == STATE_FREE:
                         break
-                print "entrrar"
-                print ep.pos
-                print ep.target
+            elif dir == "RIGHT":
+                print "check grid "+str(gridEpX + i)+ "," +str(gridEpY)
+                for i in range(1,checker):
+                    if self.grids[gridEpX + i][gridEpY] == STATE_BLOCKED:
+                        self.grids[gridEpX + i][gridEpY] = STATE_FREE
+                    elif self.grids[gridEpX + i][gridEpY] == STATE_FREE:
+                        break
+            elif dir == "UP":
+                print "check grid "+str(gridEpX)+ "," +str(gridEpY+i)
+                for i in range(-1,-checker,-1):
+                    if self.grids[gridEpX][gridEpY + i] == STATE_BLOCKED:
+                        self.grids[gridEpX][gridEpY + i] = STATE_FREE
+                    elif self.grids[gridEpX][gridEpY + i] == STATE_FREE:
+                        break
+            elif dir == "DOWN":
+                print "check grid "+str(gridEpX)+ "," +str(gridEpY+i)
+                for i in range(1,checker):
+                    if self.grids[gridEpX][gridEpY + i] == STATE_BLOCKED:
+                        self.grids[gridEpX][gridEpY + i] = STATE_FREE
+                    elif self.grids[gridEpX][gridEpY + i] == STATE_FREE:
+                        break
+            for (tObject,target) in zip(targetPointObject,self.possibleTarget):
+                targetGroupList = tObject.GetGroupList()
+                counter = 0
+                #target and entry point must have all their group similar
+                for tGroup in targetGroupList:
+                    #print "tiger "+str(tGroup)
+                    for eGroup in epGroupList:
+                        #print "eger "+str(eGroup)
+                        if tGroup == eGroup:
+                            counter +=1
+                            break
+                if counter == len(targetGroupList):
+                    ep.target = target
+                    break
+            print "entrrar"
+            print ep.pos
+            print ep.target
             
             print "done dion"
             
-        for tgt in self.possibleTarget:
+        """for tgt in self.possibleTarget:
             print tgt.targetPoint
         
         print len(self.grids[0])
         print len(self.grids)
         print gridCountH
-        print gridCountW
+        print gridCountW"""
+        print "lenin "+str(len(self.NEIGHBOR_CHECK))
+        for k in self.NEIGHBOR_CHECK:
+            print k
         
         for i in range(len(self.grids[0])):
             for j in range(len(self.grids)):
-                for neighbor in NEIGHBOR_CHECK:
+                for neighbor in self.NEIGHBOR_CHECK:
                     toCheckX = i + neighbor[0]
                     toCheckY = j + neighbor[1]
+                    #print "from "+str(j)+","+str(i)+" ceking diff "+str(neighbor)+ " become "+str(toCheckY)+","+str(toCheckX)
                     
                     #out of area
                     if (toCheckX &lt; 0) or (toCheckX &gt;= gridCountH) or (toCheckY &lt; 0) or (toCheckY &gt;= gridCountW):
@@ -828,7 +862,7 @@ class MyComponent(component):
                         #continue
                         
                     if self.grids[toCheckY][toCheckX] == STATE_BLOCKED:
-                        self.additionalWeight[j][i] = max(abs(neighbor[0]),abs(neighbor[1])) * self.gridSize * 100
+                        self.additionalWeight[j][i] = max(self.additionalWeight[j][i],(self.NEIGHBOR_DIS - max(abs(neighbor[0]),abs(neighbor[1])) + 1) * self.gridSize * 100)
                     
         print "maze"
         for i in range(len(self.grids[0])):
@@ -840,11 +874,12 @@ class MyComponent(component):
         for i in range(len(self.grids[0])):
             s = ""
             for j in range(len(self.grids)):
-                s+=(str(self.additionalWeight[j][len(self.additionalWeight[0]) - i -1])+" ")
+                s+=(str(int(self.additionalWeight[j][len(self.additionalWeight[0]) - i -1]/10))+" ")
             print s
         self.gridInitialized = True
             
         self.topPos = Point3d(gridStartX,gridStartY,0)
+        #rg.Mesh(
     
     def RunScript(self, area,counter,reset):
         gridArea = None
@@ -952,12 +987,12 @@ class MyComponent(component):
         possibleTarget = self.possibleTarget
         entryPoints = self.entryPoint
         additionalWeight = self.additionalWeight
-        return gridArea,topPos,possibleTarget,entryPoints,additionalWeight
+        return gridArea,topPos,possibleTarget,entryPoints,additionalWeight,None#self.polina
 </item>
                     <item name="Description" type_name="gh_string" type_code="10">GhPython provides a Python script component</item>
                     <item name="EditorLocation" type_name="gh_drawing_point" type_code="30">
-                      <X>143</X>
-                      <Y>52</Y>
+                      <X>156</X>
+                      <Y>153</Y>
                     </item>
                     <item name="EditorSize" type_name="gh_drawing_size" type_code="32">
                       <W>1044</W>
@@ -976,9 +1011,9 @@ class MyComponent(component):
                       <items count="2">
                         <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                           <X>607</X>
-                          <Y>256</Y>
+                          <Y>248</Y>
                           <W>172</W>
-                          <H>107</H>
+                          <H>124</H>
                         </item>
                         <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
                           <X>668</X>
@@ -987,19 +1022,20 @@ class MyComponent(component):
                       </items>
                     </chunk>
                     <chunk name="ParameterData">
-                      <items count="10">
+                      <items count="11">
                         <item name="InputCount" type_name="gh_int32" type_code="3">3</item>
                         <item name="InputId" index="0" type_name="gh_guid" type_code="9">84fa917c-1ed8-4db3-8be1-7bdc4a6495a2</item>
                         <item name="InputId" index="1" type_name="gh_guid" type_code="9">84fa917c-1ed8-4db3-8be1-7bdc4a6495a2</item>
                         <item name="InputId" index="2" type_name="gh_guid" type_code="9">84fa917c-1ed8-4db3-8be1-7bdc4a6495a2</item>
-                        <item name="OutputCount" type_name="gh_int32" type_code="3">5</item>
+                        <item name="OutputCount" type_name="gh_int32" type_code="3">6</item>
                         <item name="OutputId" index="0" type_name="gh_guid" type_code="9">8ec86459-bf01-4409-baee-174d0d2b13d0</item>
                         <item name="OutputId" index="1" type_name="gh_guid" type_code="9">8ec86459-bf01-4409-baee-174d0d2b13d0</item>
                         <item name="OutputId" index="2" type_name="gh_guid" type_code="9">8ec86459-bf01-4409-baee-174d0d2b13d0</item>
                         <item name="OutputId" index="3" type_name="gh_guid" type_code="9">8ec86459-bf01-4409-baee-174d0d2b13d0</item>
                         <item name="OutputId" index="4" type_name="gh_guid" type_code="9">8ec86459-bf01-4409-baee-174d0d2b13d0</item>
+                        <item name="OutputId" index="5" type_name="gh_guid" type_code="9">8ec86459-bf01-4409-baee-174d0d2b13d0</item>
                       </items>
-                      <chunks count="8">
+                      <chunks count="9">
                         <chunk name="InputParam" index="0">
                           <items count="11">
                             <item name="AllowTreeAccess" type_name="gh_bool" type_code="1">true</item>
@@ -1019,13 +1055,13 @@ class MyComponent(component):
                               <items count="2">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>609</X>
-                                  <Y>258</Y>
+                                  <Y>250</Y>
                                   <W>44</W>
-                                  <H>34</H>
+                                  <H>40</H>
                                 </item>
                                 <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
                                   <X>632.5</X>
-                                  <Y>275.1667</Y>
+                                  <Y>270</Y>
                                 </item>
                               </items>
                             </chunk>
@@ -1050,13 +1086,13 @@ class MyComponent(component):
                               <items count="2">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>609</X>
-                                  <Y>292</Y>
+                                  <Y>290</Y>
                                   <W>44</W>
-                                  <H>34</H>
+                                  <H>40</H>
                                 </item>
                                 <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
                                   <X>632.5</X>
-                                  <Y>309.5</Y>
+                                  <Y>310</Y>
                                 </item>
                               </items>
                             </chunk>
@@ -1081,13 +1117,13 @@ class MyComponent(component):
                               <items count="2">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>609</X>
-                                  <Y>326</Y>
+                                  <Y>330</Y>
                                   <W>44</W>
-                                  <H>35</H>
+                                  <H>40</H>
                                 </item>
                                 <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
                                   <X>632.5</X>
-                                  <Y>343.8333</Y>
+                                  <Y>350</Y>
                                 </item>
                               </items>
                             </chunk>
@@ -1107,13 +1143,13 @@ class MyComponent(component):
                               <items count="2">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>683</X>
-                                  <Y>258</Y>
+                                  <Y>250</Y>
                                   <W>94</W>
                                   <H>20</H>
                                 </item>
                                 <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
                                   <X>730</X>
-                                  <Y>268.3</Y>
+                                  <Y>260</Y>
                                 </item>
                               </items>
                             </chunk>
@@ -1133,13 +1169,13 @@ class MyComponent(component):
                               <items count="2">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>683</X>
-                                  <Y>278</Y>
+                                  <Y>270</Y>
                                   <W>94</W>
-                                  <H>21</H>
+                                  <H>20</H>
                                 </item>
                                 <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
                                   <X>730</X>
-                                  <Y>288.9</Y>
+                                  <Y>280</Y>
                                 </item>
                               </items>
                             </chunk>
@@ -1159,13 +1195,13 @@ class MyComponent(component):
                               <items count="2">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>683</X>
-                                  <Y>299</Y>
+                                  <Y>290</Y>
                                   <W>94</W>
                                   <H>20</H>
                                 </item>
                                 <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
                                   <X>730</X>
-                                  <Y>309.5</Y>
+                                  <Y>300</Y>
                                 </item>
                               </items>
                             </chunk>
@@ -1185,13 +1221,13 @@ class MyComponent(component):
                               <items count="2">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>683</X>
-                                  <Y>319</Y>
+                                  <Y>310</Y>
                                   <W>94</W>
-                                  <H>21</H>
+                                  <H>20</H>
                                 </item>
                                 <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
                                   <X>730</X>
-                                  <Y>330.1</Y>
+                                  <Y>320</Y>
                                 </item>
                               </items>
                             </chunk>
@@ -1211,13 +1247,39 @@ class MyComponent(component):
                               <items count="2">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>683</X>
-                                  <Y>340</Y>
+                                  <Y>330</Y>
                                   <W>94</W>
-                                  <H>21</H>
+                                  <H>20</H>
                                 </item>
                                 <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
                                   <X>730</X>
-                                  <Y>350.7</Y>
+                                  <Y>340</Y>
+                                </item>
+                              </items>
+                            </chunk>
+                          </chunks>
+                        </chunk>
+                        <chunk name="OutputParam" index="5">
+                          <items count="6">
+                            <item name="Description" type_name="gh_string" type_code="10">Script output polina.</item>
+                            <item name="InstanceGuid" type_name="gh_guid" type_code="9">5d1829dc-f9a8-4a44-b155-66b5270cd331</item>
+                            <item name="Name" type_name="gh_string" type_code="10">polina</item>
+                            <item name="NickName" type_name="gh_string" type_code="10">polina</item>
+                            <item name="Optional" type_name="gh_bool" type_code="1">false</item>
+                            <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
+                          </items>
+                          <chunks count="1">
+                            <chunk name="Attributes">
+                              <items count="2">
+                                <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
+                                  <X>683</X>
+                                  <Y>350</Y>
+                                  <W>94</W>
+                                  <H>20</H>
+                                </item>
+                                <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
+                                  <X>730</X>
+                                  <Y>360</Y>
                                 </item>
                               </items>
                             </chunk>
@@ -1271,7 +1333,7 @@ class MyComponent(component):
     
     def RunScript(self,checkAgent, anySelected,mArea, agent,topPos,possibleTarget,entryPoints,additionalWeight):
         import Agent
-        Agent = reload(Agent)
+        #Agent = reload(Agent)
         PathFinding.Map.topPos = topPos
         PathFinding.Map.additionalWeight = additionalWeight
         angle = []
@@ -1328,6 +1390,7 @@ class MyComponent(component):
                 self.pointScreen[i].Z = pos.Z
             
             angle.append(math.atan2(agt.moveDir.Y,agt.moveDir.X) - math.atan2(-1,0))
+            
             #i+=1
             #if agt.state != 0:
                 #print agt.myPath
@@ -1352,12 +1415,12 @@ def TranslateToGridPos(topPos,pos):
     return gridX,gridY</item>
                     <item name="Description" type_name="gh_string" type_code="10">GhPython provides a Python script component</item>
                     <item name="EditorLocation" type_name="gh_drawing_point" type_code="30">
-                      <X>221</X>
-                      <Y>153</Y>
+                      <X>457</X>
+                      <Y>98</Y>
                     </item>
                     <item name="EditorSize" type_name="gh_drawing_size" type_code="32">
                       <W>724</W>
-                      <H>730</H>
+                      <H>940</H>
                     </item>
                     <item name="HideInput" type_name="gh_bool" type_code="1">true</item>
                     <item name="HideOutput" type_name="gh_bool" type_code="1">true</item>
@@ -1778,7 +1841,7 @@ class MyComponent(component):
                 if index &lt; len(initialState):
                     tState = state
                 #print pos
-                agent = Agent.Agent(pos,Point3d(0,0,0),state)
+                agent = Agent.Agent(pos,Point3d(0,0,0),state,index)
                 self.agentList.append(agent)
                 print agent.pos
         self.isAgentInitialized = True
@@ -1822,8 +1885,8 @@ class MyComponent(component):
 </item>
                     <item name="Description" type_name="gh_string" type_code="10">GhPython provides a Python script component</item>
                     <item name="EditorLocation" type_name="gh_drawing_point" type_code="30">
-                      <X>397</X>
-                      <Y>180</Y>
+                      <X>546</X>
+                      <Y>325</Y>
                     </item>
                     <item name="EditorSize" type_name="gh_drawing_size" type_code="32">
                       <W>558</W>
@@ -1839,7 +1902,7 @@ class MyComponent(component):
                   </items>
                   <chunks count="2">
                     <chunk name="Attributes">
-                      <items count="2">
+                      <items count="3">
                         <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                           <X>564</X>
                           <Y>500</Y>
@@ -1850,6 +1913,7 @@ class MyComponent(component):
                           <X>639</X>
                           <Y>559</Y>
                         </item>
+                        <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                       </items>
                     </chunk>
                     <chunk name="ParameterData">
@@ -1879,7 +1943,7 @@ class MyComponent(component):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="2">
+                              <items count="3">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>566</X>
                                   <Y>502</Y>
@@ -1890,6 +1954,7 @@ class MyComponent(component):
                                   <X>596.5</X>
                                   <Y>521</Y>
                                 </item>
+                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -1911,7 +1976,7 @@ class MyComponent(component):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="2">
+                              <items count="3">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>566</X>
                                   <Y>540</Y>
@@ -1922,6 +1987,7 @@ class MyComponent(component):
                                   <X>596.5</X>
                                   <Y>559</Y>
                                 </item>
+                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -1942,7 +2008,7 @@ class MyComponent(component):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="2">
+                              <items count="3">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>566</X>
                                   <Y>578</Y>
@@ -1953,6 +2019,7 @@ class MyComponent(component):
                                   <X>596.5</X>
                                   <Y>597</Y>
                                 </item>
+                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -1968,7 +2035,7 @@ class MyComponent(component):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="2">
+                              <items count="3">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>654</X>
                                   <Y>502</Y>
@@ -1979,6 +2046,7 @@ class MyComponent(component):
                                   <X>681</X>
                                   <Y>559</Y>
                                 </item>
+                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -3333,7 +3401,7 @@ class MyComponent(component):
                                 <chunk name="Item" index="0">
                                   <items count="1">
                                     <item name="color" type_name="gh_drawing_color" type_code="36">
-                                      <ARGB>255;255;255;255</ARGB>
+                                      <ARGB>1;255;255;255</ARGB>
                                     </item>
                                   </items>
                                 </chunk>
@@ -3458,7 +3526,7 @@ class MyComponent(component):
         
         import rhinoscriptsyntax as rs
         surfaces = []
-        halfSize = 0.1
+        halfSize = 0.3
         print location
         for (loc,agl) in zip(location,angle):
             #print loc
@@ -3478,8 +3546,8 @@ class MyComponent(component):
 </item>
                     <item name="Description" type_name="gh_string" type_code="10">GhPython provides a Python script component</item>
                     <item name="EditorLocation" type_name="gh_drawing_point" type_code="30">
-                      <X>130</X>
-                      <Y>130</Y>
+                      <X>-8</X>
+                      <Y>-8</Y>
                     </item>
                     <item name="EditorSize" type_name="gh_drawing_size" type_code="32">
                       <W>558</W>
@@ -3723,7 +3791,7 @@ class MyComponent(component):
         
         import rhinoscriptsyntax as rs
         
-        halfSize = 0.1
+        halfSize = 0.3
         fullSize = halfSize*2
         if checkAgent:
             if not self.isAgentBaked:
@@ -3757,12 +3825,12 @@ class MyComponent(component):
 </item>
                     <item name="Description" type_name="gh_string" type_code="10">GhPython provides a Python script component</item>
                     <item name="EditorLocation" type_name="gh_drawing_point" type_code="30">
-                      <X>-8</X>
-                      <Y>-8</Y>
+                      <X>692</X>
+                      <Y>57</Y>
                     </item>
                     <item name="EditorSize" type_name="gh_drawing_size" type_code="32">
                       <W>558</W>
-                      <H>571</H>
+                      <H>877</H>
                     </item>
                     <item name="HideInput" type_name="gh_bool" type_code="1">true</item>
                     <item name="HideOutput" type_name="gh_bool" type_code="1">true</item>
@@ -3867,7 +3935,7 @@ class MyComponent(component):
                             <item name="AllowTreeAccess" type_name="gh_bool" type_code="1">true</item>
                             <item name="Description" type_name="gh_string" type_code="10">Script input location.</item>
                             <item name="InstanceGuid" type_name="gh_guid" type_code="9">73329bd3-21bb-4ee4-999f-eb0c3430c52e</item>
-                            <item name="Name" type_name="gh_string" type_code="10">x</item>
+                            <item name="Name" type_name="gh_string" type_code="10">location</item>
                             <item name="NickName" type_name="gh_string" type_code="10">location</item>
                             <item name="Optional" type_name="gh_bool" type_code="1">true</item>
                             <item name="ScriptParamAccess" type_name="gh_int32" type_code="3">1</item>
@@ -3964,7 +4032,7 @@ class MyComponent(component):
     <chunk name="Thumbnail">
       <items count="1">
         <item name="Thumbnail" type_name="gh_drawing_bitmap" type_code="37">
-          <bitmap length="7640">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</bitmap>
+          <bitmap length="5308">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</bitmap>
         </item>
       </items>
     </chunk>

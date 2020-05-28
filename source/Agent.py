@@ -21,7 +21,7 @@ class Agent:
 	entryPointList = []
 	hasErr = False
 	
-	def __init__(self,position,targetPoint,state = STATE_IDLE):
+	def __init__(self,position,targetPoint,index,state = STATE_IDLE):
 		self.pos = position
 		self.targetPoint = targetPoint
 		self.entryPoint = None
@@ -35,6 +35,7 @@ class Agent:
 		self.target = None
 		self.moveDir = Vector3f(0,1,0)
 		self.pathCalculated = False
+		self.myIndex = index
 	
 	def setTarget(self,newTarget):
 		self.target = newTarget
@@ -63,7 +64,11 @@ class Agent:
 			# print start
 			# print end
 			#if not self.pathCalculated:
-			self.myPath = PathFinding.astarv3(start,end)
+			self.myPath = PathFinding.astarv3(start,end,self.myIndex)
+			
+			#No path found. Wait a moment
+			if self.myPath == None:
+				return self.pos
 			
 			if self.oldEntryPoint != None:
 				print "inserting "+str(self.pos)
@@ -73,14 +78,17 @@ class Agent:
 				print "appendix "+str(self.entryPoint.target.targetPoint)
 				self.myPath.append(self.entryPoint.target.targetPoint)
 			#self.pathCalculated = True
-			print "parat"
-			print self.myPath
+			# print "parat"
+			# for pata in self.myPath:
+				# print TranslateToGridPos(pata)
+			# print "petok"
+			#print self.myPath
 			self.pathIndex = 1
 			self.recalculateMoveDir()
 			self.state = STATE_MOVE
 			return self.pos
 		else:
-			print "movettgggx"
+			print "movettgffgx"
 			#TODO: implement movement
 			#pa = Point3d(0,0,0)
 			# print TranslateToGridPos(self.pos)
@@ -105,7 +113,13 @@ class Agent:
 					# else:
 						# myNextDestGrid = TranslateToGridPos(self.myPath[self.pathIndex])
 					myNextDestGrid = TranslateToGridPos(self.entryPoint.pos)
-					midPath = PathFinding.astarv3(myGrid,myNextDestGrid,True)
+					midPath = PathFinding.astarv3(myGrid,myNextDestGrid,self.myIndex,True)
+					
+					#No path found. Wait a moment
+					if midPath == None:
+						print "waiteo"
+						return self.pos
+					
 					if self.entryPoint.pos != self.entryPoint.target.targetPoint:
 						print "appendix "+str(self.entryPoint.target.targetPoint)
 						midPath.append(self.entryPoint.target.targetPoint)
@@ -119,6 +133,10 @@ class Agent:
 					# self.myPath[self.pathIndex:self.pathIndex] = midPath
 					# self.pathIndex+=1
 					self.recalculateMoveDir()
+				# print "parat"
+				# for pata in self.myPath:
+					# print TranslateToGridPos(pata)
+				# print "petok"
 				self.pos = rs.PointAdd(self.pos,self.moveDir)
 			else:
 				self.pos = destination

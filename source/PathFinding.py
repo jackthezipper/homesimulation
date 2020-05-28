@@ -426,15 +426,15 @@ def getDir(nodeA,nodeB):
 	if diffX < 0:
 		return DIR_UPLEFT if diffY > 0 else (DIR_LEFT if diffY == 0 else DIR_DOWNLEFT)
 
-def astarv3(start, end,liveBlocker = False):
+def astarv3(start, end,ignoreIndex,liveBlocker = False):
 	"""Returns a list of tuples as a path from the given start to the given end in the given maze"""
 
-	print "create node"
+	#print "create node"
 	allHailNode = [[None for i in range(len(Map.maze[0]))] for j in range(len(Map.maze))]
 	for i in range(len(Map.maze)):
 		for j in range(len(Map.maze[0])):
 			allHailNode[i][j] = Node(None, (i,j))
-	print "done create node"
+	#print "done create node"
 	# Create start and end node
 	start_node = allHailNode[start[0]][start[1]]
 	start_node.makeSelfReference()
@@ -442,6 +442,10 @@ def astarv3(start, end,liveBlocker = False):
 	end_node = allHailNode[end[0]][end[1]]
 	end_node.g = end_node.h = end_node.f = 0
 	
+	if liveBlocker:
+		print "bolokar "+str(start)
+		for block in Map.liveBlock:
+			print block
 	# Initialize both open and closed list
 	open_list = []
 	# closed_list = []
@@ -460,7 +464,7 @@ def astarv3(start, end,liveBlocker = False):
 		current_node.isOpen = False
 		current_node.isClosed = True
 		if current_node.equals(end_node):
-			#print('Path found')
+			print('Path found')
 			# print "itecon "+str(iter)
 			return reconstructPathv2(current_node,liveBlocker)
 			break
@@ -477,11 +481,19 @@ def astarv3(start, end,liveBlocker = False):
 			
 			liveBlockerWeight = 0
 			if liveBlocker:
-				for block in Map.liveBlock:
+				overlapWithOther = False
+				for index,block in enumerate(Map.liveBlock):
+					if index == ignoreIndex:
+						continue
 					diffTile = max(abs(coord[0] - block[0]),abs(coord[1] - block[1]))
-					if (diffTile < 5):
-						liveBlockerWeight = (5-diffTile)*5
+					overlapWithOther = diffTile < 6
+					if overlapWithOther:
 						break
+					if (diffTile < 10):
+						liveBlockerWeight = (10-diffTile)*5
+						break
+				if overlapWithOther:
+					continue
 			# iter+=1
 			
 			# print "ceki "+str(coord)
@@ -499,6 +511,7 @@ def astarv3(start, end,liveBlocker = False):
 				if not isOldNode:
 					InsertNode(nodeCheck,open_list)
 	# print "itecon "+str(iter)
+	print "nonyepat"
 	return None
 
 def InsertNode(node,list):
@@ -558,7 +571,7 @@ BLOCKER_IN = BLOCKER_FREE + 1
 BLOCKER_BETWEEN = BLOCKER_IN + 1
 BLOCKER_FIRST = BLOCKER_BETWEEN + 1
 BLOCKER_FIRST_FREE = BLOCKER_FIRST + 1
-def lineInSightv2(startX,startY,endX,endY,liveBlocker = False):
+def lineInSightv2(startX,startY,endX,endY,ignoreIndex,liveBlocker = False):
 	#print "deva "+toExcel((startX,startY))+" "+toExcel((endX,endY))
 	#print "deva "+str(startX)+" "+str(startY)+" "+str(endX)+" "+str(endY)
 	diffX = (endX-startX)
@@ -580,8 +593,10 @@ def lineInSightv2(startX,startY,endX,endY,liveBlocker = False):
 			if (Map.maze[checkY][checkX] == STATE_BLOCKED) or ((Map.additionalWeight[checkY][checkX] > 10)):
 				return False
 			if liveBlocker:
-				for block in Map.liveBlock:
-					if (abs(checkY - block[0]) < 3) and (abs(checkX - block[1]) < 3):
+				for index,block in enumerate(Map.liveBlock):
+					if index == ignoreIndex:
+						continue
+					if (abs(checkY - block[0]) < 6) and (abs(checkX - block[1]) < 6):
 						print "at live block "+str(checkY)+" "+str(checkX)
 						return False
 
@@ -608,8 +623,10 @@ def lineInSightv2(startX,startY,endX,endY,liveBlocker = False):
 			if (Map.maze[checkY][checkX] == STATE_BLOCKED) or ((Map.additionalWeight[checkY][checkX] > 10)):
 				return False
 			if liveBlocker:
-				for block in Map.liveBlock:
-					if (abs(checkY - block[0]) < 3) and (abs(checkX - block[1]) < 3):
+				for index,block in enumerate(Map.liveBlock):
+					if index == ignoreIndex:
+						continue
+					if (abs(checkY - block[0]) < 6) and (abs(checkX - block[1]) < 6):
 						return False
 			
 			if Map.additionalWeight[checkY][checkX] > 0:
@@ -631,7 +648,7 @@ def IsBlocked(pos):
 	for blocker in Map.liveBlock:
 		if blocker[0] == pos [0] and blocker[1] == pos[1]:
 			continue
-		if abs(blocker[0] - pos[0]) < 5 and abs(blocker[1] - pos[1]) < 5:
+		if abs(blocker[0] - pos[0]) < 10 and abs(blocker[1] - pos[1]) < 10:
 			return True
 	return False
 	
