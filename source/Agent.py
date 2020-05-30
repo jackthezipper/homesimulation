@@ -36,6 +36,9 @@ class Agent:
 		self.moveDir = Vector3f(0,1,0)
 		self.pathCalculated = False
 		self.myIndex = index
+		self.blockedBy = -1
+		self.blockCounter = 0
+		self.hasWait = False
 	
 	def setTarget(self,newTarget):
 		self.target = newTarget
@@ -106,7 +109,30 @@ class Agent:
 			
 			if distance > 0.1:
 				myGrid = TranslateToGridPos(self.pos)
-				if PathFinding.IsBlocked(myGrid):
+				self.blockedBy,blocked = PathFinding.IsBlocked(myGrid)
+				if blocked:
+					blockPos = PathFinding.TranslateToRealPos(PathFinding.Map.liveBlock[self.blockedBy])
+					print blockPos
+					blockDir = Vector3f.Subtract(Vector3f(blockPos[0],blockPos[1],0),Vector3f(self.pos.X,self.pos.Y,0))
+					normalMoveDir = Vector3f.Divide(self.moveDir,self.moveDir.Length)
+					blockDir = Vector3f.Divide(blockDir,blockDir.Length)
+					dotP = (blockDir.X*normalMoveDir.X) + (blockDir.Y*normalMoveDir.Y)
+					angle = math.acos(dotP)
+					print "radongle "+str(angle)
+					angle = math.degrees(angle)
+					print "dedengle "+str(angle)
+					if angle > 60 and abs(myGrid[0]-PathFinding.Map.liveBlock[self.blockedBy][0]) > 6 and abs(myGrid[1]-PathFinding.Map.liveBlock[self.blockedBy][1]) > 6:
+						blocked = False
+					if self.entryPoint.pos != self.entryPoint.target.targetPoint and self.pathIndex == (len(self.myPath) - 1):
+						blocked = False
+				if blocked:
+					if self.blockCounter < 10 and self.myIndex > self.blockedBy:
+						if not self.hasWait:
+							print "waiteo"
+							self.blockCounter += 1
+							return self.pos
+						else:
+							self.hasWait = True
 					print "kalukulatimo "+str(myGrid[0])+" "+str(myGrid[1])
 					# if self.pathIndex+1 < len(self.myPath):
 						# myNextDestGrid = TranslateToGridPos(self.myPath[self.pathIndex+1])
@@ -118,6 +144,9 @@ class Agent:
 					#No path found. Wait a moment
 					if midPath == None:
 						print "waiteo"
+						self.blockCounter += 1
+						if self.blockCounter > 10 and self.myIndex > self.blockedBy and self.pathIndex > 2:
+							self.pos = rs.PointAdd(self.pos,(self.moveDir * (-1)))
 						return self.pos
 					
 					if self.entryPoint.pos != self.entryPoint.target.targetPoint:
@@ -132,7 +161,11 @@ class Agent:
 					self.myPath.extend(midPath)
 					# self.myPath[self.pathIndex:self.pathIndex] = midPath
 					# self.pathIndex+=1
+					self.hasWait = False
 					self.recalculateMoveDir()
+				else:
+					self.blockCounter = 0
+					self.blockedBy = -1
 				# print "parat"
 				# for pata in self.myPath:
 					# print TranslateToGridPos(pata)
@@ -146,7 +179,7 @@ class Agent:
 				else:
 					self.state = STATE_WAIT
 					self.waitTime = 20
-			
+			self.hasWait = False
 			return self.pos
 	
 	def calculateNextTarget(self):

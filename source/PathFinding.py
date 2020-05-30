@@ -645,10 +645,10 @@ def lineInSightv2(startX,startY,endX,endY,ignoreIndex,liveBlocker = False):
 	return True
 
 def IsBlocked(pos):
-	for blocker in Map.liveBlock:
+	for (index,blocker) in enumerate(Map.liveBlock):
 		if blocker[0] == pos [0] and blocker[1] == pos[1]:
 			continue
 		if abs(blocker[0] - pos[0]) < 10 and abs(blocker[1] - pos[1]) < 10:
-			return True
-	return False
+			return index,True
+	return -1,False
 	
