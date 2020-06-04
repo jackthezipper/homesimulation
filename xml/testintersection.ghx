@@ -48,10 +48,10 @@
             <chunk name="Projection">
               <items count="2">
                 <item name="Target" type_name="gh_drawing_point" type_code="30">
-                  <X>107</X>
-                  <Y>46</Y>
+                  <X>-59</X>
+                  <Y>-111</Y>
                 </item>
-                <item name="Zoom" type_name="gh_single" type_code="5">1.17647052</item>
+                <item name="Zoom" type_name="gh_single" type_code="5">1.38408291</item>
               </items>
             </chunk>
             <chunk name="Views">
@@ -104,6 +104,8 @@ import Rhino as rh
 import rhinoscriptsyntax as rs
 import scriptcontext as sc
 import Rhino.Geometry
+from Rhino.Geometry import Vector3d,Point3d,Line,Polyline
+import math
 
 class MyComponent(component):
     
@@ -121,41 +123,199 @@ class MyComponent(component):
         import rhinoscriptsyntax as rs
         print x.GetType()
         rarea = rs.coercecurve(x)
-        print rarea
+        
+        #Rhino.Geometry.NurbsCurve.Points
+        #Rhino.Geometry.ControlPoint.Location
+        print rarea.Points[0].Location
         #print pl
         rc,pl = rarea.TryGetPolyline()
         
-        view = sc.doc.Views.ActiveView.ActiveViewport            
-        objectList = rh.RhinoDoc.ActiveDoc.Objects.FindByCrossingWindowRegion(view,pl,True,rh.DocObjects.ObjectType.Curve)
+        vecDir = Vector3d(0,1,0)
+        diag = Vector3d.Subtract(Vector3d(rarea.Points[0].Location),Vector3d(rarea.Points[2].Location))
+        length = diag.Length
+        #print diag
+        #print len
+        print "abababababababa"
+        vec1 = rs.VectorRotate(vecDir,-60,(0,0,1))
+        endl1 = Point3d.Add(y,(vec1*length))
+        mLine1 = Line(y,endl1)
         
+        vec2 = rs.VectorRotate(vecDir,60,(0,0,1))
+        endl2 = Point3d.Add(y,(vec2*length))
+        mLine2 = Line(y,endl2)
+        #Line.to
+        iSect1 = Rhino.Geometry.Intersect.Intersection.CurveCurve(rarea,mLine1.ToNurbsCurve(),0,0)
+        iSect2 = Rhino.Geometry.Intersect.Intersection.CurveCurve(rarea,mLine2.ToNurbsCurve(),0,0)
+        
+        for inte in iSect1:
+            point1 = inte.PointA
+            
+        for inte in iSect2:
+            point2 = inte.PointA
+            
+        print (mLine1.Direction/mLine1.Length)
+        
+        #print point1
+        #print point2
+        
+        deg = math.degrees(math.atan2(vec1.Y,vec1.X)-math.atan2(vec2.Y,vec2.X))
+        #print deg
+        
+        #Vector3d.Unitize(
+        vpointList = []
+        for poin in rarea.Points:
+            vect = Vector3d.Subtract(Vector3d(poin.Location),Vector3d(y))
+            vect.Unitize()
+            angle = math.degrees(math.atan2(vect.Y,vect.X)-math.atan2(vec1.Y,vec1.X))
+            if angle &gt;= 0 and angle &lt;= 120:
+                vpointList.append((vect,poin.Location))
+        #print vpointList
+        
+        vpointList.sort(key = lambda x: math.degrees(math.atan2(x[0].Y,x[0].X)-math.atan2(vec1.Y,vec1.X)),reverse = True)
+        
+        #print vpointList
+        pointList = []
+        pointList.append(y)
+        pointList.append(point2)
+        for vpoint in vpointList:
+            pointList.append(vpoint[1])
+        pointList.append(point1)
+        pointList.append(y)
+        
+        #print pointList
+        
+        
+        view = sc.doc.Views.ActiveView.ActiveViewport      
+        objectList = rh.RhinoDoc.ActiveDoc.Objects.FindByCrossingWindowRegion(view,pointList,True,rh.DocObjects.ObjectType.Curve)
+        
+        sc.doc = rh.RhinoDoc.ActiveDoc
+        layerIndex = sc.doc.Layers.Find("ARS_DINDING",True)
+        sc.doc = ghdoc
+        
+        wallList = [item for item in objectList if item.Attributes.LayerIndex == layerIndex]
+                
+        mLine2.To = point2
+        mLine1.To = point1
+        
+        #Rhino.Geometry.Curve(
+        
+        viewArea = Polyline(pointList)
+        
+        print viewArea.Item
+        for i in viewArea.GetSegments():
+            print i#.GetType()
+            
+        #Polyline.GetSegments(
+        #for itm in viewArea.
+        
+        checkedWall = []
+        #print wallList.GetType()
+        #checkedWall.Size
+        #lon = len(checkedWall)
+        while len(wallList) &gt; 0:
+            curWall = wallList.pop()
+            #Rhino.DocObjects.CurveObject.
+            iSect = Rhino.Geometry.Intersect.Intersection.CurveCurve(viewArea.ToNurbsCurve(),curWall.Geometry,0,0)
+            #print curWall.Id
+            #for sect in iSect:
+                #print sect.PointA
+                #print sect.PointB
+            #print len(iSect)
+            pointToConsiderate = []
+            
+            #intersection point
+            for sect in iSect:
+                pointToConsiderate.append(sect.PointA)
+            
+            #point in wall inside view area + projection into view area
+            #Rhino.Geometry.Curve.Contains(
+            isPol,pointInCurve = curWall.Geometry.TryGetPolyline()
+            #pointInCurve = pointInCurve[:-1]
+            
+            #pointInside = [p for p in pointInCurve if viewArea.Contains(p) == Rhino.Geometry.PointContainment.Inside]
+            pointInside = []
+            for p in pointInCurve:
+                pointPos = viewArea.Contains(p)
+                if pointPos == Rhino.Geometry.PointContainment.Inside:
+                    vDir = Point3d.Subtract(p,y)
+                    vDir.Unitize()
+                    line = Line(y,vDir,length)
+                
+                    iSect = Rhino.Geometry.Intersect.Intersection.CurveCurve(viewArea.ToNurbsCurve(),line.ToNurbsCurve(),0,0)
+                    
+                    for sect in iSect:
+                        pointInside.append((p,sect.pointA))
+                        #TODO: sort pointInside based on projection which has smallest placement in curve
+                        #HINT: possibly using Rhino.Geometry.Curve.ClosestPoint
+                    
+            #Rhino.Geometry.Curve.ClosestPoint(
+            #pointToConsiderate.extend(pointInside)
+            
+            #projection of point inside curve
+            #for p in pointInside:
+                #vDir = Point3d.Subtract(p,y)
+                #vDir.Unitize()
+                #line = Line(y,vDir,length)
+                
+                #iSect = Rhino.Geometry.Intersect.Intersection.CurveCurve(viewArea.ToNurbsCurve(),line.ToNurbsCurve(),0,0)
+                #for sect in iSect:
+                   # pointToConsiderate.append(sect.PointA)
+                
+            
+            
+            
+            for p in pointToConsiderate:
+                print p
+        
+        
+        
+        #for wall in wallList:
+            #print wall.Geometry.GetType()
+            #Rhino.DocObjects.CurveObject.Geometry
+            #iSect = Rhino.Geometry.Intersect.Intersection.CurveCurve(wall.Geometry,mLine2.ToNurbsCurve(),0,0)
+            #for inte in iSect:
+                
+        
+        
+            #vect = vect/vect.Length
+        #Rhino.Geometry.Intersect.IntersectionEvent.PointA
+        
+        #Rhino.Geometry.Intersect.CurveIntersections.Item
+        #Rhino.Geometry.Line(
+        #print iSect
+        print "ccccccccccccccccc"
+        
+        #view = sc.doc.Views.ActiveView.ActiveViewport      
+        #objectList = rh.RhinoDoc.ActiveDoc.Objects.FindByCrossingWindowRegion(view,pl,True,rh.DocObjects.ObjectType.Curve)
+        #Vector3d.Rotate(
         #print objectList
-        for oi in objectList:
+        #for oi in objectList:
             #rg.Intersect.Intersection.CurveCurve(
             #rs.CurveCurveIntersection
-            print oi.Id
+            #print oi.Id
             #rs.CurveCurveIntersection(
             #iter = []
-            iter = rs.CurveCurveIntersection(oi.CurveGeometry,x,0)
+            #iter = rs.CurveCurveIntersection(oi.CurveGeometry,x,0)
             #p = []
             #iter(p)
-            if not iter:
-                continue
-            print iter
+            #if not iter:
+                #continue
+            #print iter
             #print p
             #for aa in iter:
                 #print aa
-            print "bbbbbbbbbbb"
+            #print "bbbbbbbbbbb"
         # return outputs if you have them; here I try it for you:
         return None
 </item>
                     <item name="Description" type_name="gh_string" type_code="10">GhPython provides a Python script component</item>
                     <item name="EditorLocation" type_name="gh_drawing_point" type_code="30">
-                      <X>108</X>
-                      <Y>630</Y>
+                      <X>-8</X>
+                      <Y>-8</Y>
                     </item>
                     <item name="EditorSize" type_name="gh_drawing_size" type_code="32">
-                      <W>558</W>
-                      <H>571</H>
+                      <W>465</W>
+                      <H>743</H>
                     </item>
                     <item name="HideInput" type_name="gh_bool" type_code="1">true</item>
                     <item name="HideOutput" type_name="gh_bool" type_code="1">true</item>
@@ -167,7 +327,7 @@ class MyComponent(component):
                   </items>
                   <chunks count="2">
                     <chunk name="Attributes">
-                      <items count="2">
+                      <items count="3">
                         <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                           <X>520</X>
                           <Y>206</Y>
@@ -178,6 +338,7 @@ class MyComponent(component):
                           <X>549</X>
                           <Y>236</Y>
                         </item>
+                        <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                       </items>
                     </chunk>
                     <chunk name="ParameterData">
@@ -205,7 +366,7 @@ class MyComponent(component):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="2">
+                              <items count="3">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>522</X>
                                   <Y>208</Y>
@@ -216,12 +377,13 @@ class MyComponent(component):
                                   <X>529.5</X>
                                   <Y>222</Y>
                                 </item>
+                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
                         </chunk>
                         <chunk name="InputParam" index="1">
-                          <items count="10">
+                          <items count="11">
                             <item name="AllowTreeAccess" type_name="gh_bool" type_code="1">true</item>
                             <item name="Description" type_name="gh_string" type_code="10">Script input y.</item>
                             <item name="InstanceGuid" type_name="gh_guid" type_code="9">d2a8ffdc-5b04-420e-a3ef-c120c6572351</item>
@@ -230,12 +392,13 @@ class MyComponent(component):
                             <item name="Optional" type_name="gh_bool" type_code="1">true</item>
                             <item name="ScriptParamAccess" type_name="gh_int32" type_code="3">0</item>
                             <item name="ShowTypeHints" type_name="gh_bool" type_code="1">true</item>
-                            <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
-                            <item name="TypeHintID" type_name="gh_guid" type_code="9">87f87f55-5b71-41f4-8aea-21d494016f81</item>
+                            <item name="Source" index="0" type_name="gh_guid" type_code="9">3de1b0a6-5316-4b04-ad29-f737b3cdc149</item>
+                            <item name="SourceCount" type_name="gh_int32" type_code="3">1</item>
+                            <item name="TypeHintID" type_name="gh_guid" type_code="9">e1937b56-b1da-4c12-8bd8-e34ee81746ef</item>
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="2">
+                              <items count="3">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>522</X>
                                   <Y>236</Y>
@@ -246,6 +409,7 @@ class MyComponent(component):
                                   <X>529.5</X>
                                   <Y>250</Y>
                                 </item>
+                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -261,7 +425,7 @@ class MyComponent(component):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="2">
+                              <items count="3">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>564</X>
                                   <Y>208</Y>
@@ -272,6 +436,7 @@ class MyComponent(component):
                                   <X>572</X>
                                   <Y>236</Y>
                                 </item>
+                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -326,8 +491,8 @@ class MyComponent(component):
                             <chunk name="Item" index="0">
                               <items count="2">
                                 <item name="Plane" type_name="gh_plane" type_code="72">
-                                  <Ox>4.27246987238287</Ox>
-                                  <Oy>1.1417056657222</Oy>
+                                  <Ox>0.687620323994039</Ox>
+                                  <Oy>2.28815518049282</Oy>
                                   <Oz>0</Oz>
                                   <Xx>1</Xx>
                                   <Xy>0</Xy>
@@ -337,10 +502,10 @@ class MyComponent(component):
                                   <Yz>0</Yz>
                                 </item>
                                 <item name="Size" type_name="gh_interval2d" type_code="61">
-                                  <Au>-1.45983078887919</Au>
-                                  <Bu>1.45983078887919</Bu>
-                                  <Av>-1.83541832194034</Av>
-                                  <Bv>1.83541832194034</Bv>
+                                  <Au>-1.1170810276402</Au>
+                                  <Bu>1.1170810276402</Bu>
+                                  <Av>-2.46106913901982</Av>
+                                  <Bv>2.46106913901982</Bv>
                                 </item>
                               </items>
                             </chunk>
@@ -385,7 +550,6 @@ class MyComponent(component):
         import rhinoscriptsyntax as rs
         
         rarea = rs.coercecurve(x)
-        Rhino.Geometry.Line(
         print rarea.GetType()
         rc,pl = rarea.TryGetPolyline()
         print pl.GetType()
@@ -414,7 +578,7 @@ class MyComponent(component):
                   </items>
                   <chunks count="2">
                     <chunk name="Attributes">
-                      <items count="3">
+                      <items count="2">
                         <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                           <X>231</X>
                           <Y>336</Y>
@@ -425,7 +589,6 @@ class MyComponent(component):
                           <X>260</X>
                           <Y>366</Y>
                         </item>
-                        <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                       </items>
                     </chunk>
                     <chunk name="ParameterData">
@@ -453,7 +616,7 @@ class MyComponent(component):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="3">
+                              <items count="2">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>233</X>
                                   <Y>338</Y>
@@ -464,7 +627,6 @@ class MyComponent(component):
                                   <X>240.5</X>
                                   <Y>352</Y>
                                 </item>
-                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -485,7 +647,7 @@ class MyComponent(component):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="3">
+                              <items count="2">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>233</X>
                                   <Y>366</Y>
@@ -496,7 +658,6 @@ class MyComponent(component):
                                   <X>240.5</X>
                                   <Y>380</Y>
                                 </item>
-                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -512,7 +673,7 @@ class MyComponent(component):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="3">
+                              <items count="2">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>275</X>
                                   <Y>338</Y>
@@ -523,7 +684,6 @@ class MyComponent(component):
                                   <X>283</X>
                                   <Y>366</Y>
                                 </item>
-                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -577,17 +737,13 @@ class MyComponent(component):
                           <chunks count="1">
                             <chunk name="Item" index="0">
                               <!--GH_Point only stores data which exists, test the existence of data fields prior to reading.-->
-                              <chunks count="1">
-                                <chunk name="ReferenceData">
-                                  <items count="5">
-                                    <item name="RefID" type_name="gh_guid" type_code="9">848d17b1-70a1-4734-b7ad-28580e753abc</item>
-                                    <item name="RefIndex" type_name="gh_int32" type_code="3">-1</item>
-                                    <item name="RefParam" index="0" type_name="gh_double" type_code="6">0</item>
-                                    <item name="RefParam" index="1" type_name="gh_double" type_code="6">0</item>
-                                    <item name="RefType" type_name="gh_string" type_code="10">point_object</item>
-                                  </items>
-                                </chunk>
-                              </chunks>
+                              <items count="1">
+                                <item name="Coordinate" type_name="gh_point3d" type_code="51">
+                                  <X>0.973915973304484</X>
+                                  <Y>2.51476030326695</Y>
+                                  <Z>0</Z>
+                                </item>
+                              </items>
                             </chunk>
                           </chunks>
                         </chunk>
@@ -604,7 +760,7 @@ class MyComponent(component):
     <chunk name="Thumbnail">
       <items count="1">
         <item name="Thumbnail" type_name="gh_drawing_bitmap" type_code="37">
-          <bitmap length="2633">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</bitmap>
+          <bitmap length="3496">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</bitmap>
         </item>
       </items>
     </chunk>
