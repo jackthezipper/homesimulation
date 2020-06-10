@@ -9,6 +9,8 @@ STATUS_UNCHECKED = 0
 STATUS_INCHECK = STATUS_UNCHECKED + 1
 STATUS_CHECKED = STATUS_INCHECK + 1
 
+OVERLAP_LIMIT = 4
+
 class Node():
 	"""A node class for A* Pathfinding"""
 
@@ -368,8 +370,8 @@ def reconstructPath(node):
 	# return path
 
 def TranslateToRealPos(pos):
-	realX = Map.topPos.X + ((pos[0]*0.1) + 0.05)
-	realY = Map.topPos.Y - ((pos[1]*0.1) + 0.05)
+	realX = Map.topPos.X + ((pos[0]*0.08) + 0.04)
+	realY = Map.topPos.Y - ((pos[1]*0.08) + 0.04)
 	return (realX,realY)
 
 def InsertNode(node,list):
@@ -486,7 +488,7 @@ def astarv3(start, end,ignoreIndex,liveBlocker = False):
 					if index == ignoreIndex:
 						continue
 					diffTile = max(abs(coord[0] - block[0]),abs(coord[1] - block[1]))
-					overlapWithOther = diffTile < 6
+					overlapWithOther = diffTile < OVERLAP_LIMIT
 					if overlapWithOther:
 						break
 					if (diffTile < 10):
@@ -596,7 +598,7 @@ def lineInSightv2(startX,startY,endX,endY,ignoreIndex,liveBlocker = False):
 				for index,block in enumerate(Map.liveBlock):
 					if index == ignoreIndex:
 						continue
-					if (abs(checkY - block[0]) < 6) and (abs(checkX - block[1]) < 6):
+					if (abs(checkY - block[0]) < OVERLAP_LIMIT) and (abs(checkX - block[1]) < OVERLAP_LIMIT):
 						print "at live block "+str(checkY)+" "+str(checkX)
 						return False
 
@@ -626,7 +628,7 @@ def lineInSightv2(startX,startY,endX,endY,ignoreIndex,liveBlocker = False):
 				for index,block in enumerate(Map.liveBlock):
 					if index == ignoreIndex:
 						continue
-					if (abs(checkY - block[0]) < 6) and (abs(checkX - block[1]) < 6):
+					if (abs(checkY - block[0]) < OVERLAP_LIMIT) and (abs(checkX - block[1]) < OVERLAP_LIMIT):
 						return False
 			
 			if Map.additionalWeight[checkY][checkX] > 0:

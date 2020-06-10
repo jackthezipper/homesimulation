@@ -107,7 +107,7 @@ class Agent:
 			#print distance
 			#print self.moveDir
 			
-			if distance > 0.1:
+			if distance > 0.08:
 				myGrid = TranslateToGridPos(self.pos)
 				self.blockedBy,blocked = PathFinding.IsBlocked(myGrid)
 				if blocked:
@@ -217,8 +217,8 @@ def TranslateToGridPos(pos):
 	#print pos
 	#print PathFinding.Map.topPos.GetType()
 	try:
-		gridX = int(math.floor((pos.X - PathFinding.Map.topPos.X)/0.1))
-		gridY = int(math.floor((PathFinding.Map.topPos.Y - pos.Y)/0.1))
+		gridX = int(math.floor((pos.X - PathFinding.Map.topPos.X)/0.08))
+		gridY = int(math.floor((PathFinding.Map.topPos.Y - pos.Y)/0.08))
 		posGrid = (gridX,gridY)
 	except Exception as e:
 		print e
