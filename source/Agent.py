@@ -6,6 +6,7 @@ import sys
 #import custom file
 import Target
 import PathFinding
+import Schedule
 
 from Rhino.Geometry import Point3d, Vector3f
 import rhinoscriptsyntax as rs
@@ -29,7 +30,7 @@ class Agent:
 		self.state = state
 		self.initialPos = position
 		self.hasNewTarget = False
-		self.waitTime = 0
+		self.waitTime = Schedule.SCHEDULE[index][0][1]
 		self.myPath = None
 		self.pathIndex = 0
 		self.target = None
@@ -39,11 +40,13 @@ class Agent:
 		self.blockedBy = -1
 		self.blockCounter = 0
 		self.hasWait = False
+		self.targetIndex = 0
 	
 	def setTarget(self,newTarget):
 		self.target = newTarget
 		self.hasNewTarget = True
-		self.target.available = False
+		if newTarget != None:
+			self.target.available = False
 	
 	def update(self):
 		# if Agent.hasErr:
@@ -57,6 +60,9 @@ class Agent:
 				return self.pos
 			#if not self.pathCalculated:
 			self.calculateNextTarget()
+			if self.target == None:
+				print "cannot find targetimo"
+				return self.pos
 			start = None
 			if self.oldEntryPoint != None:
 				start = TranslateToGridPos(self.oldEntryPoint.pos)
@@ -77,6 +83,11 @@ class Agent:
 				print "inserting "+str(self.pos)
 				self.myPath.insert(0,self.pos)
 			
+			print "kokota"
+			print self.entryPoint
+			print self.entryPoint.pos
+			print self.entryPoint.target
+			print self.entryPoint.target.targetPoint
 			if self.entryPoint.pos != self.entryPoint.target.targetPoint:# and not self.pathCalculated:
 				print "appendix "+str(self.entryPoint.target.targetPoint)
 				self.myPath.append(self.entryPoint.target.targetPoint)
@@ -184,10 +195,29 @@ class Agent:
 	
 	def calculateNextTarget(self):
 		#print "abalabalsuuuzzziccc"
-		availableTarget = [target for target in Agent.possibleTarget if target.available]
+		if self.targetIndex == len(Schedule.SCHEDULE[self.myIndex]):
+			print "rettainoi"
+			self.setTarget(None)
+			return
+		nextSchedule = Schedule.SCHEDULE[self.myIndex][self.targetIndex + 1]
+		print nextSchedule
+		availableTarget = [target for target in Agent.possibleTarget if target.available and target.hasActivity(nextSchedule[0])]
+		print availableTarget
 		if self.target != None:
 			self.target.available = True
-		self.setTarget(availableTarget[random.randrange(len(availableTarget))])
+			
+		if len(availableTarget) > 0:
+			if self.target != None:
+				self.targetIndex += 1
+			self.setTarget(availableTarget[0])
+		else:
+			self.setTarget(None)
+			return
+			
+			
+		# self.setTarget(availableTarget[random.randrange(len(availableTarget))])
+		
+		
 		entryPointL = []#[ep for ep in Agent.entryPointList if (ep.target.targetPoint == self.target)]
 		# print Agent.entryPointList
 		for ep in Agent.entryPointList:
@@ -195,17 +225,17 @@ class Agent:
 			# print self.target
 			if ep.target == self.target:
 				entryPointL.append(ep)
-				# print "appen"
+			# print "appen"
 		selectedEntry = 0
 		distanceMin = float(sys.maxint)
 		for (i,ep) in enumerate(entryPointL):
 			curDistance = self.pos.DistanceTo(ep.pos)
-			if curDistance == distanceMin:
+			if curDistance < distanceMin:
 				curDistance = distanceMin
 				selectedEntry = i
 		self.oldEntryPoint = self.entryPoint
 		self.entryPoint = entryPointL[selectedEntry]
-		
+
 	def recalculateMoveDir(self):
 		#print self.myPath
 		destination  = self.myPath[self.pathIndex]
