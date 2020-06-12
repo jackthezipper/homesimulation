@@ -21,6 +21,7 @@ class Agent:
 	possibleTarget = []
 	entryPointList = []
 	hasErr = False
+	agentList = []
 	
 	def __init__(self,position,targetPoint,index,state = STATE_IDLE):
 		self.pos = position
@@ -30,7 +31,7 @@ class Agent:
 		self.state = state
 		self.initialPos = position
 		self.hasNewTarget = False
-		self.waitTime = Schedule.SCHEDULE[index][0][1]
+		self.waitTime = (Schedule.SCHEDULE[index][0][1] * 20 / 3)
 		self.myPath = None
 		self.pathIndex = 0
 		self.target = None
@@ -200,7 +201,7 @@ class Agent:
 					self.recalculateMoveDir()
 				else:
 					self.state = STATE_WAIT
-					self.waitTime = 20
+					self.waitTime = (Schedule.SCHEDULE[self.myIndex][self.targetIndex][1] * 20 / 3)
 			self.hasWait = False
 			return self.pos
 	
@@ -214,13 +215,24 @@ class Agent:
 		print nextSchedule
 		availableTarget = [target for target in Agent.possibleTarget if target.available and target.hasActivity(nextSchedule[0])]
 		print availableTarget
+		
+		
+		
 		if self.target != None:
 			self.target.available = True
 			
 		if len(availableTarget) > 0:
+			specificTarget = [target for target in availableTarget if target.isSpecificToAgent(self.myIndex)]
+		
+			if specificTarget != None and len(specificTarget) > 0:
+				availableTarget = specificTarget
+				
 			if self.target != None:
 				self.targetIndex += 1
-			self.setTarget(availableTarget[0])
+			print availableTarget
+			ron = random.randint(0,len(availableTarget)-1)
+			print ron
+			self.setTarget(availableTarget[ron])
 		else:
 			self.setTarget(None)
 			return
