@@ -41,6 +41,8 @@ class Agent:
 		self.blockCounter = 0
 		self.hasWait = False
 		self.targetIndex = 0
+		self.initialized = False
+		self.canGetNewTarget = True
 	
 	def setTarget(self,newTarget):
 		self.target = newTarget
@@ -53,17 +55,25 @@ class Agent:
 			# i = 0
 			# while i<10000:
 				# i+=1
+		print "initializuuuuuu "+str(self.initialized)
+		if not self.initialized:
+			self.AssignToClosestTarget()
+			self.initialized = True
 		if self.state != STATE_MOVE:
 			self.pathIndex = 1
+			print "ma waite "+ str(self.waitTime)
 			if self.waitTime > 0:
 				self.waitTime -=1
 				return self.pos
-			#if not self.pathCalculated:
-			self.calculateNextTarget()
+			# if not self.pathCalculated:
+			if self.canGetNewTarget:
+				self.calculateNextTarget()
+				self.canGetNewTarget = False
 			if self.target == None:
 				print "cannot find targetimo"
 				return self.pos
 			start = None
+			print "tariga "+str(self.target.targetPoint)
 			if self.oldEntryPoint != None:
 				start = TranslateToGridPos(self.oldEntryPoint.pos)
 			else:
@@ -72,30 +82,30 @@ class Agent:
 			print "estar"
 			# print start
 			# print end
-			#if not self.pathCalculated:
+			# if not self.pathCalculated:
 			self.myPath = PathFinding.astarv3(start,end,self.myIndex)
 			
 			#No path found. Wait a moment
 			if self.myPath == None:
 				return self.pos
 			
-			if self.oldEntryPoint != None:
+			if self.oldEntryPoint != None:# and not self.pathCalculated:
 				print "inserting "+str(self.pos)
 				self.myPath.insert(0,self.pos)
 			
-			print "kokota"
-			print self.entryPoint
-			print self.entryPoint.pos
-			print self.entryPoint.target
-			print self.entryPoint.target.targetPoint
+			# print "kokota"
+			# print self.entryPoint
+			# print self.entryPoint.pos
+			# print self.entryPoint.target
+			# print self.entryPoint.target.targetPoint
 			if self.entryPoint.pos != self.entryPoint.target.targetPoint:# and not self.pathCalculated:
 				print "appendix "+str(self.entryPoint.target.targetPoint)
 				self.myPath.append(self.entryPoint.target.targetPoint)
-			#self.pathCalculated = True
-			# print "parat"
-			# for pata in self.myPath:
-				# print TranslateToGridPos(pata)
-			# print "petok"
+			# self.pathCalculated = True
+			print "parat"
+			for pata in self.myPath:
+				print TranslateToGridPos(pata)
+			print "petok"
 			#print self.myPath
 			self.pathIndex = 1
 			self.recalculateMoveDir()
@@ -132,7 +142,7 @@ class Agent:
 					print "radongle "+str(angle)
 					angle = math.degrees(angle)
 					print "dedengle "+str(angle)
-					if angle > 60 and abs(myGrid[0]-PathFinding.Map.liveBlock[self.blockedBy][0]) > 6 and abs(myGrid[1]-PathFinding.Map.liveBlock[self.blockedBy][1]) > 6:
+					if angle > 60 and (abs(myGrid[0]-PathFinding.Map.liveBlock[self.blockedBy][0]) > PathFinding.OVERLAP_LIMIT or abs(myGrid[1]-PathFinding.Map.liveBlock[self.blockedBy][1]) > PathFinding.OVERLAP_LIMIT):
 						blocked = False
 					if self.entryPoint.pos != self.entryPoint.target.targetPoint and self.pathIndex == (len(self.myPath) - 1):
 						blocked = False
@@ -185,6 +195,7 @@ class Agent:
 			else:
 				self.pos = destination
 				self.pathIndex+=1
+				self.canGetNewTarget = True
 				if self.pathIndex < len(self.myPath):
 					self.recalculateMoveDir()
 				else:
@@ -241,6 +252,28 @@ class Agent:
 		destination  = self.myPath[self.pathIndex]
 		self.moveDir = Vector3f.Subtract(Vector3f(destination.X,destination.Y,destination.Z),Vector3f(self.pos.X,self.pos.Y,self.pos.Z))
 		self.moveDir = Vector3f.Divide(self.moveDir,self.moveDir.Length*20)
+		
+	def AssignToClosestTarget(self):
+		print "targetasukof"
+		distanceMin = float(sys.maxint)
+		targetIndex = 0
+		for (i,target) in enumerate(Agent.possibleTarget):
+			curDistance = self.pos.DistanceTo(target.targetPoint)
+			if curDistance < distanceMin:
+				distanceMin = curDistance
+				targetIndex = i
+		print Agent.possibleTarget[targetIndex]
+		print Agent.possibleTarget[targetIndex].targetPoint
+		epList = []#[ep for ep in Agent.entryPointList if ep.target == Agent.possibleTarget[targetIndex]]
+		for (i,ep) in enumerate(Agent.entryPointList):
+			print "check epo "+str(i)
+			print ep.target
+			print ep.target.targetPoint
+			if ep.target == Agent.possibleTarget[targetIndex]:
+				print "inklading"
+				epList.append(ep)
+		self.setTarget(Agent.possibleTarget[targetIndex])
+		self.entryPoint = epList[0]
 
 def TranslateToGridPos(pos):
 	#print "aa"
