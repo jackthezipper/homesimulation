@@ -207,7 +207,7 @@ class Agent:
 	
 	def calculateNextTarget(self):
 		#print "abalabalsuuuzzziccc"
-		if self.targetIndex == len(Schedule.SCHEDULE[self.myIndex]):
+		if self.targetIndex == len(Schedule.SCHEDULE[self.myIndex]) - 1:
 			print "rettainoi"
 			self.setTarget(None)
 			return
