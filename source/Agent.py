@@ -8,8 +8,11 @@ import Target
 import PathFinding
 import Schedule
 
-from Rhino.Geometry import Point3d, Vector3f
+from Rhino.Geometry import Point3d, Vector3f,Vector3d,Line,Polyline
 import rhinoscriptsyntax as rs
+
+import scriptcontext as sc
+import Rhino.Geometry
 
 PathFinding = reload(PathFinding)
 
@@ -44,6 +47,9 @@ class Agent:
 		self.targetIndex = 0
 		self.initialized = False
 		self.canGetNewTarget = True
+		self.boundArea = None
+		
+		self.objectList = []
 	
 	def setTarget(self,newTarget):
 		self.target = newTarget
@@ -286,6 +292,58 @@ class Agent:
 				epList.append(ep)
 		self.setTarget(Agent.possibleTarget[targetIndex])
 		self.entryPoint = epList[0]
+		
+	def setBoundArea(self,area):
+		self.boundArea = area
+		
+	def updateView(self):
+		print "vrtijo"
+		print self.boundArea
+		curveBound = rs.coercecurve(self.boundArea)
+		rc,pl = curveBound.TryGetPolyline()
+		
+		diagL = Vector3d.Subtract(Vector3d(curveBound.Points[0].Location),Vector3d(curveBound.Points[2].Location)).Length
+		
+		vec1 = rs.VectorRotate(self.moveDir,-60,(0,0,1))
+		endl1 = Point3d.Add(self.pos,(vec1*diagL))
+		mLine1 = Line(self.pos,endl1)
+		
+		vec2 = rs.VectorRotate(self.moveDir,60,(0,0,1))
+		endl2 = Point3d.Add(self.pos,(vec2*diagL))
+		mLine2 = Line(self.pos,endl2)
+		#Line.to
+		iSect1 = Rhino.Geometry.Intersect.Intersection.CurveCurve(curveBound,mLine1.ToNurbsCurve(),0,0)
+		iSect2 = Rhino.Geometry.Intersect.Intersection.CurveCurve(curveBound,mLine2.ToNurbsCurve(),0,0)
+		
+		for inte in iSect1:
+			point1 = inte.PointA
+			
+		for inte in iSect2:
+			point2 = inte.PointA
+			
+		vpointList = []
+		for poin in curveBound.Points:
+			vect = Vector3d.Subtract(Vector3d(poin.Location),Vector3d(self.pos))
+			vect.Unitize()
+			angle = math.degrees(math.atan2(vect.Y,vect.X)-math.atan2(vec1.Y,vec1.X))
+			if angle >= 0 and angle <= 120:
+				vpointList.append((vect,poin.Location))
+		
+		vpointList.sort(key = lambda x: math.degrees(math.atan2(x[0].Y,x[0].X)-math.atan2(vec1.Y,vec1.X)),reverse = True)
+		
+		#print vpointList
+		pointList = []
+		pointList.append(self.pos)
+		pointList.append(point2)
+		for vpoint in vpointList:
+			pointList.append(vpoint[1])
+		pointList.append(point1)
+		pointList.append(self.pos)
+		
+		view = sc.doc.Views.ActiveView.ActiveViewport      
+		self.objectList = Rhino.RhinoDoc.ActiveDoc.Objects.FindByCrossingWindowRegion(view,pointList,True,Rhino.DocObjects.InstanceObject)
+		print olist
+		print self.objectList
 
 def TranslateToGridPos(pos):
 	#print "aa"

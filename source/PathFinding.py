@@ -444,10 +444,10 @@ def astarv3(start, end,ignoreIndex,liveBlocker = False):
 	end_node = allHailNode[end[0]][end[1]]
 	end_node.g = end_node.h = end_node.f = 0
 	
-	if liveBlocker:
-		print "bolokar "+str(start)
-		for block in Map.liveBlock:
-			print block
+	# if liveBlocker:
+		# print "bolokar "+str(start)
+		# for block in Map.liveBlock:
+			# print block
 	# Initialize both open and closed list
 	open_list = []
 	# closed_list = []
