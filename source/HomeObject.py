@@ -2,6 +2,8 @@ import Target
 import EntryPoint
 
 class HomeObject:
+	HomeObjectList = []
+	
 	def __init__(self):
 		self.objectParts = []
 		self.targets = []
