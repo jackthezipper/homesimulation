@@ -50,6 +50,8 @@ class Agent:
 		self.boundArea = None
 		
 		self.objectList = []
+		
+		self.speedFactor = 0.15
 	
 	def setTarget(self,newTarget):
 		self.target = newTarget
@@ -135,16 +137,16 @@ class Agent:
 			#print distance
 			#print self.moveDir
 			
-			if distance > 0.08:
+			if distance > self.speedFactor:
 				myGrid = TranslateToGridPos(self.pos)
 				self.blockedBy,blocked = PathFinding.IsBlocked(myGrid)
 				if blocked:
 					blockPos = PathFinding.TranslateToRealPos(PathFinding.Map.liveBlock[self.blockedBy])
 					print blockPos
 					blockDir = Vector3f.Subtract(Vector3f(blockPos[0],blockPos[1],0),Vector3f(self.pos.X,self.pos.Y,0))
-					normalMoveDir = Vector3f.Divide(self.moveDir,self.moveDir.Length)
+					# normalMoveDir = Vector3f.Divide(self.moveDir,self.moveDir.Length)
 					blockDir = Vector3f.Divide(blockDir,blockDir.Length)
-					dotP = (blockDir.X*normalMoveDir.X) + (blockDir.Y*normalMoveDir.Y)
+					dotP = (blockDir.X*self.moveDir.X) + (blockDir.Y*self.moveDir.Y)
 					angle = math.acos(dotP)
 					print "radongle "+str(angle)
 					angle = math.degrees(angle)
@@ -174,7 +176,7 @@ class Agent:
 						print "waiteo"
 						self.blockCounter += 1
 						if self.blockCounter > 10 and self.myIndex > self.blockedBy and self.pathIndex > 2:
-							self.pos = rs.PointAdd(self.pos,(self.moveDir * (-1)))
+							self.pos = rs.PointAdd(self.pos,(Vector3d.Multiply(self.moveDir,self.speedFactor) * (-1)))
 						return self.pos
 					
 					if self.entryPoint.pos != self.entryPoint.target.targetPoint:
@@ -198,7 +200,7 @@ class Agent:
 				# for pata in self.myPath:
 					# print TranslateToGridPos(pata)
 				# print "petok"
-				self.pos = rs.PointAdd(self.pos,self.moveDir)
+				self.pos = rs.PointAdd(self.pos,Vector3d.Multiply(self.moveDir,self.speedFactor))
 			else:
 				self.pos = destination
 				self.pathIndex+=1
@@ -269,7 +271,8 @@ class Agent:
 		#print self.myPath
 		destination  = self.myPath[self.pathIndex]
 		self.moveDir = Vector3f.Subtract(Vector3f(destination.X,destination.Y,destination.Z),Vector3f(self.pos.X,self.pos.Y,self.pos.Z))
-		self.moveDir = Vector3f.Divide(self.moveDir,self.moveDir.Length*20)
+		self.moveDir.Unitize()
+		# self.moveDir = Vector3f.Divide(self.moveDir,self.moveDir.Length*20)
 		
 	def AssignToClosestTarget(self):
 		print "targetasukof"
