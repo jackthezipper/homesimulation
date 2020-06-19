@@ -34,7 +34,7 @@ class Agent:
 		self.state = state
 		self.initialPos = position
 		self.hasNewTarget = False
-		self.waitTime = (Schedule.SCHEDULE[index][0][1] * 20 / 3)
+		self.waitTime = (Schedule.SCHEDULE[index][0][1] * 5)
 		self.myPath = None
 		self.pathIndex = 0
 		self.target = None
@@ -77,10 +77,10 @@ class Agent:
 			# if not self.pathCalculated:
 			if self.canGetNewTarget:
 				self.calculateNextTarget()
-				self.canGetNewTarget = False
 			if self.target == None:
 				print "cannot find targetimo"
 				return self.pos
+			self.canGetNewTarget = False
 			start = None
 			print "tariga "+str(self.target.targetPoint)
 			if self.oldEntryPoint != None:
@@ -209,7 +209,7 @@ class Agent:
 					self.recalculateMoveDir()
 				else:
 					self.state = STATE_WAIT
-					self.waitTime = (Schedule.SCHEDULE[self.myIndex][self.targetIndex][1] * 20 / 3)
+					self.waitTime = (Schedule.SCHEDULE[self.myIndex][self.targetIndex][1] * 5)
 			self.hasWait = False
 			return self.pos
 	
@@ -219,21 +219,28 @@ class Agent:
 			print "rettainoi"
 			self.setTarget(None)
 			return
-		nextSchedule = Schedule.SCHEDULE[self.myIndex][self.targetIndex + 1]
-		print nextSchedule
-		availableTarget = [target for target in Agent.possibleTarget if target.available and target.hasActivity(nextSchedule[0])]
-		print availableTarget
-		
-		
-		
+			
 		if self.target != None:
 			self.target.available = True
 			
-		if len(availableTarget) > 0:
-			specificTarget = [target for target in availableTarget if target.isSpecificToAgent(self.myIndex)]
+		nextSchedule = Schedule.SCHEDULE[self.myIndex][self.targetIndex + 1]
+		print nextSchedule
+		availableTarget = [target for target in Agent.possibleTarget if target.available and target.hasActivity(nextSchedule[0])]
+		print "hole target"
+		print availableTarget
+	
+		specificTarget = [target for target in availableTarget if target.isSpecificToAgent(self.myIndex)]
+		print "daspecifica"
+		print specificTarget
 		
-			if specificTarget != None and len(specificTarget) > 0:
-				availableTarget = specificTarget
+		if specificTarget != None and len(specificTarget) > 0:
+			availableTarget = specificTarget
+		else:
+			availableTarget = [target for target in availableTarget if target.notHaveSpecific()]
+			print "non despio"
+			print availableTarget
+		
+		if len(availableTarget) > 0:
 				
 			if self.target != None:
 				self.targetIndex += 1

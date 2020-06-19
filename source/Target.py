@@ -25,4 +25,7 @@ class Target:
 			if spec == agent:
 				return True
 		return False
+		
+	def notHaveSpecific(self):
+		return (len(self.specificAgent) == 0)
 	
