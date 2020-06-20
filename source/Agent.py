@@ -7,6 +7,7 @@ import sys
 import Target
 import PathFinding
 import Schedule
+Schedule = reload(Schedule)
 
 from Rhino.Geometry import Point3d, Vector3f,Vector3d,Line,Polyline
 import rhinoscriptsyntax as rs
@@ -98,8 +99,8 @@ class Agent:
 			if self.myPath == None:
 				return self.pos
 			
-			if self.oldEntryPoint != None:# and not self.pathCalculated:
-				print "inserting "+str(self.pos)
+			if self.oldEntryPoint != None and self.myPath[0] != self.pos:# and not self.pathCalculated:
+				print "inserting "+str(self.pos)+" "+str(self.myPath[0])+"endis"
 				self.myPath.insert(0,self.pos)
 			
 			# print "kokota"
