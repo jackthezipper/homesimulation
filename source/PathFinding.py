@@ -15,16 +15,12 @@ class Node():
 	"""A node class for A* Pathfinding"""
 
 	def __init__(self, parent=None, position=None, selfReference=False):
+		self.position = position
+
+		self.reset()
 		self.parent = parent
 		if selfReference:
 			self.parent = self
-		self.position = position
-
-		self.g = 0
-		self.h = 0
-		self.f = 0
-		self.isClosed = False
-		self.isOpen = False
 
 	def equals(self, other):
 		if other == None:
@@ -34,11 +30,20 @@ class Node():
 	def makeSelfReference(self):
 		self.parent = self
 		
+	def reset(self):
+		self.g = 0
+		self.h = 0
+		self.f = 0
+		self.isClosed = False
+		self.isOpen = False
+		self.parent = None
+		
 class Map():
 	topPos = None
 	maze = []
 	additionalWeight = []
 	liveBlock = []
+	allNode = None
 
 def euclidian(posA,posB):
 	diffX = posA[0] - posB[0]
@@ -49,19 +54,6 @@ def TranslateToRealPos(pos):
 	realX = Map.topPos.X + ((pos[0]*0.08) + 0.04)
 	realY = Map.topPos.Y - ((pos[1]*0.08) + 0.04)
 	return (realX,realY)
-
-# def InsertNode(node,list):
-	# listLen = len(list)
-	# limitUp = listLen - 1
-	# limitDown = 0
-	# mid = 0
-	# while (limitUp - limitDown) > 1:
-		# mid = (limitUp - limitDown)/2
-		# if list[mid].f > node.f:
-			# limitUp = mid
-		# else:
-			# limitDown = mid
-	# list.insert(mid,node)
 
 DIR_UP = 0
 DIR_UPRIGHT = DIR_UP + 1
@@ -87,24 +79,28 @@ def getDir(nodeA,nodeB):
 
 def astarv3(start, end,ignoreIndex,liveBlocker = False):
 	"""Returns a list of tuples as a path from the given start to the given end in the given maze"""
-
-	#print "create node"
-	allHailNode = [[None for i in range(len(Map.maze[0]))] for j in range(len(Map.maze))]
+	
+	if Map.allNode == None:
+		Map.allNode = [[None for i in range(len(Map.maze[0]))] for j in range(len(Map.maze))]
+		for i in range(len(Map.maze)):
+			for j in range(len(Map.maze[0])):
+				Map.allNode[i][j] = Node(None, (i,j))
 	for i in range(len(Map.maze)):
 		for j in range(len(Map.maze[0])):
-			allHailNode[i][j] = Node(None, (i,j))
-	#print "done create node"
+			Map.allNode[i][j].reset()
+	# allHailNode = [[None for i in range(len(Map.maze[0]))] for j in range(len(Map.maze))]
+	# for i in range(len(Map.maze)):
+		# for j in range(len(Map.maze[0])):
+			# allHailNode[i][j] = Node(None, (i,j))
 	# Create start and end node
-	start_node = allHailNode[start[0]][start[1]]
+	# start_node = allHailNode[start[0]][start[1]]
+	start_node = Map.allNode[start[0]][start[1]]
 	start_node.makeSelfReference()
 	start_node.g = start_node.h = start_node.f = 0
-	end_node = allHailNode[end[0]][end[1]]
+	# end_node = allHailNode[end[0]][end[1]]
+	end_node = Map.allNode[end[0]][end[1]]
 	end_node.g = end_node.h = end_node.f = 0
 	
-	# if liveBlocker:
-		# print "bolokar "+str(start)
-		# for block in Map.liveBlock:
-			# print block
 	# Initialize both open and closed list
 	open_list = []
 	# closed_list = []
@@ -123,13 +119,10 @@ def astarv3(start, end,ignoreIndex,liveBlocker = False):
 		current_node.isOpen = False
 		current_node.isClosed = True
 		if current_node.equals(end_node):
-			print('Path found')
-			# print "itecon "+str(iter)
 			return reconstructPathv2(current_node,liveBlocker)
 			break
 	
-		for new_position in [(0, -1), (0, 1), (-1, 0), (1, 0)]: #[(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]:
-		# for new_position in [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]:
+		for new_position in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
 			coord = (current_node.position[0]+new_position[0],current_node.position[1]+new_position[1])
 			if (coord[0] < 0) or (coord[1] < 0) or (coord[0] >= len(Map.maze)) or (coord[1] >= len(Map.maze[0])):
 				continue
@@ -153,9 +146,6 @@ def astarv3(start, end,ignoreIndex,liveBlocker = False):
 						break
 				if overlapWithOther:
 					continue
-			# iter+=1
-			
-			# print "ceki "+str(coord)
 			nodeCheck = allHailNode[coord[0]][coord[1]]
 			if not (nodeCheck.isClosed):
 				isOldNode = nodeCheck.isOpen
@@ -169,27 +159,19 @@ def astarv3(start, end,ignoreIndex,liveBlocker = False):
 				nodeCheck.f = nodeCheck.g + euclidian(nodeCheck.position,end)
 				if not isOldNode:
 					InsertNode(nodeCheck,open_list)
-	# print "itecon "+str(iter)
-	print "nonyepat"
 	return None
 
 def InsertNode(node,list):
-	#print "insert list len "+str(len(list))
-	#print "inserting "+str(node.position)
 	listLen = len(list)
 	limitUp = listLen - 1
 	limitDown = 0
 	mid = 0
 	while (limitUp - limitDown) > 1:
-		#print "cek lim "+str(limitUp)+" "+str(limitDown)
 		mid = (limitUp + limitDown)/2
-		#print "mid "+str(mid)
-		#print "compare "+str(list[mid].f)+" to "+str(node.f)
 		if list[mid].f > node.f:
 			limitUp = mid
 		else:
 			limitDown = mid
-	#print "insert at "+str(mid)
 	list.insert(mid,node)
 	node.isOpen = True
 
