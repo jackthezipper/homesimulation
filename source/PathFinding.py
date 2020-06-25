@@ -146,12 +146,12 @@ def astarv3(start, end,ignoreIndex,liveBlocker = False):
 						break
 				if overlapWithOther:
 					continue
-			nodeCheck = allHailNode[coord[0]][coord[1]]
+			nodeCheck = Map.allNode[coord[0]][coord[1]]
 			if not (nodeCheck.isClosed):
 				isOldNode = nodeCheck.isOpen
 				if not isOldNode:
 					nodeCheck.g = sys.maxint
-				newG = current_node.g + (Map.additionalWeight[nodeCheck.position[0]][nodeCheck.position[1]]+liveBlockerWeight)**2# + euclidian(current_node.position,nodeCheck.position)
+				newG = current_node.g + (Map.additionalWeight[nodeCheck.position[0]][nodeCheck.position[1]]+liveBlockerWeight)**2
 				if newG < nodeCheck.g:
 					
 					nodeCheck.g = newG
@@ -180,22 +180,15 @@ def reconstructPathv2(node,liveBlocker = False):
 	curNode = node
 	path = []
 	nodePath = []
-	# realPos = TranslateToRealPos(curNode.position)
-	# point = Point3d(realPos[0],realPos[1],0)
-	# path.append(point)
 	nodePath.insert(0,curNode)
 	while not curNode.parent.equals(curNode):
-		# print ('mnode ',curNode.position)
 		curNode = curNode.parent
-		#realPos = TranslateToRealPos(curNode.position)
-		#point = Point3d(realPos[0],realPos[1],0)
 		nodePath.insert(0,curNode)
 	nodePath = simplifyPathv3(nodePath,liveBlocker)
 	for node in nodePath:
 		realPos = TranslateToRealPos(node.position)
 		point = Point3d(realPos[0],realPos[1],0)
 		path.append(point)
-	# return nodePath
 	return path
 
 def simplifyPathv3(path,liveBlocker = False):
@@ -203,7 +196,6 @@ def simplifyPathv3(path,liveBlocker = False):
 	while index > 0:
 		if lineInSightv2(path[index + 1].position[0],path[index + 1].position[1],path[index - 1].position[0],path[index - 1].position[1],liveBlocker):
 			path.remove(path[index])
-		# else:
 		index-=1
 	return path
 	
@@ -213,11 +205,9 @@ BLOCKER_BETWEEN = BLOCKER_IN + 1
 BLOCKER_FIRST = BLOCKER_BETWEEN + 1
 BLOCKER_FIRST_FREE = BLOCKER_FIRST + 1
 def lineInSightv2(startX,startY,endX,endY,ignoreIndex,liveBlocker = False):
-	#print "deva "+toExcel((startX,startY))+" "+toExcel((endX,endY))
-	#print "deva "+str(startX)+" "+str(startY)+" "+str(endX)+" "+str(endY)
 	diffX = (endX-startX)
 	diffY = (endY-startY)
-	dirX = 1 if diffX > 0 else -1#(endX-startX)>0?1:-1
+	dirX = 1 if diffX > 0 else -1
 	dirY = 1 if diffY > 0 else -1
 	
 	diffX = abs(diffX)
@@ -226,11 +216,8 @@ def lineInSightv2(startX,startY,endX,endY,ignoreIndex,liveBlocker = False):
 	blockerState = BLOCKER_FREE
 	if (diffX >= diffY):
 		for i in range(1,diffX):
-			#print("check ",(startY + (diffY*i/diffX*dirY)),",",(startX + i*dirX)," is ",maze[startY + (diffY*i/diffX*dirY)][startX + i*dirX])
 			checkX = startY + (diffY*i/diffX*dirY)
 			checkY = startX + i*dirX
-			#print "ceka "+str(checkY)+" "+str(checkX)
-			#print "ceka "+toExcel((checkY,checkX))
 			if (Map.maze[checkY][checkX] == STATE_BLOCKED) or ((Map.additionalWeight[checkY][checkX] > 10)):
 				return False
 			if liveBlocker:
@@ -238,7 +225,6 @@ def lineInSightv2(startX,startY,endX,endY,ignoreIndex,liveBlocker = False):
 					if index == ignoreIndex:
 						continue
 					if (abs(checkY - block[0]) < OVERLAP_LIMIT) and (abs(checkX - block[1]) < OVERLAP_LIMIT):
-						print "at live block "+str(checkY)+" "+str(checkX)
 						return False
 
 			if Map.additionalWeight[checkY][checkX] > 0:
@@ -258,9 +244,6 @@ def lineInSightv2(startX,startY,endX,endY,ignoreIndex,liveBlocker = False):
 		for i in range(1,diffY):
 			checkX = startY + i*dirY
 			checkY = startX + (diffX*i/diffY*dirX)
-			#print "cekb "+toExcel((checkY,checkX))
-			# print "cekb "+str(checkY)+" "+str(checkX)
-			#print('check2 ',(startY + i*dirY),',',(startX + (diffX*i/diffY*dirX)),' is ',maze[startY + i*dirY][startX + (diffX*i/diffY*dirX)])
 			if (Map.maze[checkY][checkX] == STATE_BLOCKED) or ((Map.additionalWeight[checkY][checkX] > 10)):
 				return False
 			if liveBlocker:
