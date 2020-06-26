@@ -1,6 +1,7 @@
 class Target:
-	def __init__(self,tp = None):
+	def __init__(self,fIndex,tp = None):
 		self.targetPoint = tp
+		self.floorIndex = fIndex
 		self.available = True
 		self.activities = []
 		self.specificAgent = []

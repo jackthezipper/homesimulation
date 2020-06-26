@@ -39,20 +39,33 @@ class Node():
 		self.parent = None
 		
 class Map():
-	topPos = None
+	topPos = []
 	maze = []
 	additionalWeight = []
 	liveBlock = []
-	allNode = None
+	allNode = []
+	
+	def AddMaze(self,top,mz):
+		self.topPos.append(top)
+		self.maze.append(mz)
+	
+	def AddWeight(self,weight):
+		self.additionalWeight.append(weight)
+	
+	def SetLiveBlock(self,pos,agentIndex,mazeIndex):
+		if agentIndex >= len(self.liveBlock):
+			self.liveBlock.append((pos,mazeIndex))
+		else:
+			self.liveBlock[agentIndex] = (pos,mazeIndex)
 
 def euclidian(posA,posB):
 	diffX = posA[0] - posB[0]
 	diffY = posA[1] - posB[1]
 	return (diffX*diffX)+(diffY*diffY)
 
-def TranslateToRealPos(pos):
-	realX = Map.topPos.X + ((pos[0]*0.08) + 0.04)
-	realY = Map.topPos.Y - ((pos[1]*0.08) + 0.04)
+def TranslateToRealPos(pos,mazeIndex):
+	realX = Map.topPos[mazeIndex].X + ((pos[0]*0.08) + 0.04)
+	realY = Map.topPos[mazeIndex].Y - ((pos[1]*0.08) + 0.04)
 	return (realX,realY)
 
 DIR_UP = 0
@@ -77,28 +90,28 @@ def getDir(nodeA,nodeB):
 	if diffX < 0:
 		return DIR_UPLEFT if diffY > 0 else (DIR_LEFT if diffY == 0 else DIR_DOWNLEFT)
 
-def astarv3(start, end,ignoreIndex,liveBlocker = False):
+def astarv3(start, end,ignoreIndex,mazeIndex,liveBlocker = False):
 	"""Returns a list of tuples as a path from the given start to the given end in the given maze"""
 	
-	if Map.allNode == None:
-		Map.allNode = [[None for i in range(len(Map.maze[0]))] for j in range(len(Map.maze))]
-		for i in range(len(Map.maze)):
-			for j in range(len(Map.maze[0])):
-				Map.allNode[i][j] = Node(None, (i,j))
-	for i in range(len(Map.maze)):
-		for j in range(len(Map.maze[0])):
-			Map.allNode[i][j].reset()
+	if len(Map.allNode) <= mazeIndex:
+		Map.allNode.append([[None for i in range(len(Map.maze[mazeIndex][0]))] for j in range(len(Map.maze[mazeIndex]))])
+		for i in range(len(Map.maze[mazeIndex])):
+			for j in range(len(Map.maze[mazeIndex][0])):
+				Map.allNode[mazeIndex][i][j] = Node(None, (i,j))
+	for i in range(len(Map.maze[mazeIndex])):
+		for j in range(len(Map.maze[mazeIndex][0])):
+			Map.allNode[mazeIndex][i][j].reset()
 	# allHailNode = [[None for i in range(len(Map.maze[0]))] for j in range(len(Map.maze))]
 	# for i in range(len(Map.maze)):
 		# for j in range(len(Map.maze[0])):
 			# allHailNode[i][j] = Node(None, (i,j))
 	# Create start and end node
 	# start_node = allHailNode[start[0]][start[1]]
-	start_node = Map.allNode[start[0]][start[1]]
+	start_node = Map.allNode[mazeIndex][start[0]][start[1]]
 	start_node.makeSelfReference()
 	start_node.g = start_node.h = start_node.f = 0
 	# end_node = allHailNode[end[0]][end[1]]
-	end_node = Map.allNode[end[0]][end[1]]
+	end_node = Map.allNode[mazeIndex][end[0]][end[1]]
 	end_node.g = end_node.h = end_node.f = 0
 	
 	# Initialize both open and closed list
@@ -119,25 +132,27 @@ def astarv3(start, end,ignoreIndex,liveBlocker = False):
 		current_node.isOpen = False
 		current_node.isClosed = True
 		if current_node.equals(end_node):
-			return reconstructPathv2(current_node,liveBlocker)
+			return reconstructPathv2(current_node,mazeIndex,liveBlocker)
 			break
 	
 		for new_position in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
 			coord = (current_node.position[0]+new_position[0],current_node.position[1]+new_position[1])
-			if (coord[0] < 0) or (coord[1] < 0) or (coord[0] >= len(Map.maze)) or (coord[1] >= len(Map.maze[0])):
+			if (coord[0] < 0) or (coord[1] < 0) or (coord[0] >= len(Map.maze[mazeIndex])) or (coord[1] >= len(Map.maze[mazeIndex][0])):
 				continue
-			if (Map.maze[coord[0]][coord[1]] == STATE_BLOCKED):
+			if (Map.maze[mazeIndex][coord[0]][coord[1]] == STATE_BLOCKED):
 				continue
-			if (Map.maze[coord[0]][coord[1]] == STATE_ENTRY and (coord[0] != end_node.position[0] or coord[1] != end_node.position[1])):
+			if (Map.maze[mazeIndex][coord[0]][coord[1]] == STATE_ENTRY and (coord[0] != end_node.position[0] or coord[1] != end_node.position[1])):
 				continue
 			
 			liveBlockerWeight = 0
 			if liveBlocker:
 				overlapWithOther = False
 				for index,block in enumerate(Map.liveBlock):
+					if block[1] != mazeIndex:
+						continue
 					if index == ignoreIndex:
 						continue
-					diffTile = max(abs(coord[0] - block[0]),abs(coord[1] - block[1]))
+					diffTile = max(abs(coord[0] - block[0][0]),abs(coord[1] - block[0][1]))
 					overlapWithOther = diffTile < OVERLAP_LIMIT
 					if overlapWithOther:
 						break
@@ -146,12 +161,12 @@ def astarv3(start, end,ignoreIndex,liveBlocker = False):
 						break
 				if overlapWithOther:
 					continue
-			nodeCheck = Map.allNode[coord[0]][coord[1]]
+			nodeCheck = Map.allNode[mazeIndex][coord[0]][coord[1]]
 			if not (nodeCheck.isClosed):
 				isOldNode = nodeCheck.isOpen
 				if not isOldNode:
 					nodeCheck.g = sys.maxint
-				newG = current_node.g + (Map.additionalWeight[nodeCheck.position[0]][nodeCheck.position[1]]+liveBlockerWeight)**2
+				newG = current_node.g + (Map.additionalWeight[mazeIndex][nodeCheck.position[0]][nodeCheck.position[1]]+liveBlockerWeight)**2
 				if newG < nodeCheck.g:
 					
 					nodeCheck.g = newG
@@ -176,7 +191,7 @@ def InsertNode(node,list):
 	node.isOpen = True
 
 
-def reconstructPathv2(node,liveBlocker = False):
+def reconstructPathv2(node,mazeIndex,liveBlocker = False):
 	curNode = node
 	path = []
 	nodePath = []
@@ -184,17 +199,17 @@ def reconstructPathv2(node,liveBlocker = False):
 	while not curNode.parent.equals(curNode):
 		curNode = curNode.parent
 		nodePath.insert(0,curNode)
-	nodePath = simplifyPathv3(nodePath,liveBlocker)
+	nodePath = simplifyPathv3(nodePath,mazeIndex,liveBlocker)
 	for node in nodePath:
-		realPos = TranslateToRealPos(node.position)
+		realPos = TranslateToRealPos(node.position,mazeIndex)
 		point = Point3d(realPos[0],realPos[1],0)
 		path.append(point)
 	return path
 
-def simplifyPathv3(path,liveBlocker = False):
+def simplifyPathv3(path,mazeIndex,liveBlocker = False):
 	index = len(path) - 2
 	while index > 0:
-		if lineInSightv2(path[index + 1].position[0],path[index + 1].position[1],path[index - 1].position[0],path[index - 1].position[1],liveBlocker):
+		if lineInSightv2(path[index + 1].position[0],path[index + 1].position[1],path[index - 1].position[0],path[index - 1].position[1],mazeIndex,liveBlocker):
 			path.remove(path[index])
 		index-=1
 	return path
@@ -204,7 +219,7 @@ BLOCKER_IN = BLOCKER_FREE + 1
 BLOCKER_BETWEEN = BLOCKER_IN + 1
 BLOCKER_FIRST = BLOCKER_BETWEEN + 1
 BLOCKER_FIRST_FREE = BLOCKER_FIRST + 1
-def lineInSightv2(startX,startY,endX,endY,ignoreIndex,liveBlocker = False):
+def lineInSightv2(startX,startY,endX,endY,ignoreIndex,mazeIndex,liveBlocker = False):
 	diffX = (endX-startX)
 	diffY = (endY-startY)
 	dirX = 1 if diffX > 0 else -1
@@ -218,16 +233,18 @@ def lineInSightv2(startX,startY,endX,endY,ignoreIndex,liveBlocker = False):
 		for i in range(1,diffX):
 			checkX = startY + (diffY*i/diffX*dirY)
 			checkY = startX + i*dirX
-			if (Map.maze[checkY][checkX] == STATE_BLOCKED) or ((Map.additionalWeight[checkY][checkX] > 10)):
+			if (Map.maze[mazeIndex][checkY][checkX] == STATE_BLOCKED) or ((Map.additionalWeight[mazeIndex][checkY][checkX] > 10)):
 				return False
 			if liveBlocker:
 				for index,block in enumerate(Map.liveBlock):
+					if block[1] != mazeIndex:
+						continue
 					if index == ignoreIndex:
 						continue
-					if (abs(checkY - block[0]) < OVERLAP_LIMIT) and (abs(checkX - block[1]) < OVERLAP_LIMIT):
+					if (abs(checkY - block[0][0]) < OVERLAP_LIMIT) and (abs(checkX - block[0][1]) < OVERLAP_LIMIT):
 						return False
 
-			if Map.additionalWeight[checkY][checkX] > 0:
+			if Map.additionalWeight[mazeIndex][checkY][checkX] > 0:
 				if i == 0:
 					blockerState = BLOCKER_FIRST
 				elif blockerState == BLOCKER_FREE:
@@ -244,16 +261,18 @@ def lineInSightv2(startX,startY,endX,endY,ignoreIndex,liveBlocker = False):
 		for i in range(1,diffY):
 			checkX = startY + i*dirY
 			checkY = startX + (diffX*i/diffY*dirX)
-			if (Map.maze[checkY][checkX] == STATE_BLOCKED) or ((Map.additionalWeight[checkY][checkX] > 10)):
+			if (Map.maze[mazeIndex][checkY][checkX] == STATE_BLOCKED) or ((Map.additionalWeight[mazeIndex][checkY][checkX] > 10)):
 				return False
 			if liveBlocker:
 				for index,block in enumerate(Map.liveBlock):
+					if block[1] != mazeIndex:
+						continue
 					if index == ignoreIndex:
 						continue
-					if (abs(checkY - block[0]) < OVERLAP_LIMIT) and (abs(checkX - block[1]) < OVERLAP_LIMIT):
+					if (abs(checkY - block[0][0]) < OVERLAP_LIMIT) and (abs(checkX - block[0][1]) < OVERLAP_LIMIT):
 						return False
 			
-			if Map.additionalWeight[checkY][checkX] > 0:
+			if Map.additionalWeight[mazeIndex][checkY][checkX] > 0:
 				if i == 0:
 					blockerState = BLOCKER_FIRST
 				elif blockerState == BLOCKER_FREE:
@@ -268,11 +287,13 @@ def lineInSightv2(startX,startY,endX,endY,ignoreIndex,liveBlocker = False):
 				return False
 	return True
 
-def IsBlocked(pos):
+def IsBlocked(pos,mazeIndex):
 	for (index,blocker) in enumerate(Map.liveBlock):
-		if blocker[0] == pos [0] and blocker[1] == pos[1]:
+		if blocker[1] != mazeIndex:
 			continue
-		if abs(blocker[0] - pos[0]) < 10 and abs(blocker[1] - pos[1]) < 10:
+		if blocker[0][0] == pos [0] and blocker[0][1] == pos[1]:
+			continue
+		if abs(blocker[0][0] - pos[0]) < 10 and abs(blocker[0][1] - pos[1]) < 10:
 			return index,True
 	return -1,False
 	

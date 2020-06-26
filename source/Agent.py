@@ -55,6 +55,7 @@ class Agent:
 		self.objectList = []
 		
 		self.speedFactor = 0.15
+		self.myFloorIndex = 0
 	
 	def setTarget(self,newTarget):
 		self.target = newTarget
@@ -82,11 +83,11 @@ class Agent:
 			#calculating path
 			start = None
 			if self.oldEntryPoint != None:
-				start = TranslateToGridPos(self.oldEntryPoint.pos)
+				start = TranslateToGridPos(self.oldEntryPoint.pos,self.myFloorIndex)
 			else:
-				start = TranslateToGridPos(self.pos)
-			end = TranslateToGridPos(self.entryPoint.pos)
-			self.myPath = PathFinding.astarv3(start,end,self.myIndex)
+				start = TranslateToGridPos(self.pos,self.myFloorIndex)
+			end = TranslateToGridPos(self.entryPoint.pos,self.myFloorIndex)
+			self.myPath = PathFinding.astarv3(start,end,self.myIndex,self.myFloorIndex)
 			
 			#No path found. Wait a moment
 			if self.myPath == None:
@@ -107,18 +108,18 @@ class Agent:
 			distance = self.pos.DistanceTo(destination)
 			if distance > self.speedFactor:
 				#there still distance within the path
-				myGrid = TranslateToGridPos(self.pos)
-				self.blockedBy,blocked = PathFinding.IsBlocked(myGrid)
+				myGrid = TranslateToGridPos(self.pos,self.myFloorIndex)
+				self.blockedBy,blocked = PathFinding.IsBlocked(myGrid,self.myFloorIndex)
 				
 				if blocked:
 					#path maybe blocked
-					blockPos = PathFinding.TranslateToRealPos(PathFinding.Map.liveBlock[self.blockedBy])
+					blockPos = PathFinding.TranslateToRealPos(PathFinding.Map.liveBlock[self.blockedBy][0],self.myFloorIndex)
 					blockDir = Vector3f.Subtract(Vector3f(blockPos[0],blockPos[1],0),Vector3f(self.pos.X,self.pos.Y,0))
 					blockDir = Vector3f.Divide(blockDir,blockDir.Length)
 					dotP = (blockDir.X*self.moveDir.X) + (blockDir.Y*self.moveDir.Y)
 					angle = math.acos(dotP)
 					angle = math.degrees(angle)
-					if angle > 60 and (abs(myGrid[0]-PathFinding.Map.liveBlock[self.blockedBy][0]) > PathFinding.OVERLAP_LIMIT or abs(myGrid[1]-PathFinding.Map.liveBlock[self.blockedBy][1]) > PathFinding.OVERLAP_LIMIT):
+					if angle > 60 and (abs(myGrid[0]-PathFinding.Map.liveBlock[self.blockedBy][0][0]) > PathFinding.OVERLAP_LIMIT or abs(myGrid[1]-PathFinding.Map.liveBlock[self.blockedBy][0][1]) > PathFinding.OVERLAP_LIMIT):
 						blocked = False
 					if self.entryPoint.pos != self.entryPoint.target.targetPoint and self.pathIndex == (len(self.myPath) - 1):
 						blocked = False
@@ -133,8 +134,8 @@ class Agent:
 						else:
 							self.hasWait = True
 					
-					myNextDestGrid = TranslateToGridPos(self.entryPoint.pos)
-					midPath = PathFinding.astarv3(myGrid,myNextDestGrid,self.myIndex,True)
+					myNextDestGrid = TranslateToGridPos(self.entryPoint.pos,self.myFloorIndex)
+					midPath = PathFinding.astarv3(myGrid,myNextDestGrid,self.myIndex,self.myFloorIndex,True)
 					
 					#No path found. Wait a moment
 					if midPath == None:
@@ -231,6 +232,7 @@ class Agent:
 				epList.append(ep)
 		self.setTarget(Agent.possibleTarget[targetIndex])
 		self.entryPoint = epList[0]
+		self.myFloorIndex = self.target.floorIndex
 		
 	def setBoundArea(self,area):
 		if area != self.boundArea:
@@ -290,10 +292,10 @@ class Agent:
 		print olist
 		print self.objectList
 
-def TranslateToGridPos(pos):
+def TranslateToGridPos(pos,mazeIndex):
 	try:
-		gridX = int(math.floor((pos.X - PathFinding.Map.topPos.X)/0.08))
-		gridY = int(math.floor((PathFinding.Map.topPos.Y - pos.Y)/0.08))
+		gridX = int(math.floor((pos.X - PathFinding.Map.topPos[mazeIndex].X)/0.08))
+		gridY = int(math.floor((PathFinding.Map.topPos[mazeIndex].Y - pos.Y)/0.08))
 		posGrid = (gridX,gridY)
 	except Exception as e:
 		print e
