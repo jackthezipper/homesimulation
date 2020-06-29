@@ -56,6 +56,7 @@ class Agent:
 		
 		self.speedFactor = 0.15
 		self.myFloorIndex = 0
+		self.needStair = False
 	
 	def setTarget(self,newTarget):
 		self.target = newTarget
@@ -86,7 +87,16 @@ class Agent:
 				start = TranslateToGridPos(self.oldEntryPoint.pos,self.myFloorIndex)
 			else:
 				start = TranslateToGridPos(self.pos,self.myFloorIndex)
-			end = TranslateToGridPos(self.entryPoint.pos,self.myFloorIndex)
+			
+			self.needStair = ()self.target.floorIndex == self.myFloorIndex)
+			
+			if self.needStair:
+				stairIndex = "STAIRS_"+str(self.myFloorIndex)
+				stairTarget = next(trgt for trgt in Agent.possibleTarget if trgt.hasActivity(stairIndex))
+				stairEntry = next(entry for entry in Agent.entryPointList if entry.target == stairTarget)
+				end = TranslateToGridPos(stairEntry,self.myFloorIndex)
+			else:
+				end = TranslateToGridPos(self.entryPoint.pos,self.myFloorIndex)
 			self.myPath = PathFinding.astarv3(start,end,self.myIndex,self.myFloorIndex)
 			
 			#No path found. Wait a moment
@@ -97,7 +107,9 @@ class Agent:
 			if self.oldEntryPoint != None and self.myPath[0] != self.pos:
 				self.myPath.insert(0,self.pos)
 			
-			if self.entryPoint.pos != self.entryPoint.target.targetPoint:
+			if self.needStair:
+				self.myPath.append(stairEntry.target.targetPoint)
+			else if self.entryPoint.pos != self.entryPoint.target.targetPoint:
 				self.myPath.append(self.entryPoint.target.targetPoint)
 			self.pathIndex = 1
 			self.recalculateMoveDir()
@@ -134,7 +146,12 @@ class Agent:
 						else:
 							self.hasWait = True
 					
-					myNextDestGrid = TranslateToGridPos(self.entryPoint.pos,self.myFloorIndex)
+					if self.needStair:
+						stairIndex = "STAIRS_"+str(self.myFloorIndex)
+						stairEntry = next(trgt for trgt in Agent.possibleTarget if trgt.hasActivity(stairIndex))
+						myNextDestGrid = TranslateToGridPos(stairEntry,self.myFloorIndex)
+					else:
+						myNextDestGrid = TranslateToGridPos(self.entryPoint.pos,self.myFloorIndex)
 					midPath = PathFinding.astarv3(myGrid,myNextDestGrid,self.myIndex,self.myFloorIndex,True)
 					
 					#No path found. Wait a moment
@@ -161,10 +178,25 @@ class Agent:
 				#already close with destination
 				self.pos = destination
 				self.pathIndex+=1
-				self.canGetNewTarget = True
 				if self.pathIndex < len(self.myPath):
 					self.recalculateMoveDir()
+				else if self.needStair:
+					nextStairIndex = "STAIRS_"+str(self.target.floorIndex)
+					nextStairTarget = next(trgt for trgt in Agent.possibleTarget if trgt.hasActivity(nextStairIndex))
+					nextStairEntry = next(entry for entry in Agent.entryPointList if entry.target == stairTarget)
+					self.myFloorIndex = self.target.floorIndex
+					start = TranslateToGridPos(nextStairEntry,self.myFloorIndex)
+					end = TranslateToGridPos(self.entryPoint.pos,self.myFloorIndex)
+					
+					self.myPath = PathFinding.astarv3(start,end,self.myIndex,self.myFloorIndex)
+					self.myPath.insert(0,self.pos)
+					if self.entryPoint.pos != self.entryPoint.target.targetPoint:
+						self.myPath.append(self.entryPoint.target.targetPoint)
+					self.pathIndex = 1
+					self.recalculateMoveDir()
+					self.pos = nextStairTarget.targetPoint
 				else:
+					self.canGetNewTarget = True
 					self.state = STATE_WAIT
 					self.waitTime = (Schedule.SCHEDULE[self.myIndex][self.targetIndex][1] * 5)
 			self.hasWait = False
