@@ -88,13 +88,13 @@ class Agent:
 			else:
 				start = TranslateToGridPos(self.pos,self.myFloorIndex)
 			
-			self.needStair = ()self.target.floorIndex == self.myFloorIndex)
+			self.needStair = (self.target.floorIndex != self.myFloorIndex)
 			
 			if self.needStair:
 				stairIndex = "STAIRS_"+str(self.myFloorIndex)
 				stairTarget = next(trgt for trgt in Agent.possibleTarget if trgt.hasActivity(stairIndex))
 				stairEntry = next(entry for entry in Agent.entryPointList if entry.target == stairTarget)
-				end = TranslateToGridPos(stairEntry,self.myFloorIndex)
+				end = TranslateToGridPos(stairEntry.pos,self.myFloorIndex)
 			else:
 				end = TranslateToGridPos(self.entryPoint.pos,self.myFloorIndex)
 			self.myPath = PathFinding.astarv3(start,end,self.myIndex,self.myFloorIndex)
@@ -109,7 +109,7 @@ class Agent:
 			
 			if self.needStair:
 				self.myPath.append(stairEntry.target.targetPoint)
-			else if self.entryPoint.pos != self.entryPoint.target.targetPoint:
+			elif self.entryPoint.pos != self.entryPoint.target.targetPoint:
 				self.myPath.append(self.entryPoint.target.targetPoint)
 			self.pathIndex = 1
 			self.recalculateMoveDir()
@@ -149,7 +149,7 @@ class Agent:
 					if self.needStair:
 						stairIndex = "STAIRS_"+str(self.myFloorIndex)
 						stairEntry = next(trgt for trgt in Agent.possibleTarget if trgt.hasActivity(stairIndex))
-						myNextDestGrid = TranslateToGridPos(stairEntry,self.myFloorIndex)
+						myNextDestGrid = TranslateToGridPos(stairEntry.pos,self.myFloorIndex)
 					else:
 						myNextDestGrid = TranslateToGridPos(self.entryPoint.pos,self.myFloorIndex)
 					midPath = PathFinding.astarv3(myGrid,myNextDestGrid,self.myIndex,self.myFloorIndex,True)
@@ -180,21 +180,22 @@ class Agent:
 				self.pathIndex+=1
 				if self.pathIndex < len(self.myPath):
 					self.recalculateMoveDir()
-				else if self.needStair:
+				elif self.needStair:
 					nextStairIndex = "STAIRS_"+str(self.target.floorIndex)
 					nextStairTarget = next(trgt for trgt in Agent.possibleTarget if trgt.hasActivity(nextStairIndex))
-					nextStairEntry = next(entry for entry in Agent.entryPointList if entry.target == stairTarget)
+					nextStairEntry = next(entry for entry in Agent.entryPointList if entry.target == nextStairTarget)
 					self.myFloorIndex = self.target.floorIndex
-					start = TranslateToGridPos(nextStairEntry,self.myFloorIndex)
+					start = TranslateToGridPos(nextStairEntry.pos,self.myFloorIndex)
 					end = TranslateToGridPos(self.entryPoint.pos,self.myFloorIndex)
 					
 					self.myPath = PathFinding.astarv3(start,end,self.myIndex,self.myFloorIndex)
+					self.pos = nextStairTarget.targetPoint
 					self.myPath.insert(0,self.pos)
 					if self.entryPoint.pos != self.entryPoint.target.targetPoint:
 						self.myPath.append(self.entryPoint.target.targetPoint)
 					self.pathIndex = 1
 					self.recalculateMoveDir()
-					self.pos = nextStairTarget.targetPoint
+					self.needStair = False
 				else:
 					self.canGetNewTarget = True
 					self.state = STATE_WAIT
