@@ -48,7 +48,7 @@
             <chunk name="Projection">
               <items count="2">
                 <item name="Target" type_name="gh_drawing_point" type_code="30">
-                  <X>31</X>
+                  <X>5</X>
                   <Y>18</Y>
                 </item>
                 <item name="Zoom" type_name="gh_single" type_code="5">1</item>
@@ -202,13 +202,118 @@ class MyComponent(component):
         #Rhino.Geometry.Curve(
         
         viewArea = Polyline(pointList)
+        viewAreaCurve = viewArea.ToNurbsCurve()
         
         #print viewArea.Item
         #for i in viewArea.GetSegments():
             #print i#.GetType()
+        print "begono"
+        print pointList
+        m_wallList = [item.Geometry.ToNurbsCurve() for item in objectList if item.Attributes.LayerIndex == layerIndex]
+        while len(m_wallList) &gt; 0:
+            print "lenwa "+str(len(m_wallList))
+            curWall = m_wallList.pop(0)
+            print curWall.GetType()
+            iSect = Rhino.Geometry.Intersect.Intersection.CurveCurve(viewAreaCurve,curWall,0,0)
+            pointToConsiderate = []
+            for sect in iSect:
+                pointC,posPointC = viewAreaCurve.ClosestPoint(sect.PointA,0)
+                pointW,posPointW = curWall.ClosestPoint(sect.PointA,0)
+                pointToConsiderate.append((sect.PointA,sect.PointA,posPointC,posPointW))
+                print "sexey"
+                print sect.PointA
+            
+            isPol,pointInCurve = curWall.TryGetPolyline()
+            for p in pointInCurve:
+                pointPos = viewAreaCurve.Contains(p)
+                print "check "+str(p)+" "+str(pointPos)
+                if pointPos == Rhino.Geometry.PointContainment.Inside:
+                    vDir = Point3d.Subtract(p,y)
+                    vDir.Unitize()
+                    line = Line(y,vDir,length)
+                
+                    iSect = Rhino.Geometry.Intersect.Intersection.CurveCurve(viewAreaCurve,line.ToNurbsCurve(),0,0)
+                    
+                    for sect in iSect:
+                        if not sect.PointA.Equals(y):
+                            pointC,posPointC = viewAreaCurve.ClosestPoint(sect.PointA,0)
+                            pointW,posPointW = curWall.ClosestPoint(sect.PointA,0)
+                            #print "pero pero "+str(sect.PointA)+" "+str(pointC)+" "+str(posPoint)
+                            pointToConsiderate.append((p,sect.PointA,posPointC,posPointW))
         
-        viewAreaCurve = viewArea.ToNurbsCurve()
-        wallList = []
+            #print "pomade"
+            #print pointToConsiderate
+            if len(pointToConsiderate) &gt; 2:
+                print "splitt"
+                pointToConsiderate.sort(key = lambda x: x[3])
+                print pointToConsiderate
+                #pointToConsiderate.sort(key = lambda x: x[2])
+                while len(pointToConsiderate) &gt; 1:
+                    curElm = pointToConsiderate.pop(0)
+                    nextElm = pointToConsiderate[0]
+                    newWall = Line(curElm[0],nextElm[0])
+                    print newWall
+                    m_wallList.append(newWall.ToNurbsCurve())
+                    
+                    #at intersection
+                    
+                    e1 = nextElm[0]
+                    e2 = nextElm[1]
+                    
+                    if e1.Equals(e2):
+                        curElm = pointToConsiderate.pop(0)
+                        
+                    #different segment line
+                    elif len(pointToConsiderate) &gt; 1 and abs(int(pointToConsiderate[1][2]) - int(nextElm[2])) &gt; 1:
+                        curElm = pointToConsiderate.pop(0)
+            elif len(pointToConsiderate) &gt; 0:
+                pointToConsiderate.sort(key = lambda x: x[2])
+                print len(pointToConsiderate)
+                print "inzana "+str(int(pointToConsiderate[0][2]+1))+" "+str(int(pointToConsiderate[1][2]+1))
+                pointList.insert(int(pointToConsiderate[1][2]+1),pointToConsiderate[1][1])
+                print "p1"
+                print pointList
+                if pointToConsiderate[1][0] != pointToConsiderate[1][1]:
+                    pointList.insert(int(pointToConsiderate[1][2]+1),pointToConsiderate[1][0])
+                    print "p1.5"
+                    print pointList
+                del pointList[int(pointToConsiderate[0][2]+1):int(pointToConsiderate[1][2]+1)]
+                print "p2"
+                print pointList
+                if pointList[int(pointToConsiderate[0][2])] != pointToConsiderate[0][0]:
+                    pointList.insert(int(pointToConsiderate[0][2]+1),pointToConsiderate[0][0])
+                print "p3"
+                print pointList
+                if pointToConsiderate[0][0] != pointToConsiderate[0][1]:
+                    pointList.insert(int(pointToConsiderate[0][2]+1),pointToConsiderate[0][1])
+                    print "p3.5"
+                    print pointList
+                viewArea = Polyline(pointList)
+                viewAreaCurve = viewArea.ToNurbsCurve()
+                #wallList.append(curWall.Geometry)
+            
+            print "iliterate"
+            print pointList
+                
+        print"resta"
+        for po in pointList:
+            print po
+        #TODO: check if only have 2 point, create new view field; if more split to several wall and continue the loop
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        """wallList = []
         
         while len(oriWallList) &gt; 0:
             curWall = oriWallList.pop()
@@ -361,15 +466,16 @@ class MyComponent(component):
                 #print aa
             #print "bbbbbbbbbbb"
         # return outputs if you have them; here I try it for you:
+            """
         return self.pola
 </item>
                     <item name="Description" type_name="gh_string" type_code="10">GhPython provides a Python script component</item>
                     <item name="EditorLocation" type_name="gh_drawing_point" type_code="30">
-                      <X>-8</X>
-                      <Y>-8</Y>
+                      <X>846</X>
+                      <Y>91</Y>
                     </item>
                     <item name="EditorSize" type_name="gh_drawing_size" type_code="32">
-                      <W>465</W>
+                      <W>613</W>
                       <H>743</H>
                     </item>
                     <item name="HideInput" type_name="gh_bool" type_code="1">true</item>
@@ -815,7 +921,7 @@ class MyComponent(component):
     <chunk name="Thumbnail">
       <items count="1">
         <item name="Thumbnail" type_name="gh_drawing_bitmap" type_code="37">
-          <bitmap length="4045">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</bitmap>
+          <bitmap length="2411">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</bitmap>
         </item>
       </items>
     </chunk>
