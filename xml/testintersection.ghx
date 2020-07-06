@@ -48,10 +48,10 @@
             <chunk name="Projection">
               <items count="2">
                 <item name="Target" type_name="gh_drawing_point" type_code="30">
-                  <X>241</X>
-                  <Y>196</Y>
+                  <X>243</X>
+                  <Y>185</Y>
                 </item>
-                <item name="Zoom" type_name="gh_single" type_code="5">0.7225001</item>
+                <item name="Zoom" type_name="gh_single" type_code="5">0.614125133</item>
               </items>
             </chunk>
             <chunk name="Views">
@@ -106,6 +106,7 @@ import scriptcontext as sc
 import Rhino.Geometry
 from Rhino.Geometry import Vector3d,Point3d,Line,Polyline
 import math
+import time
 
 class MyComponent(component):
     def __init__(self):
@@ -123,21 +124,23 @@ class MyComponent(component):
         __version__ = "2020.05.19"
         
         import rhinoscriptsyntax as rs
-        print x.GetType()
+        #print x.GetType()
+        t1 = int(time.time()*1000)
         rarea = rs.coercecurve(x)
         
         #Rhino.Geometry.NurbsCurve.Points
         #Rhino.Geometry.ControlPoint.Location
-        print rarea.Points[0].Location
+        #print rarea.Points[0].Location
         #print pl
         rc,pl = rarea.TryGetPolyline()
         
-        vecDir = Vector3d(0,1,0)
+        #vecDir = Vector3d(0,1,0)
+        vecDir = rs.VectorRotate(Vector3d(0,1,0),-30,(0,0,1))
         diag = Vector3d.Subtract(Vector3d(rarea.Points[0].Location),Vector3d(rarea.Points[2].Location))
         length = diag.Length
         #print diag
         #print len
-        print "abababababababa"
+        #print "abababababababa"
         vec1 = rs.VectorRotate(vecDir,-60,(0,0,1))
         endl1 = Point3d.Add(y,(vec1*length))
         mLine1 = Line(y,endl1)
@@ -155,7 +158,7 @@ class MyComponent(component):
         for inte in iSect2:
             point2 = inte.PointA
             
-        print (mLine1.Direction/mLine1.Length)
+        #print (mLine1.Direction/mLine1.Length)
         
         #print point1
         #print point2
@@ -189,7 +192,8 @@ class MyComponent(component):
         
         view = sc.doc.Views.ActiveView.ActiveViewport      
         objectList = rh.RhinoDoc.ActiveDoc.Objects.FindByCrossingWindowRegion(view,pointList,True,rh.DocObjects.ObjectType.Curve)
-        
+        t3 = int(time.time()*1000)
+        print str((t3-t1))
         sc.doc = rh.RhinoDoc.ActiveDoc
         layerIndex = sc.doc.Layers.Find("ARS_DINDING",True)
         sc.doc = ghdoc
@@ -207,26 +211,29 @@ class MyComponent(component):
         #print viewArea.Item
         #for i in viewArea.GetSegments():
             #print i#.GetType()
-        print "begono"
-        print pointList
+        #print "begono"
+        #print pointList
         m_wallList = [item.Geometry.ToNurbsCurve() for item in objectList if item.Attributes.LayerIndex == layerIndex]
         while len(m_wallList) &gt; 0:
-            print "lenwa "+str(len(m_wallList))
+            #print "lenwa "+str(len(m_wallList))
             curWall = m_wallList.pop(0)
-            print curWall.GetType()
+            #print curWall.GetType()
             iSect = Rhino.Geometry.Intersect.Intersection.CurveCurve(viewAreaCurve,curWall,0,0)
             pointToConsiderate = []
             for sect in iSect:
                 pointC,posPointC = viewAreaCurve.ClosestPoint(sect.PointA,0)
                 pointW,posPointW = curWall.ClosestPoint(sect.PointA,0)
-                pointToConsiderate.append((sect.PointA,sect.PointA,posPointC,posPointW))
-                print "sexey"
-                print sect.PointA
+                #print "popor "+str(round(posPointW)) +" "+str(posPointW)
+                closestIdx = round(posPointW) - posPointW
+                if abs(closestIdx) &gt; 0.05:
+                    pointToConsiderate.append((sect.PointA,sect.PointA,posPointC,posPointW))
+                    #print "sexey"
+                    #print sect.PointA
             
             isPol,pointInCurve = curWall.TryGetPolyline()
             for p in pointInCurve:
                 pointPos = viewAreaCurve.Contains(p)
-                print "check "+str(p)+" "+str(pointPos)
+                #print "check "+str(p)+" "+str(pointPos)
                 if pointPos == Rhino.Geometry.PointContainment.Inside:
                     vDir = Point3d.Subtract(p,y)
                     vDir.Unitize()
@@ -237,22 +244,26 @@ class MyComponent(component):
                     for sect in iSect:
                         if not sect.PointA.Equals(y):
                             pointC,posPointC = viewAreaCurve.ClosestPoint(sect.PointA,0)
-                            pointW,posPointW = curWall.ClosestPoint(sect.PointA,0)
+                            pointW,posPointW = curWall.ClosestPoint(p,0)
                             #print "pero pero "+str(sect.PointA)+" "+str(pointC)+" "+str(posPoint)
                             pointToConsiderate.append((p,sect.PointA,posPointC,posPointW))
+                elif pointPos == Rhino.Geometry.PointContainment.Coincident:
+                    pointC,posPointC = viewAreaCurve.ClosestPoint(p,0)
+                    pointW,posPointW = curWall.ClosestPoint(p,0)
+                    pointToConsiderate.append((p,p,posPointC,posPointW))
         
             #print "pomade"
             #print pointToConsiderate
             if len(pointToConsiderate) &gt; 2:
-                print "splitt"
+                #print "splitt"
                 pointToConsiderate.sort(key = lambda x: x[3])
-                print pointToConsiderate
+                #print pointToConsiderate
                 #pointToConsiderate.sort(key = lambda x: x[2])
                 while len(pointToConsiderate) &gt; 1:
                     curElm = pointToConsiderate.pop(0)
                     nextElm = pointToConsiderate[0]
                     newWall = Line(curElm[0],nextElm[0])
-                    print newWall
+                    #print newWall
                     m_wallList.append(newWall.ToNurbsCurve())
                     
                     #at intersection
@@ -266,40 +277,43 @@ class MyComponent(component):
                     #different segment line
                     elif len(pointToConsiderate) &gt; 1 and abs(int(pointToConsiderate[1][2]) - int(nextElm[2])) &gt; 1:
                         curElm = pointToConsiderate.pop(0)
-            elif len(pointToConsiderate) &gt; 0:
+            elif len(pointToConsiderate) == 2:
+                #print "foint"
                 pointToConsiderate.sort(key = lambda x: x[2])
-                print len(pointToConsiderate)
-                print "inzana "+str(int(pointToConsiderate[0][2]+1))+" "+str(int(pointToConsiderate[1][2]+1))
+                #print pointToConsiderate
+                #print len(pointToConsiderate)
+                #print "inzana "+str(int(pointToConsiderate[0][2]+1))+" "+str(int(pointToConsiderate[1][2]+1))
                 pointList.insert(int(pointToConsiderate[1][2]+1),pointToConsiderate[1][1])
-                print "p1"
-                print pointList
+                #print "p1"
+                #print pointList
                 if pointToConsiderate[1][0] != pointToConsiderate[1][1]:
                     pointList.insert(int(pointToConsiderate[1][2]+1),pointToConsiderate[1][0])
-                    print "p1.5"
-                    print pointList
+                    #print "p1.5"
+                    #print pointList
                 del pointList[int(pointToConsiderate[0][2]+1):int(pointToConsiderate[1][2]+1)]
-                print "p2"
-                print pointList
+                #print "p2"
+                #print pointList
                 if pointList[int(pointToConsiderate[0][2])] != pointToConsiderate[0][0]:
                     pointList.insert(int(pointToConsiderate[0][2]+1),pointToConsiderate[0][0])
-                print "p3"
-                print pointList
+                #print "p3"
+                #print pointList
                 if pointToConsiderate[0][0] != pointToConsiderate[0][1]:
                     pointList.insert(int(pointToConsiderate[0][2]+1),pointToConsiderate[0][1])
-                    print "p3.5"
-                    print pointList
+                    #print "p3.5"
+                    #print pointList
                 viewArea = Polyline(pointList)
                 viewAreaCurve = viewArea.ToNurbsCurve()
                 #wallList.append(curWall.Geometry)
             
-            print "iliterate"
-            print pointList
+            #print "iliterate"
+            #print pointList
                 
-        print"resta"
-        for po in pointList:
-            print po
+        #print"resta"
+        #for po in pointList:
+            #print po
         #TODO: check if only have 2 point, create new view field; if more split to several wall and continue the loop
-        
+        t2 = int(time.time()*1000)
+        print str((t2-t1))
         
         
         
@@ -471,12 +485,12 @@ class MyComponent(component):
 </item>
                     <item name="Description" type_name="gh_string" type_code="10">GhPython provides a Python script component</item>
                     <item name="EditorLocation" type_name="gh_drawing_point" type_code="30">
-                      <X>846</X>
-                      <Y>91</Y>
+                      <X>663</X>
+                      <Y>0</Y>
                     </item>
                     <item name="EditorSize" type_name="gh_drawing_size" type_code="32">
                       <W>613</W>
-                      <H>743</H>
+                      <H>908</H>
                     </item>
                     <item name="HideInput" type_name="gh_bool" type_code="1">true</item>
                     <item name="HideOutput" type_name="gh_bool" type_code="1">true</item>
@@ -921,7 +935,7 @@ class MyComponent(component):
     <chunk name="Thumbnail">
       <items count="1">
         <item name="Thumbnail" type_name="gh_drawing_bitmap" type_code="37">
-          <bitmap length="2988">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</bitmap>
+          <bitmap length="1532">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</bitmap>
         </item>
       </items>
     </chunk>
