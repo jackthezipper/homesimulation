@@ -48,10 +48,10 @@
             <chunk name="Projection">
               <items count="2">
                 <item name="Target" type_name="gh_drawing_point" type_code="30">
-                  <X>243</X>
-                  <Y>185</Y>
+                  <X>137</X>
+                  <Y>-99</Y>
                 </item>
-                <item name="Zoom" type_name="gh_single" type_code="5">0.614125133</item>
+                <item name="Zoom" type_name="gh_single" type_code="5">1.17647052</item>
               </items>
             </chunk>
             <chunk name="Views">
@@ -125,7 +125,7 @@ class MyComponent(component):
         
         import rhinoscriptsyntax as rs
         #print x.GetType()
-        t1 = int(time.time()*1000)
+        t1 = int(time.time()*1000000)
         rarea = rs.coercecurve(x)
         
         #Rhino.Geometry.NurbsCurve.Points
@@ -192,7 +192,7 @@ class MyComponent(component):
         
         view = sc.doc.Views.ActiveView.ActiveViewport      
         objectList = rh.RhinoDoc.ActiveDoc.Objects.FindByCrossingWindowRegion(view,pointList,True,rh.DocObjects.ObjectType.Curve)
-        t3 = int(time.time()*1000)
+        t3 = int(time.time()*1000000)
         print str((t3-t1))
         sc.doc = rh.RhinoDoc.ActiveDoc
         layerIndex = sc.doc.Layers.Find("ARS_DINDING",True)
@@ -206,21 +206,31 @@ class MyComponent(component):
         #Rhino.Geometry.Curve(
         
         viewArea = Polyline(pointList)
-        viewAreaCurve = viewArea.ToNurbsCurve()
+        viewAreaCurve = viewArea.ToPolylineCurve()
         
         #print viewArea.Item
         #for i in viewArea.GetSegments():
             #print i#.GetType()
         #print "begono"
         #print pointList
-        m_wallList = [item.Geometry.ToNurbsCurve() for item in objectList if item.Attributes.LayerIndex == layerIndex]
+        m_wallList = [item.Geometry for item in objectList if item.Attributes.LayerIndex == layerIndex]
+        iterInside = 0
+        iterSect = 0
+        outSide = 0
+        iterTot = 0
+        sect1 = 0
+        sect2 = 0
+        sect3 = 0
+        sect25 = 0
         while len(m_wallList) &gt; 0:
+            ts1 = int(time.time()*1000000)
             #print "lenwa "+str(len(m_wallList))
             curWall = m_wallList.pop(0)
             #print curWall.GetType()
             iSect = Rhino.Geometry.Intersect.Intersection.CurveCurve(viewAreaCurve,curWall,0,0)
             pointToConsiderate = []
             for sect in iSect:
+                iterSect+=1
                 pointC,posPointC = viewAreaCurve.ClosestPoint(sect.PointA,0)
                 pointW,posPointW = curWall.ClosestPoint(sect.PointA,0)
                 #print "popor "+str(round(posPointW)) +" "+str(posPointW)
@@ -229,12 +239,24 @@ class MyComponent(component):
                     pointToConsiderate.append((sect.PointA,sect.PointA,posPointC,posPointW))
                     #print "sexey"
                     #print sect.PointA
-            
             isPol,pointInCurve = curWall.TryGetPolyline()
+            ts2 = int(time.time()*1000000)
+            ts25 = ts27 = 0
             for p in pointInCurve:
+                iterTot += 1
+                ts25 = int(time.time()*1000000)
                 pointPos = viewAreaCurve.Contains(p)
+                #TODO: check raycasting to check containment
+                #      check if it's faster than Contains
+                
+                #Polyline.ToPolylineCurve
+                #pointPos = viewArea.ToPolylineCurve().Contains(p)
+                #print pointPos
+                ts27 = int(time.time()*1000000)
+                sect25 += (ts27-ts25)
                 #print "check "+str(p)+" "+str(pointPos)
                 if pointPos == Rhino.Geometry.PointContainment.Inside:
+                    iterInside += 1
                     vDir = Point3d.Subtract(p,y)
                     vDir.Unitize()
                     line = Line(y,vDir,length)
@@ -251,7 +273,10 @@ class MyComponent(component):
                     pointC,posPointC = viewAreaCurve.ClosestPoint(p,0)
                     pointW,posPointW = curWall.ClosestPoint(p,0)
                     pointToConsiderate.append((p,p,posPointC,posPointW))
-        
+                elif len(iSect) == 0:
+                    outSide += 1
+                    break
+            ts3 = int(time.time()*1000000)
             #print "pomade"
             #print pointToConsiderate
             if len(pointToConsiderate) &gt; 2:
@@ -302,9 +327,13 @@ class MyComponent(component):
                     #print "p3.5"
                     #print pointList
                 viewArea = Polyline(pointList)
-                viewAreaCurve = viewArea.ToNurbsCurve()
+                viewAreaCurve = viewArea.ToPolylineCurve()
                 #wallList.append(curWall.Geometry)
+            ts4 = int(time.time()*1000000)
             
+            sect1 += (ts2-ts1)
+            sect2 += (ts3-ts2)
+            sect3 += (ts4-ts3)
             #print "iliterate"
             #print pointList
                 
@@ -312,8 +341,10 @@ class MyComponent(component):
         #for po in pointList:
             #print po
         #TODO: check if only have 2 point, create new view field; if more split to several wall and continue the loop
-        t2 = int(time.time()*1000)
+        t2 = int(time.time()*1000000)
         print str((t2-t1))
+        print iterTot
+        print str(sect1)+" "+str(sect2)+" "+str(sect3)+" "+str(sect25)
         
         
         
@@ -485,11 +516,11 @@ class MyComponent(component):
 </item>
                     <item name="Description" type_name="gh_string" type_code="10">GhPython provides a Python script component</item>
                     <item name="EditorLocation" type_name="gh_drawing_point" type_code="30">
-                      <X>663</X>
+                      <X>331</X>
                       <Y>0</Y>
                     </item>
                     <item name="EditorSize" type_name="gh_drawing_size" type_code="32">
-                      <W>613</W>
+                      <W>945</W>
                       <H>908</H>
                     </item>
                     <item name="HideInput" type_name="gh_bool" type_code="1">true</item>
@@ -502,7 +533,7 @@ class MyComponent(component):
                   </items>
                   <chunks count="2">
                     <chunk name="Attributes">
-                      <items count="3">
+                      <items count="2">
                         <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                           <X>520</X>
                           <Y>206</Y>
@@ -513,7 +544,6 @@ class MyComponent(component):
                           <X>549</X>
                           <Y>236</Y>
                         </item>
-                        <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                       </items>
                     </chunk>
                     <chunk name="ParameterData">
@@ -541,7 +571,7 @@ class MyComponent(component):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="3">
+                              <items count="2">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>522</X>
                                   <Y>208</Y>
@@ -552,7 +582,6 @@ class MyComponent(component):
                                   <X>529.5</X>
                                   <Y>222</Y>
                                 </item>
-                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -573,7 +602,7 @@ class MyComponent(component):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="3">
+                              <items count="2">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>522</X>
                                   <Y>236</Y>
@@ -584,7 +613,6 @@ class MyComponent(component):
                                   <X>529.5</X>
                                   <Y>250</Y>
                                 </item>
-                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -600,7 +628,7 @@ class MyComponent(component):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="3">
+                              <items count="2">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>564</X>
                                   <Y>208</Y>
@@ -611,7 +639,6 @@ class MyComponent(component):
                                   <X>572</X>
                                   <Y>236</Y>
                                 </item>
-                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -666,8 +693,8 @@ class MyComponent(component):
                             <chunk name="Item" index="0">
                               <items count="2">
                                 <item name="Plane" type_name="gh_plane" type_code="72">
-                                  <Ox>6.52562164213813</Ox>
-                                  <Oy>7.99338849669863</Oy>
+                                  <Ox>7.8134277208615</Ox>
+                                  <Oy>7.35777242947928</Oy>
                                   <Oz>0</Oz>
                                   <Xx>1</Xx>
                                   <Xy>0</Xy>
@@ -677,10 +704,10 @@ class MyComponent(component):
                                   <Yz>0</Yz>
                                 </item>
                                 <item name="Size" type_name="gh_interval2d" type_code="61">
-                                  <Au>-2.42313788061787</Au>
-                                  <Bu>2.42313788061787</Bu>
-                                  <Av>-1.15528578660265</Av>
-                                  <Bv>1.15528578660265</Bv>
+                                  <Au>-8.0868102249533</Au>
+                                  <Bu>8.0868102249533</Bu>
+                                  <Av>-7.52668484140676</Av>
+                                  <Bv>7.52668484140676</Bv>
                                 </item>
                               </items>
                             </chunk>
@@ -886,7 +913,7 @@ class MyComponent(component):
                   </items>
                   <chunks count="2">
                     <chunk name="Attributes">
-                      <items count="2">
+                      <items count="3">
                         <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                           <X>110</X>
                           <Y>378</Y>
@@ -897,6 +924,7 @@ class MyComponent(component):
                           <X>135.65</X>
                           <Y>388</Y>
                         </item>
+                        <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                       </items>
                     </chunk>
                     <chunk name="PersistentData">
@@ -914,8 +942,8 @@ class MyComponent(component):
                               <!--GH_Point only stores data which exists, test the existence of data fields prior to reading.-->
                               <items count="1">
                                 <item name="Coordinate" type_name="gh_point3d" type_code="51">
-                                  <X>5.84076168075614</X>
-                                  <Y>7.12169371056443</Y>
+                                  <X>10.229963434948</X>
+                                  <Y>5.09282079916493</Y>
                                   <Z>0</Z>
                                 </item>
                               </items>
@@ -935,7 +963,7 @@ class MyComponent(component):
     <chunk name="Thumbnail">
       <items count="1">
         <item name="Thumbnail" type_name="gh_drawing_bitmap" type_code="37">
-          <bitmap length="1532">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</bitmap>
+          <bitmap length="2678">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</bitmap>
         </item>
       </items>
     </chunk>
