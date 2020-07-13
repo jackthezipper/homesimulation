@@ -48,10 +48,10 @@
             <chunk name="Projection">
               <items count="2">
                 <item name="Target" type_name="gh_drawing_point" type_code="30">
-                  <X>-439</X>
-                  <Y>-69</Y>
+                  <X>-450</X>
+                  <Y>-49</Y>
                 </item>
-                <item name="Zoom" type_name="gh_single" type_code="5">1.17647064</item>
+                <item name="Zoom" type_name="gh_single" type_code="5">1.17647052</item>
               </items>
             </chunk>
             <chunk name="Views">
@@ -539,8 +539,8 @@ class MyComponent(component):
 </item>
                     <item name="Description" type_name="gh_string" type_code="10">GhPython provides a Python script component</item>
                     <item name="EditorLocation" type_name="gh_drawing_point" type_code="30">
-                      <X>210</X>
-                      <Y>3</Y>
+                      <X>253</X>
+                      <Y>0</Y>
                     </item>
                     <item name="EditorSize" type_name="gh_drawing_size" type_code="32">
                       <W>577</W>
@@ -556,18 +556,17 @@ class MyComponent(component):
                   </items>
                   <chunks count="2">
                     <chunk name="Attributes">
-                      <items count="3">
+                      <items count="2">
                         <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
-                          <X>520</X>
-                          <Y>206</Y>
+                          <X>398</X>
+                          <Y>139</Y>
                           <W>62</W>
                           <H>60</H>
                         </item>
                         <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
-                          <X>549</X>
-                          <Y>236</Y>
+                          <X>427</X>
+                          <Y>169</Y>
                         </item>
-                        <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                       </items>
                     </chunk>
                     <chunk name="ParameterData">
@@ -595,18 +594,17 @@ class MyComponent(component):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="3">
+                              <items count="2">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
-                                  <X>522</X>
-                                  <Y>208</Y>
+                                  <X>400</X>
+                                  <Y>141</Y>
                                   <W>12</W>
                                   <H>28</H>
                                 </item>
                                 <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
-                                  <X>529.5</X>
-                                  <Y>222</Y>
+                                  <X>407.5</X>
+                                  <Y>155</Y>
                                 </item>
-                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -627,18 +625,17 @@ class MyComponent(component):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="3">
+                              <items count="2">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
-                                  <X>522</X>
-                                  <Y>236</Y>
+                                  <X>400</X>
+                                  <Y>169</Y>
                                   <W>12</W>
                                   <H>28</H>
                                 </item>
                                 <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
-                                  <X>529.5</X>
-                                  <Y>250</Y>
+                                  <X>407.5</X>
+                                  <Y>183</Y>
                                 </item>
-                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -654,18 +651,17 @@ class MyComponent(component):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="3">
+                              <items count="2">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
-                                  <X>564</X>
-                                  <Y>208</Y>
+                                  <X>442</X>
+                                  <Y>141</Y>
                                   <W>16</W>
                                   <H>56</H>
                                 </item>
                                 <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
-                                  <X>572</X>
-                                  <Y>236</Y>
+                                  <X>450</X>
+                                  <Y>169</Y>
                                 </item>
-                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -693,18 +689,17 @@ class MyComponent(component):
                   </items>
                   <chunks count="2">
                     <chunk name="Attributes">
-                      <items count="3">
+                      <items count="2">
                         <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
-                          <X>76</X>
-                          <Y>124</Y>
+                          <X>-44</X>
+                          <Y>59</Y>
                           <W>50</W>
                           <H>20</H>
                         </item>
                         <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
-                          <X>101.7</X>
-                          <Y>134.35</Y>
+                          <X>-18.19246</X>
+                          <Y>69.06294</Y>
                         </item>
-                        <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                       </items>
                     </chunk>
                     <chunk name="PersistentData">
@@ -808,18 +803,17 @@ class MyComponent(component):
                   </items>
                   <chunks count="2">
                     <chunk name="Attributes">
-                      <items count="3">
+                      <items count="2">
                         <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
-                          <X>231</X>
-                          <Y>336</Y>
+                          <X>109</X>
+                          <Y>269</Y>
                           <W>62</W>
                           <H>60</H>
                         </item>
                         <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
-                          <X>260</X>
-                          <Y>366</Y>
+                          <X>138</X>
+                          <Y>299</Y>
                         </item>
-                        <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                       </items>
                     </chunk>
                     <chunk name="ParameterData">
@@ -847,18 +841,17 @@ class MyComponent(component):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="3">
+                              <items count="2">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
-                                  <X>233</X>
-                                  <Y>338</Y>
+                                  <X>111</X>
+                                  <Y>271</Y>
                                   <W>12</W>
                                   <H>28</H>
                                 </item>
                                 <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
-                                  <X>240.5</X>
-                                  <Y>352</Y>
+                                  <X>118.5</X>
+                                  <Y>285</Y>
                                 </item>
-                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -879,18 +872,17 @@ class MyComponent(component):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="3">
+                              <items count="2">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
-                                  <X>233</X>
-                                  <Y>366</Y>
+                                  <X>111</X>
+                                  <Y>299</Y>
                                   <W>12</W>
                                   <H>28</H>
                                 </item>
                                 <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
-                                  <X>240.5</X>
-                                  <Y>380</Y>
+                                  <X>118.5</X>
+                                  <Y>313</Y>
                                 </item>
-                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -906,18 +898,17 @@ class MyComponent(component):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="3">
+                              <items count="2">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
-                                  <X>275</X>
-                                  <Y>338</Y>
+                                  <X>153</X>
+                                  <Y>271</Y>
                                   <W>16</W>
                                   <H>56</H>
                                 </item>
                                 <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
-                                  <X>283</X>
-                                  <Y>366</Y>
+                                  <X>161</X>
+                                  <Y>299</Y>
                                 </item>
-                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -945,18 +936,17 @@ class MyComponent(component):
                   </items>
                   <chunks count="2">
                     <chunk name="Attributes">
-                      <items count="3">
+                      <items count="2">
                         <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
-                          <X>110</X>
-                          <Y>378</Y>
+                          <X>-10</X>
+                          <Y>312</Y>
                           <W>50</W>
                           <H>20</H>
                         </item>
                         <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
-                          <X>135.65</X>
-                          <Y>388</Y>
+                          <X>15.75754</X>
+                          <Y>322.713</Y>
                         </item>
-                        <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                       </items>
                     </chunk>
                     <chunk name="PersistentData">
@@ -1000,7 +990,7 @@ class MyComponent(component):
                     <item name="Description" type_name="gh_string" type_code="10">A C#.NET scriptable component</item>
                     <item name="EditorPosition" type_name="gh_drawing_point" type_code="30">
                       <X>18</X>
-                      <Y>220</Y>
+                      <Y>13</Y>
                     </item>
                     <item name="Hidden" type_name="gh_bool" type_code="1">true</item>
                     <item name="InstanceGuid" type_name="gh_guid" type_code="9">ab6a9ab0-a61b-4220-8c8d-79c66fc3d987</item>
@@ -1010,19 +1000,20 @@ class MyComponent(component):
                     <item name="ReferenceCount" type_name="gh_int32" type_code="3">0</item>
                     <item name="ScriptSource" type_name="gh_string" type_code="10">    //Rhino.RhinoDoc.ActiveDoc.Views.ActiveView
     Polyline pl = x.ToPolyline();
-    Layer wallLayer = RhinoDoc.ActiveDoc.Layers.FindName("ARS-DINDING");
+    Layer wallLayer = RhinoDoc.ActiveDoc.Layers.FindName("ARS_DINDING");
     List&lt;Rhino.DocObjects.RhinoObject&gt; wallList = Rhino.RhinoDoc.ActiveDoc.Objects.FindByCrossingWindowRegion(Rhino.RhinoDoc.ActiveDoc.Views.ActiveView.ActiveViewport, pl, true, Rhino.DocObjects.ObjectType.Curve).Where(elm =&gt; elm.Attributes.LayerIndex == 98).ToList();
-    Print("ddo "+((Rhino.DocObjects.CurveObject)wallList.ElementAt(0)).CurveGeometry.GetType());
+    Print("ddo " + ((Rhino.DocObjects.CurveObject) wallList.ElementAt(0)).CurveGeometry.GetType());
     Rhino.DocObjects.RhinoObject j;
     List&lt;Rhino.Geometry.Curve&gt; wallListCurve = new List&lt;Rhino.Geometry.Curve&gt;();
     for(int i = wallList.Count() - 1;i &gt;= 0;i--)
     {
-      wallListCurve.Insert(0,((Rhino.DocObjects.CurveObject)wallList.ElementAt(i)).CurveGeometry);
+      wallListCurve.Insert(0, ((Rhino.DocObjects.CurveObject) wallList.ElementAt(i)).CurveGeometry);
     }
-    
+
     //ro.
     //RhinoObject r;
     //r.
+    DateTime t1 = DateTime.Now;
     Vector3d unitDir = new Vector3d(0, 1, 0);
     Vector3d myDir = new Vector3d(unitDir);
     //myDir.Rotate(RhinoMath.ToRadians(-90), Vector3d.ZAxis);
@@ -1046,7 +1037,7 @@ class MyComponent(component):
       point1 = iSect.ElementAt(i).PointA;
       Print("puki " + point1);
     }
-    Print("puki " + point1);
+    //Print("puki " + point1);
     iSect = Rhino.Geometry.Intersect.Intersection.CurveCurve(pl.ToPolylineCurve(), l2.ToNurbsCurve(), 0, 0);
     Point3d point2 = new Point3d(0, 0, 0);
     for(int i = 0;i &lt; iSect.Count;i++)
@@ -1061,7 +1052,7 @@ class MyComponent(component):
       Vector3d dir = Point3d.Subtract(pl.ElementAt(i), y);
       dir.Unitize();
       double angle = RhinoMath.ToDegrees(Math.Atan2(dir.Y, dir.X) - Math.Atan2(tmp.Y, tmp.X));
-      Print("elus " + angle);
+      //Print("elus " + angle);
       if(angle &gt;= 0 &amp;&amp; angle &lt;= 120)
       {
         vpointList.Add(Tuple.Create(pl.ElementAt(i), angle));
@@ -1069,7 +1060,7 @@ class MyComponent(component):
       //pointList
     }
     Tuple&lt;int,int&gt; cc = Tuple.Create(3, 4);
-    Print("fff " + cc.Item1);
+    //Print("fff " + cc.Item1);
     vpointList = vpointList.OrderByDescending(elm =&gt; elm.Item2).ToList();
     pointList.Add(y);
     pointList.Add(point2);
@@ -1085,14 +1076,15 @@ class MyComponent(component):
 
     List&lt;Rhino.Geometry.Curve&gt; checkWallList = new List&lt;Rhino.Geometry.Curve&gt;(wallListCurve);
     List&lt;Tuple&lt;Point3d,Point3d,double,double&gt;&gt; pointToConsiderate = new List&lt;Tuple&lt;Point3d,Point3d,double,double&gt;&gt;();
-    
+
     Vector3d vDir = new Vector3d(tmp);
+    Tuple&lt;Point3d,Point3d,double,double&gt; tmpTuple;
     while(checkWallList.Count() &gt; 0)
     {
       Rhino.Geometry.Curve curWall = checkWallList.ElementAt(0);
       checkWallList.RemoveAt(0);
       iSect = Rhino.Geometry.Intersect.Intersection.CurveCurve(viewAreaCurve, curWall, 0, 0);
-      
+
       pointToConsiderate.Clear();
       foreach (Rhino.Geometry.Intersect.IntersectionEvent sect in iSect)
       {
@@ -1103,24 +1095,25 @@ class MyComponent(component):
         double testPos = Math.Round(posPointW) - posPointW;
         if(Math.Abs(testPos) &gt; 0.05)
         {
-          pointToConsiderate.Append(Tuple.Create(sect.PointA, sect.PointA, posPointC, posPointW));
+          pointToConsiderate.Add(Tuple.Create(sect.PointA, sect.PointA, posPointC, posPointW));
         }
       }
       Polyline pll;
       curWall.TryGetPolyline(out pll);
-      
+
       foreach(Point3d p in pll)
       {
-        vDir = Point3d.Subtract(p,y);
-        double angle = RhinoMath.ToDegrees(Vector3d.VectorAngle(vDir,myDir));
+        vDir = Point3d.Subtract(p, y);
+        double angle = RhinoMath.ToDegrees(Vector3d.VectorAngle(vDir, myDir));
         if(angle &gt; 60)
         {
           continue;
         }
         Rhino.Geometry.PointContainment pointPos = viewAreaCurve.Contains(p);
+        //Print("peplos " + pointPos);
         if(pointPos == Rhino.Geometry.PointContainment.Inside)
         {
-          Line line = new Line(y,vDir,diagL);
+          Line line = new Line(y, vDir, diagL);
           iSect = Rhino.Geometry.Intersect.Intersection.CurveCurve(viewAreaCurve, line.ToNurbsCurve(), 0, 0);
           foreach (Rhino.Geometry.Intersect.IntersectionEvent sect in iSect)
           {
@@ -1130,7 +1123,9 @@ class MyComponent(component):
               viewAreaCurve.ClosestPoint(sect.PointA, out posPointC);
               double posPointW;
               curWall.ClosestPoint(p, out posPointW);
-              pointToConsiderate.Append(Tuple.Create(p, sect.PointA, posPointC, posPointW));
+              //Print("penpendar ");
+              pointToConsiderate.Add(Tuple.Create(p, sect.PointA, posPointC, posPointW));
+              //Print("perotak "+pointToConsiderate.Count());
             }
           }
         }
@@ -1140,23 +1135,26 @@ class MyComponent(component):
           viewAreaCurve.ClosestPoint(p, out posPointC);
           double posPointW;
           curWall.ClosestPoint(p, out posPointW);
-          pointToConsiderate.Append(Tuple.Create(p, p, posPointC, posPointW));
+          pointToConsiderate.Add(Tuple.Create(p, p, posPointC, posPointW));
         }
         else if(iSect.Count == 0)
         {
           break;
         }
       }
+      //Print("samkara " + pointToConsiderate.Count());
       if(pointToConsiderate.Count &gt; 2)
       {
         pointToConsiderate = pointToConsiderate.OrderBy(elm =&gt; elm.Item4).ToList();
-        while(pointToConsiderate.Count &gt; 0)
+        //Print();
+        while(pointToConsiderate.Count() &gt; 1)
         {
           var curElm = pointToConsiderate.ElementAt(0);
           pointToConsiderate.RemoveAt(0);
+          //Print("remkaliii");
           var nextElm = pointToConsiderate.ElementAt(0);
           Line newWall = new Line(curElm.Item1, nextElm.Item1);
-          checkWallList.Append(newWall.ToNurbsCurve());
+          checkWallList.Add(newWall.ToNurbsCurve());
           if(nextElm.Item1.Equals(nextElm.Item2))
           {
             pointToConsiderate.RemoveAt(0);
@@ -1170,10 +1168,37 @@ class MyComponent(component):
       else if(pointToConsiderate.Count == 2)
       {
         pointToConsiderate = pointToConsiderate.OrderBy(elm =&gt; elm.Item3).ToList();
+        tmpTuple = pointToConsiderate.ElementAt(1);
+        pointList.Insert((int) (tmpTuple.Item3 + 1), tmpTuple.Item2);
+        if(!tmpTuple.Item1.Equals(tmpTuple.Item2))
+        {
+          pointList.Insert((int) (tmpTuple.Item3 + 1), tmpTuple.Item1);
+        }
+        int idxToRemove = (int) (tmpTuple.Item3);
+        tmpTuple = pointToConsiderate.ElementAt(0);
+        pointList.RemoveRange((int) (tmpTuple.Item3 + 1), idxToRemove - (int) (tmpTuple.Item3));
+        if(!pointList.ElementAt((int) tmpTuple.Item3).Equals(tmpTuple.Item1))
+        {
+          pointList.Insert((int) (tmpTuple.Item3 + 1), tmpTuple.Item1);
+        }
+        if(!tmpTuple.Item1.Equals(tmpTuple.Item2))
+        {
+          pointList.Insert((int) (tmpTuple.Item3 + 1), tmpTuple.Item2);
+        }
+        viewArea = new Polyline(pointList);
+        viewAreaCurve = viewArea.ToPolylineCurve();
       }
-      Print("sekot " + iSect.Count);
+      //Print("sekot " + iSect.Count);
     }
-    Print("otorai " + wallListCurve.ElementAt(0));
+
+    DateTime t2 = DateTime.Now;
+    TimeSpan ts = t2 - t1;
+    Print("tossua " + ts.TotalMilliseconds);
+    //foreach(Point3d pph in pointList)
+    //{
+    //Print("polit " + pph);
+    //}
+    //Print("cudat "+DateTime.UtcNow);
     //pointList.
     //ro.
     //RhinoObject[] allWall = Rhino.RhinoDoc.ActiveDoc.Objects.FindByLayer("ARS-DINDING");
@@ -1194,14 +1219,14 @@ using System.Linq;</item>
                     <chunk name="Attributes">
                       <items count="3">
                         <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
-                          <X>607</X>
-                          <Y>317</Y>
+                          <X>485</X>
+                          <Y>250</Y>
                           <W>72</W>
                           <H>44</H>
                         </item>
                         <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
-                          <X>636</X>
-                          <Y>339</Y>
+                          <X>514</X>
+                          <Y>272</Y>
                         </item>
                         <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                       </items>
@@ -1234,14 +1259,14 @@ using System.Linq;</item>
                             <chunk name="Attributes">
                               <items count="3">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
-                                  <X>609</X>
-                                  <Y>319</Y>
+                                  <X>487</X>
+                                  <Y>252</Y>
                                   <W>12</W>
                                   <H>20</H>
                                 </item>
                                 <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
-                                  <X>616.5</X>
-                                  <Y>329</Y>
+                                  <X>494.5</X>
+                                  <Y>262</Y>
                                 </item>
                                 <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
@@ -1266,14 +1291,14 @@ using System.Linq;</item>
                             <chunk name="Attributes">
                               <items count="3">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
-                                  <X>609</X>
-                                  <Y>339</Y>
+                                  <X>487</X>
+                                  <Y>272</Y>
                                   <W>12</W>
                                   <H>20</H>
                                 </item>
                                 <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
-                                  <X>616.5</X>
-                                  <Y>349</Y>
+                                  <X>494.5</X>
+                                  <Y>282</Y>
                                 </item>
                                 <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
@@ -1294,14 +1319,14 @@ using System.Linq;</item>
                             <chunk name="Attributes">
                               <items count="3">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
-                                  <X>651</X>
-                                  <Y>319</Y>
+                                  <X>529</X>
+                                  <Y>252</Y>
                                   <W>26</W>
                                   <H>20</H>
                                 </item>
                                 <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
-                                  <X>664</X>
-                                  <Y>329</Y>
+                                  <X>542</X>
+                                  <Y>262</Y>
                                 </item>
                                 <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
@@ -1321,14 +1346,14 @@ using System.Linq;</item>
                             <chunk name="Attributes">
                               <items count="3">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
-                                  <X>651</X>
-                                  <Y>339</Y>
+                                  <X>529</X>
+                                  <Y>272</Y>
                                   <W>26</W>
                                   <H>20</H>
                                 </item>
                                 <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
-                                  <X>664</X>
-                                  <Y>349</Y>
+                                  <X>542</X>
+                                  <Y>282</Y>
                                 </item>
                                 <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
@@ -1361,21 +1386,20 @@ using System.Linq;</item>
                   </items>
                   <chunks count="2">
                     <chunk name="Attributes">
-                      <items count="6">
+                      <items count="5">
                         <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
-                          <X>681</X>
-                          <Y>107</Y>
-                          <W>402</W>
+                          <X>730</X>
+                          <Y>42</Y>
+                          <W>233</W>
                           <H>210</H>
                         </item>
                         <item name="MarginLeft" type_name="gh_int32" type_code="3">0</item>
                         <item name="MarginRight" type_name="gh_int32" type_code="3">0</item>
                         <item name="MarginTop" type_name="gh_int32" type_code="3">0</item>
                         <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
-                          <X>681.1509</X>
-                          <Y>107.7782</Y>
+                          <X>730.5524</X>
+                          <Y>42.49115</Y>
                         </item>
-                        <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                       </items>
                     </chunk>
                     <chunk name="PanelProperties">
@@ -1410,7 +1434,7 @@ using System.Linq;</item>
     <chunk name="Thumbnail">
       <items count="1">
         <item name="Thumbnail" type_name="gh_drawing_bitmap" type_code="37">
-          <bitmap length="8736">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</bitmap>
+          <bitmap length="4890">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</bitmap>
         </item>
       </items>
     </chunk>
