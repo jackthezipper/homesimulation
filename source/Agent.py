@@ -57,6 +57,8 @@ class Agent:
 		self.speedFactor = 0.15
 		self.myFloorIndex = 0
 		self.needStair = False
+		
+		self.m_active = False
 	
 	def setTarget(self,newTarget):
 		self.target = newTarget
@@ -68,6 +70,10 @@ class Agent:
 		if not self.initialized:
 			self.AssignToClosestTarget()
 			self.initialized = True
+		
+		if not self.m_active:
+			return self.pos
+		
 		if self.state != STATE_MOVE:
 			self.pathIndex = 1
 			if self.waitTime > 0:
