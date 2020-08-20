@@ -21,6 +21,11 @@ STATE_IDLE = 0
 STATE_MOVE = STATE_IDLE + 1
 STATE_WAIT = STATE_MOVE + 1
 errPause = False
+
+#30 min -> 15 sec
+TIMECONVERSION = 2 #to multiply dt
+TIMEFACTOR = 1000 #to multiply waitTime
+
 class Agent:
 	possibleTarget = []
 	entryPointList = []
@@ -66,7 +71,7 @@ class Agent:
 		if newTarget != None:
 			self.target.available = False
 	
-	def update(self):
+	def update(self, dt):
 		if not self.initialized:
 			self.AssignToClosestTarget()
 			self.initialized = True
@@ -77,7 +82,7 @@ class Agent:
 		if self.state != STATE_MOVE:
 			self.pathIndex = 1
 			if self.waitTime > 0:
-				self.waitTime -=1
+				self.waitTime -= (dt * TIMEFACTOR)
 				return self.pos
 			
 			#getting new target
@@ -124,7 +129,8 @@ class Agent:
 		else:
 			destination  = self.myPath[self.pathIndex]
 			distance = self.pos.DistanceTo(destination)
-			if distance > self.speedFactor:
+			distanceCovered = float(dt) / 1000
+			if distance > distanceCovered#self.speedFactor:
 				#there still distance within the path
 				myGrid = TranslateToGridPos(self.pos,self.myFloorIndex)
 				self.blockedBy,blocked = PathFinding.IsBlocked(myGrid,self.myFloorIndex)
@@ -179,33 +185,45 @@ class Agent:
 					self.blockedBy = -1
 				
 				#update agent position
-				self.pos = rs.PointAdd(self.pos,Vector3d.Multiply(self.moveDir,self.speedFactor))
+				self.pos = rs.PointAdd(self.pos,Vector3d.Multiply(self.moveDir,distanceCovered))
 			else:
 				#already close with destination
-				self.pos = destination
-				self.pathIndex+=1
-				if self.pathIndex < len(self.myPath):
-					self.recalculateMoveDir()
-				elif self.needStair:
-					nextStairIndex = "STAIRS_"+str(self.target.floorIndex)
-					nextStairTarget = next(trgt for trgt in Agent.possibleTarget if trgt.hasActivity(nextStairIndex))
-					nextStairEntry = next(entry for entry in Agent.entryPointList if entry.target == nextStairTarget)
-					self.myFloorIndex = self.target.floorIndex
-					start = TranslateToGridPos(nextStairEntry.pos,self.myFloorIndex)
-					end = TranslateToGridPos(self.entryPoint.pos,self.myFloorIndex)
-					
-					self.myPath = PathFinding.astarv3(start,end,self.myIndex,self.myFloorIndex)
-					self.pos = nextStairTarget.targetPoint
-					self.myPath.insert(0,self.pos)
-					if self.entryPoint.pos != self.entryPoint.target.targetPoint:
-						self.myPath.append(self.entryPoint.target.targetPoint)
-					self.pathIndex = 1
-					self.recalculateMoveDir()
-					self.needStair = False
-				else:
-					self.canGetNewTarget = True
-					self.state = STATE_WAIT
-					self.waitTime = (Schedule.SCHEDULE[self.myIndex][self.targetIndex][1] * 5)
+				remainingDistance = distanceCovered - distance
+				while (remainingDistance > 0):
+					self.pos = destination
+					self.pathIndex+=1
+					if self.pathIndex < len(self.myPath):
+						self.recalculateMoveDir()
+						destination  = self.myPath[self.pathIndex]
+						distance = self.pos.DistanceTo(destination)
+						if remainingDistance < distance:
+							self.pos = rs.PointAdd(self.pos,Vector3d.Multiply(self.moveDir,remainingDistance))
+						remainingDistance = remainingDistance - distance
+					elif self.needStair:
+						nextStairIndex = "STAIRS_"+str(self.target.floorIndex)
+						nextStairTarget = next(trgt for trgt in Agent.possibleTarget if trgt.hasActivity(nextStairIndex))
+						nextStairEntry = next(entry for entry in Agent.entryPointList if entry.target == nextStairTarget)
+						self.myFloorIndex = self.target.floorIndex
+						start = TranslateToGridPos(nextStairEntry.pos,self.myFloorIndex)
+						end = TranslateToGridPos(self.entryPoint.pos,self.myFloorIndex)
+						
+						self.myPath = PathFinding.astarv3(start,end,self.myIndex,self.myFloorIndex)
+						self.pos = nextStairTarget.targetPoint
+						self.myPath.insert(0,self.pos)
+						if self.entryPoint.pos != self.entryPoint.target.targetPoint:
+							self.myPath.append(self.entryPoint.target.targetPoint)
+						self.pathIndex = 1
+						self.recalculateMoveDir()
+						self.needStair = False
+						distance = self.pos.DistanceTo(destination)
+						if remainingDistance < distance:
+							self.pos = rs.PointAdd(self.pos,Vector3d.Multiply(self.moveDir,remainingDistance))
+						remainingDistance = remainingDistance - distance
+					else:
+						self.canGetNewTarget = True
+						self.state = STATE_WAIT
+						self.waitTime = (Schedule.SCHEDULE[self.myIndex][self.targetIndex][1] * TIMEFACTOR)
+						remainingDistance = 0
 			self.hasWait = False
 			return self.pos
 	
