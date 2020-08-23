@@ -40,7 +40,7 @@ class Agent:
 		self.state = state
 		self.initialPos = position
 		self.hasNewTarget = False
-		self.waitTime = (Schedule.SCHEDULE[index][0][1] * 5)
+		self.waitTime = (Schedule.SCHEDULE[index][0][1] * TIMEFACTOR)
 		self.myPath = None
 		self.pathIndex = 0
 		self.target = None
@@ -82,7 +82,7 @@ class Agent:
 		if self.state != STATE_MOVE:
 			self.pathIndex = 1
 			if self.waitTime > 0:
-				self.waitTime -= (dt * TIMEFACTOR)
+				self.waitTime -= (dt * TIMECONVERSION)
 				return self.pos
 			
 			#getting new target
@@ -130,7 +130,7 @@ class Agent:
 			destination  = self.myPath[self.pathIndex]
 			distance = self.pos.DistanceTo(destination)
 			distanceCovered = float(dt) / 1000
-			if distance > distanceCovered#self.speedFactor:
+			if distance > distanceCovered:#self.speedFactor:
 				#there still distance within the path
 				myGrid = TranslateToGridPos(self.pos,self.myFloorIndex)
 				self.blockedBy,blocked = PathFinding.IsBlocked(myGrid,self.myFloorIndex)
