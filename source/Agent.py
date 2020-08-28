@@ -31,6 +31,7 @@ class Agent:
 	entryPointList = []
 	hasErr = False
 	agentList = []
+	s_scaleSpeed = 1.0
 	
 	def __init__(self,position,targetPoint,index,state = STATE_IDLE):
 		self.pos = position
@@ -82,7 +83,7 @@ class Agent:
 		if self.state != STATE_MOVE:
 			self.pathIndex = 1
 			if self.waitTime > 0:
-				self.waitTime -= (dt * TIMECONVERSION)
+				self.waitTime -= (dt * Agent.s_scaleSpeed * TIMECONVERSION)
 				return self.pos
 			
 			#getting new target
@@ -129,7 +130,7 @@ class Agent:
 		else:
 			destination  = self.myPath[self.pathIndex]
 			distance = self.pos.DistanceTo(destination)
-			distanceCovered = float(dt) / 1000
+			distanceCovered = float(dt) * Agent.s_scaleSpeed / 1000
 			if distance > distanceCovered:#self.speedFactor:
 				#there still distance within the path
 				myGrid = TranslateToGridPos(self.pos,self.myFloorIndex)
