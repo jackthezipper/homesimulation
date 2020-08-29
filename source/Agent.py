@@ -47,21 +47,21 @@ class Agent:
 		self.target = None
 		self.moveDir = Vector3f(0,1,0)
 		self.pathCalculated = False
-		self.myIndex = index
-		self.blockedBy = -1
+		self.m_myIndex = index
+		self.m_blockedBy = -1
 		self.blockCounter = 0
-		self.hasWait = False
+		self.m_hasWait = False
 		self.targetIndex = 0
 		self.initialized = False
-		self.canGetNewTarget = True
+		self.m_canGetNewTarget = True
 		self.boundArea = None
 		self.curveBoundArea = None
 		self.diagonalBound = 0
 		
 		self.objectList = []
 		
-		self.speedFactor = 0.15
-		self.myFloorIndex = 0
+		self.m_speedFactor = 0.15
+		self.m_myFloorIndex = 0
 		self.needStair = False
 		
 		self.m_active = False
@@ -87,29 +87,29 @@ class Agent:
 				return self.pos
 			
 			#getting new target
-			if self.canGetNewTarget:
+			if self.m_canGetNewTarget:
 				self.calculateNextTarget()
 			if self.target == None:
 				return self.pos
-			self.canGetNewTarget = False
+			self.m_canGetNewTarget = False
 			
 			#calculating path
 			start = None
 			if self.oldEntryPoint != None:
-				start = TranslateToGridPos(self.oldEntryPoint.pos,self.myFloorIndex)
+				start = TranslateToGridPos(self.oldEntryPoint.pos,self.m_myFloorIndex)
 			else:
-				start = TranslateToGridPos(self.pos,self.myFloorIndex)
+				start = TranslateToGridPos(self.pos,self.m_myFloorIndex)
 			
-			self.needStair = (self.target.floorIndex != self.myFloorIndex)
+			self.needStair = (self.target.floorIndex != self.m_myFloorIndex)
 			
 			if self.needStair:
-				stairIndex = "STAIRS_"+str(self.myFloorIndex)
+				stairIndex = "STAIRS_"+str(self.m_myFloorIndex)
 				stairTarget = next(trgt for trgt in Agent.possibleTarget if trgt.hasActivity(stairIndex))
 				stairEntry = next(entry for entry in Agent.entryPointList if entry.target == stairTarget)
-				end = TranslateToGridPos(stairEntry.pos,self.myFloorIndex)
+				end = TranslateToGridPos(stairEntry.pos,self.m_myFloorIndex)
 			else:
-				end = TranslateToGridPos(self.entryPoint.pos,self.myFloorIndex)
-			self.myPath = PathFinding.astarv3(start,end,self.myIndex,self.myFloorIndex)
+				end = TranslateToGridPos(self.entryPoint.pos,self.m_myFloorIndex)
+			self.myPath = PathFinding.astarv3(start,end,self.m_myIndex,self.m_myFloorIndex)
 			
 			#No path found. Wait a moment
 			if self.myPath == None:
@@ -131,20 +131,20 @@ class Agent:
 			destination  = self.myPath[self.pathIndex]
 			distance = self.pos.DistanceTo(destination)
 			distanceCovered = float(dt) * Agent.s_scaleSpeed / 1000
-			if distance > distanceCovered:#self.speedFactor:
+			if distance > distanceCovered:#self.m_speedFactor:
 				#there still distance within the path
-				myGrid = TranslateToGridPos(self.pos,self.myFloorIndex)
-				self.blockedBy,blocked = PathFinding.IsBlocked(myGrid,self.myFloorIndex)
+				myGrid = TranslateToGridPos(self.pos,self.m_myFloorIndex)
+				self.m_blockedBy,blocked = PathFinding.IsBlocked(myGrid,self.m_myFloorIndex)
 				
 				if blocked:
 					#path maybe blocked
-					blockPos = PathFinding.TranslateToRealPos(PathFinding.Map.liveBlock[self.blockedBy][0],self.myFloorIndex)
+					blockPos = PathFinding.TranslateToRealPos(PathFinding.Map.liveBlock[self.m_blockedBy][0],self.m_myFloorIndex)
 					blockDir = Vector3f.Subtract(Vector3f(blockPos[0],blockPos[1],0),Vector3f(self.pos.X,self.pos.Y,0))
 					blockDir = Vector3f.Divide(blockDir,blockDir.Length)
 					dotP = (blockDir.X*self.moveDir.X) + (blockDir.Y*self.moveDir.Y)
 					angle = math.acos(dotP)
 					angle = math.degrees(angle)
-					if angle > 60 and (abs(myGrid[0]-PathFinding.Map.liveBlock[self.blockedBy][0][0]) > PathFinding.OVERLAP_LIMIT or abs(myGrid[1]-PathFinding.Map.liveBlock[self.blockedBy][0][1]) > PathFinding.OVERLAP_LIMIT):
+					if angle > 60 and (abs(myGrid[0]-PathFinding.Map.liveBlock[self.m_blockedBy][0][0]) > PathFinding.OVERLAP_LIMIT or abs(myGrid[1]-PathFinding.Map.liveBlock[self.m_blockedBy][0][1]) > PathFinding.OVERLAP_LIMIT):
 						blocked = False
 					if self.entryPoint.pos != self.entryPoint.target.targetPoint and self.pathIndex == (len(self.myPath) - 1):
 						blocked = False
@@ -152,38 +152,38 @@ class Agent:
 				
 				if blocked:
 					#path is blocked
-					if self.blockCounter < 10 and self.myIndex > self.blockedBy:
-						if not self.hasWait:
+					if self.blockCounter < 10 and self.m_myIndex > self.m_blockedBy:
+						if not self.m_hasWait:
 							self.blockCounter += 1
 							return self.pos
 						else:
-							self.hasWait = True
+							self.m_hasWait = True
 					
 					if self.needStair:
-						stairIndex = "STAIRS_"+str(self.myFloorIndex)
+						stairIndex = "STAIRS_"+str(self.m_myFloorIndex)
 						stairEntry = next(trgt for trgt in Agent.possibleTarget if trgt.hasActivity(stairIndex))
-						myNextDestGrid = TranslateToGridPos(stairEntry.pos,self.myFloorIndex)
+						myNextDestGrid = TranslateToGridPos(stairEntry.pos,self.m_myFloorIndex)
 					else:
-						myNextDestGrid = TranslateToGridPos(self.entryPoint.pos,self.myFloorIndex)
-					midPath = PathFinding.astarv3(myGrid,myNextDestGrid,self.myIndex,self.myFloorIndex,True)
+						myNextDestGrid = TranslateToGridPos(self.entryPoint.pos,self.m_myFloorIndex)
+					midPath = PathFinding.astarv3(myGrid,myNextDestGrid,self.m_myIndex,self.m_myFloorIndex,True)
 					
 					#No path found. Wait a moment
 					if midPath == None:
 						self.blockCounter += 1
-						if self.blockCounter > 10 and self.myIndex > self.blockedBy and self.pathIndex > 2:
-							self.pos = rs.PointAdd(self.pos,(Vector3d.Multiply(self.moveDir,self.speedFactor) * (-1)))
+						if self.blockCounter > 10 and self.m_myIndex > self.m_blockedBy and self.pathIndex > 2:
+							self.pos = rs.PointAdd(self.pos,(Vector3d.Multiply(self.moveDir,self.m_speedFactor) * (-1)))
 						return self.pos
 					
 					if self.entryPoint.pos != self.entryPoint.target.targetPoint:
 						midPath.append(self.entryPoint.target.targetPoint)
 					del self.myPath[self.pathIndex-1:]
 					self.myPath.extend(midPath)
-					self.hasWait = False
+					self.m_hasWait = False
 					self.recalculateMoveDir()
 				else:
 					#not blocked, continue to move
 					self.blockCounter = 0
-					self.blockedBy = -1
+					self.m_blockedBy = -1
 				
 				#update agent position
 				self.pos = rs.PointAdd(self.pos,Vector3d.Multiply(self.moveDir,distanceCovered))
@@ -204,11 +204,11 @@ class Agent:
 						nextStairIndex = "STAIRS_"+str(self.target.floorIndex)
 						nextStairTarget = next(trgt for trgt in Agent.possibleTarget if trgt.hasActivity(nextStairIndex))
 						nextStairEntry = next(entry for entry in Agent.entryPointList if entry.target == nextStairTarget)
-						self.myFloorIndex = self.target.floorIndex
-						start = TranslateToGridPos(nextStairEntry.pos,self.myFloorIndex)
-						end = TranslateToGridPos(self.entryPoint.pos,self.myFloorIndex)
+						self.m_myFloorIndex = self.target.floorIndex
+						start = TranslateToGridPos(nextStairEntry.pos,self.m_myFloorIndex)
+						end = TranslateToGridPos(self.entryPoint.pos,self.m_myFloorIndex)
 						
-						self.myPath = PathFinding.astarv3(start,end,self.myIndex,self.myFloorIndex)
+						self.myPath = PathFinding.astarv3(start,end,self.m_myIndex,self.m_myFloorIndex)
 						self.pos = nextStairTarget.targetPoint
 						self.myPath.insert(0,self.pos)
 						if self.entryPoint.pos != self.entryPoint.target.targetPoint:
@@ -221,25 +221,25 @@ class Agent:
 							self.pos = rs.PointAdd(self.pos,Vector3d.Multiply(self.moveDir,remainingDistance))
 						remainingDistance = remainingDistance - distance
 					else:
-						self.canGetNewTarget = True
+						self.m_canGetNewTarget = True
 						self.state = STATE_WAIT
-						self.waitTime = (Schedule.SCHEDULE[self.myIndex][self.targetIndex][1] * TIMEFACTOR)
+						self.waitTime = (Schedule.SCHEDULE[self.m_myIndex][self.targetIndex][1] * TIMEFACTOR)
 						remainingDistance = 0
-			self.hasWait = False
+			self.m_hasWait = False
 			return self.pos
 	
 	def calculateNextTarget(self):
-		if self.targetIndex == len(Schedule.SCHEDULE[self.myIndex]) - 1:
+		if self.targetIndex == len(Schedule.SCHEDULE[self.m_myIndex]) - 1:
 			self.setTarget(None)
 			return
 			
 		if self.target != None:
 			self.target.available = True
 			
-		nextSchedule = Schedule.SCHEDULE[self.myIndex][self.targetIndex + 1]
+		nextSchedule = Schedule.SCHEDULE[self.m_myIndex][self.targetIndex + 1]
 		availableTarget = [target for target in Agent.possibleTarget if target.available and target.hasActivity(nextSchedule[0])]
 	
-		specificTarget = [target for target in availableTarget if target.isSpecificToAgent(self.myIndex)]
+		specificTarget = [target for target in availableTarget if target.isSpecificToAgent(self.m_myIndex)]
 		
 		if specificTarget != None and len(specificTarget) > 0:
 			availableTarget = specificTarget
@@ -290,7 +290,7 @@ class Agent:
 				epList.append(ep)
 		self.setTarget(Agent.possibleTarget[targetIndex])
 		self.entryPoint = epList[0]
-		self.myFloorIndex = self.target.floorIndex
+		self.m_myFloorIndex = self.target.floorIndex
 		
 	def setBoundArea(self,area):
 		if area != self.boundArea:
