@@ -132,7 +132,7 @@ def astarv3(start, end,ignoreIndex,mazeIndex,liveBlocker = False):
 		current_node.isOpen = False
 		current_node.isClosed = True
 		if current_node.equals(end_node):
-			return reconstructPathv2(current_node,mazeIndex,liveBlocker)
+			return reconstructPathv2(current_node,ignoreIndex,mazeIndex,liveBlocker)
 			break
 	
 		for new_position in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
@@ -191,7 +191,7 @@ def InsertNode(node,list):
 	node.isOpen = True
 
 
-def reconstructPathv2(node,mazeIndex,liveBlocker = False):
+def reconstructPathv2(node,ignoreIndex,mazeIndex,liveBlocker = False):
 	curNode = node
 	path = []
 	nodePath = []
@@ -199,17 +199,17 @@ def reconstructPathv2(node,mazeIndex,liveBlocker = False):
 	while not curNode.parent.equals(curNode):
 		curNode = curNode.parent
 		nodePath.insert(0,curNode)
-	nodePath = simplifyPathv3(nodePath,mazeIndex,liveBlocker)
+	nodePath = simplifyPathv3(nodePath,ignoreIndex,mazeIndex,liveBlocker)
 	for node in nodePath:
 		realPos = TranslateToRealPos(node.position,mazeIndex)
 		point = Point3d(realPos[0],realPos[1],0)
 		path.append(point)
 	return path
 
-def simplifyPathv3(path,mazeIndex,liveBlocker = False):
+def simplifyPathv3(path,ignoreIndex,mazeIndex,liveBlocker = False):
 	index = len(path) - 2
 	while index > 0:
-		if lineInSightv2(path[index + 1].position[0],path[index + 1].position[1],path[index - 1].position[0],path[index - 1].position[1],mazeIndex,liveBlocker):
+		if lineInSightv2(path[index + 1].position[0],path[index + 1].position[1],path[index - 1].position[0],path[index - 1].position[1],ignoreIndex,mazeIndex,liveBlocker):
 			path.remove(path[index])
 		index-=1
 	return path
@@ -261,6 +261,7 @@ def lineInSightv2(startX,startY,endX,endY,ignoreIndex,mazeIndex,liveBlocker = Fa
 		for i in range(1,diffY):
 			checkX = startY + i*dirY
 			checkY = startX + (diffX*i/diffY*dirX)
+			print "amazo "+str(mazeIndex)+" "+str(checkY)+" "+str(checkX)
 			if (Map.maze[mazeIndex][checkY][checkX] == STATE_BLOCKED) or ((Map.additionalWeight[mazeIndex][checkY][checkX] > 10)):
 				return False
 			if liveBlocker:
