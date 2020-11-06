@@ -1,0 +1,30 @@
+ID,Description,Habit
+S8,Mematikan lampu ,0.8
+S9,Mematikan AC/kipas,0.8
+S10,Mematikan setrika ,0.8
+S11,Mematikan TV ,0.8
+S12,Mematikan radio ,0.8
+S13,Mematikan komputer/laptop,0.8
+J3,Keluar dari ruang,1
+O9,Mematikan kran air ,0.8
+O10,Mematikan pompa air ,0.6
+O11,Menyimpan peralatan berkebun ,0.4
+O12,Menyimpan peralatan kerja ,1
+O13,Menyimpan peralatan les ,0.4
+O14,Meletakkan pakaian kotor ,0.4
+O15,Mengambil pakaian bersih,0.4
+O18,Menyimpan peralatan bersih rumah ,0.2
+G9,Mengganti Gas,1
+G10,Menutup pintu,0.8
+G11,Mematikan Kompor,1
+G12,Mengambil makanan,1
+G13,Mematikan printer,0.8
+G14,"Mematikan rice cooker, microwave, oven",1
+G15,Mematikan dispenser,0.8
+K2,Bangun dari duduk di kursi,1
+Sf2,Bangun dari duduk di sofa,1
+Kr2,Bangun dari duduk di karpet,1
+Kk2,Menutup kulkas,1
+T4,Bangun dari tempat tidur,1
+B2,Pulang belanja,1
+B4,Mematikan blender,1
