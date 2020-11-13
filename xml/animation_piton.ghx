@@ -710,7 +710,7 @@ class MyComponent(component):
             for (idx,floor) in enumerate(area):
                 self.InitializeGrid(floor,idx)
             for target in self.possibleTarget:
-                print "torogenta "+str(target.targetPoint)+" "+str(target.floorIndex)
+                print "torogenta "+str(target.m_targetPoint)+" "+str(target.m_floorIndex)
 
         gridArea = self.grids
         topPos = self.topPos
@@ -3468,8 +3468,8 @@ class MyComponent(component):
         
         import rhinoscriptsyntax as rs
         
-        Agent.Agent.possibleTarget = possibleTarget
-        Agent.Agent.entryPointList = entryPoints
+        Agent.Agent.s_possibleTarget = possibleTarget
+        Agent.Agent.s_entryPointList = entryPoints
         Agent.Agent.agentList = agent
         
         vectorDir = []
@@ -3482,8 +3482,8 @@ class MyComponent(component):
                 print agt.m_active
                 if agt.m_active:
                     print agt.waitTime
-                    print agt.state
-                    print agt.target
+                    print agt.m_state
+                    print agt.m_target
                 #print "cc "+str(agt.waitTime)
                 agt.setBoundArea(boundArea[agt.m_myFloorIndex])
                 #self.UpdateViewAgent(agt)

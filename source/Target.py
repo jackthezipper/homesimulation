@@ -1,13 +1,20 @@
 class Target:
-	def __init__(self,fIndex,tp = None):
-		self.targetPoint = tp
-		self.floorIndex = fIndex
-		self.available = True
+	s_unNamedCount = 0
+	def __init__(self,fIndex,tp = None, id = "UNNAMED"):
+		if id == "UNNAMED":
+			m_id = id+str(s_unNamedCount)
+			s_unNamedCount += 1
+		else:
+			m_id = id
+		self.m_id = id
+		self.m_targetPoint = tp
+		self.m_floorIndex = fIndex
+		self.m_available = True
 		self.activities = []
-		self.specificAgent = []
+		self.m_specificAgent = []
 		
 	def setTargetPoint(self,point):
-		self.targetPoint = point
+		self.m_targetPoint = point
 		
 	def setActivity(self,activity):
 		self.activities.append(activity)
@@ -19,14 +26,14 @@ class Target:
 		return False
 		
 	def setSpecificAgent(self,agent):
-		self.specificAgent.append(agent)
+		self.m_specificAgent.append(agent)
 	
 	def isSpecificToAgent(self,agent):
-		for spec in self.specificAgent:
+		for spec in self.m_specificAgent:
 			if spec == agent:
 				return True
 		return False
 		
 	def notHaveSpecific(self):
-		return (len(self.specificAgent) == 0)
+		return (len(self.m_specificAgent) == 0)
 	

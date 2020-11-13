@@ -52,6 +52,6 @@ class HomeObject:
 			return 0,0
 		occupied = 0
 		for target in self.targets:
-			if not target.available:
+			if not target.m_available:
 				occupied += 1
 		return occupied,len(self.targets)

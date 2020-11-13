@@ -8,6 +8,7 @@ import Target
 import PathFinding
 import Schedule
 Schedule = reload(Schedule)
+import Activity
 
 from Rhino.Geometry import Point3d, Vector3f,Vector3d,Line,Polyline
 import rhinoscriptsyntax as rs
@@ -17,6 +18,7 @@ import Rhino.Geometry
 
 PathFinding = reload(PathFinding)
 
+#agent state
 STATE_IDLE = 0
 STATE_MOVE = STATE_IDLE + 1
 STATE_WAIT = STATE_MOVE + 1
@@ -26,25 +28,60 @@ errPause = False
 TIMECONVERSION = 2 #to multiply dt
 TIMEFACTOR = 1000 #to multiply waitTime
 
+#find resources path
+sourceFilePath	= ghenv.Component.OnPingDocument().FilePath
+sourceDirPath	= sourceFilePath[0:sourceFilePath.rfind('\\')+1]
+resPath			= sourceDirPath+"..\\res\\"
+
+#table column
+TABLE_ID				= 0
+TABLE_DESCRIPTION		= TABLE_ID + 1
+TABLE_VALUE				= TABLE_DESCRIPTION + 1
+TABLE_CANINTERRUPT		= TABLE_VALUE + 1
+TABLE_CANBEINTERRUPTED	= TABLE_CANINTERRUPT + 1
+TABLE_STARTTIMECANSTART	= TABLE_CANBEINTERRUPTED + 1
+TABLE_ENDTIMECANSTART	= TABLE_STARTTIMECANSTART + 1
+TABLE_DURATION			= TABLE_ENDTIMECANSTART + 1
+TABLE_ROOM1				= TABLE_DURATION + 1
+TABLE_ROOM2				= TABLE_ROOM1 + 1
+TABLE_PLAN				= TABLE_ROOM2 + 1
+TABLE_HABIT				= TABLE_PLAN + 1
+TABLE_RULES				= TABLE_HABIT + 1
+TABLE_EXHAUST			= TABLE_RULES + 1
+TABLE_SLEEPY			= TABLE_EXHAUST + 1
+TABLE_DIRTY				= TABLE_SLEEPY + 1
+TABLE_URINATE			= TABLE_DIRTY + 1
+TABLE_DEFECATE			= TABLE_URINATE + 1
+TABLE_ENERGY			= TABLE_DEFECATE + 1
+TABLE_HUNGER			= TABLE_ENERGY + 1
+TABLE_THIRSTY			= TABLE_HUNGER + 1
+TABLE_ABILITY			= TABLE_THIRSTY + 1
+TABLE_STRESS			= TABLE_ABILITY + 1
+TABLE_EMOTION			= TABLE_STRESS + 1
+TABLE_MOOD				= TABLE_EMOTION + 1
+TABLE_LONELINESS		= TABLE_MOOD + 1
+TABLE_COLUMN_COUNT		= TABLE_LONELINESS + 1
+
+#---------------------------------------------------------------------------------------
 class Agent:
-	possibleTarget = []
-	entryPointList = []
+	s_possibleTarget = []
+	s_entryPointList = []
 	hasErr = False
 	agentList = []
 	s_scaleSpeed = 1.0
 	
-	def __init__(self,position,targetPoint,index,state = STATE_IDLE):
+	def __init__(self,position,m_targetPoint,index,role = "ayah",state = STATE_IDLE):
 		self.pos = position
-		self.targetPoint = targetPoint
+		self.m_targetPoint = m_targetPoint
 		self.entryPoint = None
 		self.oldEntryPoint = None
-		self.state = state
+		self.m_state = state
 		self.initialPos = position
 		self.hasNewTarget = False
 		self.waitTime = (Schedule.SCHEDULE[index][0][1] * TIMEFACTOR)
 		self.myPath = None
 		self.pathIndex = 0
-		self.target = None
+		self.m_target = None
 		self.moveDir = Vector3f(0,1,0)
 		self.pathCalculated = False
 		self.m_myIndex = index
@@ -65,12 +102,13 @@ class Agent:
 		self.needStair = False
 		
 		self.m_active = False
+		self.m_role = role
 	
 	def setTarget(self,newTarget):
-		self.target = newTarget
+		self.m_target = newTarget
 		self.hasNewTarget = True
 		if newTarget != None:
-			self.target.available = False
+			self.m_target.m_available = False
 	
 	def update(self, dt):
 		if not self.initialized:
@@ -80,7 +118,7 @@ class Agent:
 		if not self.m_active:
 			return self.pos
 		
-		if self.state != STATE_MOVE:
+		if self.m_state != STATE_MOVE:
 			self.pathIndex = 1
 			if self.waitTime > 0:
 				self.waitTime -= (dt * Agent.s_scaleSpeed * TIMECONVERSION)
@@ -89,7 +127,7 @@ class Agent:
 			#getting new target
 			if self.m_canGetNewTarget:
 				self.calculateNextTarget()
-			if self.target == None:
+			if self.m_target == None:
 				return self.pos
 			self.m_canGetNewTarget = False
 			
@@ -100,12 +138,12 @@ class Agent:
 			else:
 				start = TranslateToGridPos(self.pos,self.m_myFloorIndex)
 			
-			self.needStair = (self.target.floorIndex != self.m_myFloorIndex)
+			self.needStair = (self.m_target.m_floorIndex != self.m_myFloorIndex)
 			
 			if self.needStair:
 				stairIndex = "STAIRS_"+str(self.m_myFloorIndex)
-				stairTarget = next(trgt for trgt in Agent.possibleTarget if trgt.hasActivity(stairIndex))
-				stairEntry = next(entry for entry in Agent.entryPointList if entry.target == stairTarget)
+				stairTarget = next(trgt for trgt in Agent.s_possibleTarget if trgt.hasActivity(stairIndex))
+				stairEntry = next(entry for entry in Agent.s_entryPointList if entry.target == stairTarget)
 				end = TranslateToGridPos(stairEntry.pos,self.m_myFloorIndex)
 			else:
 				end = TranslateToGridPos(self.entryPoint.pos,self.m_myFloorIndex)
@@ -120,12 +158,12 @@ class Agent:
 				self.myPath.insert(0,self.pos)
 			
 			if self.needStair:
-				self.myPath.append(stairEntry.target.targetPoint)
-			elif self.entryPoint.pos != self.entryPoint.target.targetPoint:
-				self.myPath.append(self.entryPoint.target.targetPoint)
+				self.myPath.append(stairEntry.target.m_targetPoint)
+			elif self.entryPoint.pos != self.entryPoint.target.m_targetPoint:
+				self.myPath.append(self.entryPoint.target.m_targetPoint)
 			self.pathIndex = 1
 			self.recalculateMoveDir()
-			self.state = STATE_MOVE
+			self.m_state = STATE_MOVE
 			return self.pos
 		else:
 			destination  = self.myPath[self.pathIndex]
@@ -146,7 +184,7 @@ class Agent:
 					angle = math.degrees(angle)
 					if angle > 60 and (abs(myGrid[0]-PathFinding.Map.liveBlock[self.m_blockedBy][0][0]) > PathFinding.OVERLAP_LIMIT or abs(myGrid[1]-PathFinding.Map.liveBlock[self.m_blockedBy][0][1]) > PathFinding.OVERLAP_LIMIT):
 						blocked = False
-					if self.entryPoint.pos != self.entryPoint.target.targetPoint and self.pathIndex == (len(self.myPath) - 1):
+					if self.entryPoint.pos != self.entryPoint.target.m_targetPoint and self.pathIndex == (len(self.myPath) - 1):
 						blocked = False
 				
 				
@@ -161,7 +199,7 @@ class Agent:
 					
 					if self.needStair:
 						stairIndex = "STAIRS_"+str(self.m_myFloorIndex)
-						stairEntry = next(trgt for trgt in Agent.possibleTarget if trgt.hasActivity(stairIndex))
+						stairEntry = next(trgt for trgt in Agent.s_possibleTarget if trgt.hasActivity(stairIndex))
 						myNextDestGrid = TranslateToGridPos(stairEntry.pos,self.m_myFloorIndex)
 					else:
 						myNextDestGrid = TranslateToGridPos(self.entryPoint.pos,self.m_myFloorIndex)
@@ -174,8 +212,8 @@ class Agent:
 							self.pos = rs.PointAdd(self.pos,(Vector3d.Multiply(self.moveDir,self.m_speedFactor) * (-1)))
 						return self.pos
 					
-					if self.entryPoint.pos != self.entryPoint.target.targetPoint:
-						midPath.append(self.entryPoint.target.targetPoint)
+					if self.entryPoint.pos != self.entryPoint.target.m_targetPoint:
+						midPath.append(self.entryPoint.target.m_targetPoint)
 					del self.myPath[self.pathIndex-1:]
 					self.myPath.extend(midPath)
 					self.m_hasWait = False
@@ -201,18 +239,18 @@ class Agent:
 							self.pos = rs.PointAdd(self.pos,Vector3d.Multiply(self.moveDir,remainingDistance))
 						remainingDistance = remainingDistance - distance
 					elif self.needStair:
-						nextStairIndex = "STAIRS_"+str(self.target.floorIndex)
-						nextStairTarget = next(trgt for trgt in Agent.possibleTarget if trgt.hasActivity(nextStairIndex))
-						nextStairEntry = next(entry for entry in Agent.entryPointList if entry.target == nextStairTarget)
-						self.m_myFloorIndex = self.target.floorIndex
+						nextStairIndex = "STAIRS_"+str(self.m_target.m_floorIndex)
+						nextStairTarget = next(trgt for trgt in Agent.s_possibleTarget if trgt.hasActivity(nextStairIndex))
+						nextStairEntry = next(entry for entry in Agent.s_entryPointList if entry.target == nextStairTarget)
+						self.m_myFloorIndex = self.m_target.m_floorIndex
 						start = TranslateToGridPos(nextStairEntry.pos,self.m_myFloorIndex)
 						end = TranslateToGridPos(self.entryPoint.pos,self.m_myFloorIndex)
 						
 						self.myPath = PathFinding.astarv3(start,end,self.m_myIndex,self.m_myFloorIndex)
-						self.pos = nextStairTarget.targetPoint
+						self.pos = nextStairTarget.m_targetPoint
 						self.myPath.insert(0,self.pos)
-						if self.entryPoint.pos != self.entryPoint.target.targetPoint:
-							self.myPath.append(self.entryPoint.target.targetPoint)
+						if self.entryPoint.pos != self.entryPoint.target.m_targetPoint:
+							self.myPath.append(self.entryPoint.target.m_targetPoint)
 						self.pathIndex = 1
 						self.recalculateMoveDir()
 						self.needStair = False
@@ -222,7 +260,7 @@ class Agent:
 						remainingDistance = remainingDistance - distance
 					else:
 						self.m_canGetNewTarget = True
-						self.state = STATE_WAIT
+						self.m_state = STATE_WAIT
 						self.waitTime = (Schedule.SCHEDULE[self.m_myIndex][self.targetIndex][1] * TIMEFACTOR)
 						remainingDistance = 0
 			self.m_hasWait = False
@@ -233,11 +271,11 @@ class Agent:
 			self.setTarget(None)
 			return
 			
-		if self.target != None:
-			self.target.available = True
+		if self.m_target != None:
+			self.m_target.m_available = True
 			
 		nextSchedule = Schedule.SCHEDULE[self.m_myIndex][self.targetIndex + 1]
-		availableTarget = [target for target in Agent.possibleTarget if target.available and target.hasActivity(nextSchedule[0])]
+		availableTarget = [target for target in Agent.s_possibleTarget if target.m_available and target.hasActivity(nextSchedule[0])]
 	
 		specificTarget = [target for target in availableTarget if target.isSpecificToAgent(self.m_myIndex)]
 		
@@ -247,7 +285,7 @@ class Agent:
 			availableTarget = [target for target in availableTarget if target.notHaveSpecific()]
 		
 		if len(availableTarget) > 0:
-			if self.target != None:
+			if self.m_target != None:
 				self.targetIndex += 1
 			ron = random.randint(0,len(availableTarget)-1)
 			self.setTarget(availableTarget[ron])
@@ -256,8 +294,8 @@ class Agent:
 			return
 			
 		entryPointL = []
-		for ep in Agent.entryPointList:
-			if ep.target == self.target:
+		for ep in Agent.s_entryPointList:
+			if ep.target == self.m_target:
 				entryPointL.append(ep)
 		selectedEntry = 0
 		distanceMin = float(sys.maxint)
@@ -277,20 +315,20 @@ class Agent:
 	def AssignToClosestTarget(self):
 		distanceMin = float(sys.maxint)
 		targetIndex = 0
-		for (i,target) in enumerate(Agent.possibleTarget):
-			curDistance = self.pos.DistanceTo(target.targetPoint)
+		for (i,target) in enumerate(Agent.s_possibleTarget):
+			curDistance = self.pos.DistanceTo(target.m_targetPoint)
 			if curDistance < distanceMin:
 				distanceMin = curDistance
 				targetIndex = i
-		print Agent.possibleTarget[targetIndex]
-		print Agent.possibleTarget[targetIndex].targetPoint
+		print Agent.s_possibleTarget[targetIndex]
+		print Agent.s_possibleTarget[targetIndex].m_targetPoint
 		epList = []
-		for (i,ep) in enumerate(Agent.entryPointList):
-			if ep.target == Agent.possibleTarget[targetIndex]:
+		for (i,ep) in enumerate(Agent.s_entryPointList):
+			if ep.target == Agent.s_possibleTarget[targetIndex]:
 				epList.append(ep)
-		self.setTarget(Agent.possibleTarget[targetIndex])
+		self.setTarget(Agent.s_possibleTarget[targetIndex])
 		self.entryPoint = epList[0]
-		self.m_myFloorIndex = self.target.floorIndex
+		self.m_myFloorIndex = self.m_target.m_floorIndex
 		
 	def setBoundArea(self,area):
 		if area != self.boundArea:
@@ -349,6 +387,18 @@ class Agent:
 		self.objectList = Rhino.RhinoDoc.ActiveDoc.Objects.FindByCrossingWindowRegion(view,pointList,True,Rhino.DocObjects.InstanceObject)
 		print olist
 		print self.objectList
+
+	def LoadActivityList(self):
+		tableFileName = resPath+"table_"self.m_role+".csv"
+		with open(tableFileName) as csvfile:
+			reader = csv.reader(csvfile)
+			for row in reader:
+				if row[TABLE_ID] == "ID"
+					continue
+				#read per row
+				#TODO: implement reading table
+				
+#-----------------------------------------------------------------------------------------------------------------------------------------
 
 def TranslateToGridPos(pos,mazeIndex):
 	try:
