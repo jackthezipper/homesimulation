@@ -1,6 +1,13 @@
 from enum import Enum
 import random
 
+import csv
+#find resources path
+sourceFilePath	= ghenv.Component.OnPingDocument().FilePath
+sourceDirPath	= sourceFilePath[0:sourceFilePath.rfind('\\')+1]
+resPath			= sourceDirPath+"..\\res\\"
+
+
 class InterruptProperty:
 	def __init__(self, canInterrupt, canBeInterrupted):
 		self.m_canInterrupt = canInterrupt
@@ -42,16 +49,17 @@ ES_TOTAL		= ES_LONELINESS + 1
 #-------------------Base Activity Class----------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------------------
 class Activity:
-	def __init__(self, ID, description):
+	def __init__(self, ID):
 		self.m_ID = ID
-		self.m_description = description
 
+	def GetDescription():
+		return g_ActivityDB[self.m_ID]
 #------------------------------------------------------------------------------------------------------------
 #-------------------Core Activity Class----------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------------------
 class CoreActivity(Activity):
-	def __init__(self, ID, description, interruptProperty, timeProperty, rooms, planProperty, biologicalEffect, esFactor)
-		Activity.__init__(self, ID, description)
+	def __init__(self, ID, interruptProperty, timeProperty, rooms, planProperty, biologicalEffect, esFactor)
+		Activity.__init__(self, ID)
 		self.m_interruptProperty = interruptProperty
 		self.m_timeProperty = timeProperty
 		self.m_rooms = rooms
@@ -101,11 +109,68 @@ class CoreActivity(Activity):
 #------------------------------------------------------------------------------------------------------------
 #-------------------Support Activity Class-------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------------------
+
+#support activity type
+SA_TYPE_BEFORE	= 0
+SA_TYPE_AFTER	= SA_TYPE_BEFORE + 1
+
 class SupportActivity(Activity):
-	def __init__(self, ID, description, duration, habitFactor):
-		Activity.__init__(self, ID, description)
-		self.m_duration = duration
+	def __init__(self, ID, habitFactor, type):
+		Activity.__init__(self, ID)
 		self.m_habitFactor = habitFactor
+		self.m_type = type
 	
 	def IsActivityExecuted(self):
 		return random.random() < self.m_habitFactor
+	
+	def GetDuration(self):
+		return type == SA_TYPE_BEFORE ? g_SupportActivityBeforeDB[self.m_ID][DB_SUPPORT_ACTIVITY_DURATION] : g_SupportActivityAfterDB[self.m_ID][DB_SUPPORT_ACTIVITY_DURATION]
+
+#------------------------------------------------------------------------------------------------------------
+#------------------General Stuff_----------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------------------
+
+#main activity
+MAIN_ACTIVITY_ID	= 0
+MAIN_ACTIVITY_DESC	= MAIN_ACTIVITY_ID + 1
+
+#table support activty
+TABLE_SUPPORT_ACTIVITY_ID		= 0
+TABLE_SUPPORT_ACTIVITY_DESC		= TABLE_SUPPORT_ACTIVITY_ID + 1
+TABLE_SUPPORT_ACTIVITY_DURATION	= TABLE_SUPPORT_ACTIVITY_DESC + 1
+
+#DB support activty
+DB_SUPPORT_ACTIVITY_DESC		= 0
+DB_SUPPORT_ACTIVITY_DURATION	= TABLE_SUPPORT_ACTIVITY_DESC + 1
+
+g_ActivityDB = {}
+g_SupportActivityBeforeDB = {}
+g_SupportActivityAfterDB = {}
+
+def LoadGeneralActivityDB()
+	tableFileName = resPath+"table_activity.csv"
+	with open(tableFileName) as csvfile:
+		reader = csv.reader(csvfile)
+		for row in reader:
+			if row[TABLE_ID] == "ID"
+				continue
+			g_ActivityDB[row[MAIN_ACTIVITY_ID]] = [row[MAIN_ACTIVITY_DESC]]
+
+def LoadSupportActivityDB()
+	#support activity before
+	tableFileName = resPath+"support_activity_before.csv"
+	with open(tableFileName) as csvfile:
+		reader = csv.reader(csvfile)
+		for row in reader:
+			if row[TABLE_ID] == "ID"
+				continue
+			g_SupportActivityBeforeDB[TABLE_SUPPORT_ACTIVITY_ID] = [row[TABLE_SUPPORT_ACTIVITY_DESC],row[TABLESUPPORT_ACTIVITY_DURATION]]
+	
+	#support activity after
+	tableFileName = resPath+"support_activity_after.csv"
+	with open(tableFileName) as csvfile:
+		reader = csv.reader(csvfile)
+		for row in reader:
+			if row[TABLE_ID] == "ID"
+				continue
+			g_SupportActivityBeforeDB[TABLE_SUPPORT_ACTIVITY_ID] = [row[TABLE_SUPPORT_ACTIVITY_DESC],row[TABLE_SUPPORT_ACTIVITY_DURATION]]

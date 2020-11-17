@@ -8,6 +8,7 @@ import Target
 import PathFinding
 import Schedule
 Schedule = reload(Schedule)
+import csv
 import Activity
 
 from Rhino.Geometry import Point3d, Vector3f,Vector3d,Line,Polyline
@@ -33,11 +34,8 @@ sourceFilePath	= ghenv.Component.OnPingDocument().FilePath
 sourceDirPath	= sourceFilePath[0:sourceFilePath.rfind('\\')+1]
 resPath			= sourceDirPath+"..\\res\\"
 
-#table column
+#table main activity column
 TABLE_ID				= 0
-TABLE_DESCRIPTION		= TABLE_ID + 1
-TABLE_VALUE				= TABLE_DESCRIPTION + 1
-TABLE_CANINTERRUPT		= TABLE_VALUE + 1
 TABLE_CANBEINTERRUPTED	= TABLE_CANINTERRUPT + 1
 TABLE_STARTTIMECANSTART	= TABLE_CANBEINTERRUPTED + 1
 TABLE_ENDTIMECANSTART	= TABLE_STARTTIMECANSTART + 1
@@ -62,6 +60,9 @@ TABLE_MOOD				= TABLE_EMOTION + 1
 TABLE_LONELINESS		= TABLE_MOOD + 1
 TABLE_COLUMN_COUNT		= TABLE_LONELINESS + 1
 
+#table support activity column
+TABLE_SA_ID		= 0
+TABLE_SA_HABIT	= TABLE_SA_ID + 1
 #---------------------------------------------------------------------------------------
 class Agent:
 	s_possibleTarget = []
@@ -103,6 +104,8 @@ class Agent:
 		
 		self.m_active = False
 		self.m_role = role
+		
+		self.m_supportActivity = []
 	
 	def setTarget(self,newTarget):
 		self.m_target = newTarget
@@ -397,7 +400,22 @@ class Agent:
 					continue
 				#read per row
 				#TODO: implement reading table
-				
+	
+	def LoadSupportActivity(self):
+		tableFileName = resPath+"table_support_activity_before"self.m_role+".csv"
+		with open(tableFileName) as csvfile:
+			reader = csv.reader(csvfile)
+			for row in reader:
+				if row[TABLE_ID] == "ID"
+					continue
+				self.m_supportActivity.append(Activity.SupportActivity(row[TABLE_SA_ID]), row[TABLE_SA_HABIT], Activity.SA_TYPE_BEFORE)
+		tableFileName = resPath+"table_support_activity_after"self.m_role+".csv"
+		with open(tableFileName) as csvfile:
+			reader = csv.reader(csvfile)
+			for row in reader:
+				if row[TABLE_ID] == "ID"
+					continue
+				self.m_supportActivity.append(Activity.SupportActivity(row[TABLE_SA_ID]), row[TABLE_SA_HABIT], Activity.SA_TYPE_AFTER)
 #-----------------------------------------------------------------------------------------------------------------------------------------
 
 def TranslateToGridPos(pos,mazeIndex):
