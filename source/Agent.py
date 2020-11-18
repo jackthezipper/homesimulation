@@ -63,6 +63,14 @@ TABLE_COLUMN_COUNT		= TABLE_LONELINESS + 1
 #table support activity column
 TABLE_SA_ID		= 0
 TABLE_SA_HABIT	= TABLE_SA_ID + 1
+
+#environment terms for activity
+TERM_ENVI_LIGHT			= 0
+TERM_ENVI_TEMPERATURE	= TERM_ENVI_LIGHT + 1
+TERM_ENVI_TOTAL			= TERM_ENVI_TEMPERATURE + 1
+
+TERM_ENVI_AFFECT	= 0
+TERM_ENVI_OBJECT	= TERM_ENVI_AFFECT + 1
 #---------------------------------------------------------------------------------------
 class Agent:
 	s_possibleTarget = []
