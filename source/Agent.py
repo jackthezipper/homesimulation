@@ -10,6 +10,7 @@ import Schedule
 Schedule = reload(Schedule)
 import csv
 import Activity
+import CommonEnum
 
 from Rhino.Geometry import Point3d, Vector3f,Vector3d,Line,Polyline
 import rhinoscriptsyntax as rs
@@ -34,43 +35,6 @@ sourceFilePath	= ghenv.Component.OnPingDocument().FilePath
 sourceDirPath	= sourceFilePath[0:sourceFilePath.rfind('\\')+1]
 resPath			= sourceDirPath+"..\\res\\"
 
-#table main activity column
-TABLE_ID				= 0
-TABLE_CANBEINTERRUPTED	= TABLE_CANINTERRUPT + 1
-TABLE_STARTTIMECANSTART	= TABLE_CANBEINTERRUPTED + 1
-TABLE_ENDTIMECANSTART	= TABLE_STARTTIMECANSTART + 1
-TABLE_DURATION			= TABLE_ENDTIMECANSTART + 1
-TABLE_ROOM1				= TABLE_DURATION + 1
-TABLE_ROOM2				= TABLE_ROOM1 + 1
-TABLE_PLAN				= TABLE_ROOM2 + 1
-TABLE_HABIT				= TABLE_PLAN + 1
-TABLE_RULES				= TABLE_HABIT + 1
-TABLE_EXHAUST			= TABLE_RULES + 1
-TABLE_SLEEPY			= TABLE_EXHAUST + 1
-TABLE_DIRTY				= TABLE_SLEEPY + 1
-TABLE_URINATE			= TABLE_DIRTY + 1
-TABLE_DEFECATE			= TABLE_URINATE + 1
-TABLE_ENERGY			= TABLE_DEFECATE + 1
-TABLE_HUNGER			= TABLE_ENERGY + 1
-TABLE_THIRSTY			= TABLE_HUNGER + 1
-TABLE_ABILITY			= TABLE_THIRSTY + 1
-TABLE_STRESS			= TABLE_ABILITY + 1
-TABLE_EMOTION			= TABLE_STRESS + 1
-TABLE_MOOD				= TABLE_EMOTION + 1
-TABLE_LONELINESS		= TABLE_MOOD + 1
-TABLE_COLUMN_COUNT		= TABLE_LONELINESS + 1
-
-#table support activity column
-TABLE_SA_ID		= 0
-TABLE_SA_HABIT	= TABLE_SA_ID + 1
-
-#environment terms for activity
-TERM_ENVI_LIGHT			= 0
-TERM_ENVI_TEMPERATURE	= TERM_ENVI_LIGHT + 1
-TERM_ENVI_TOTAL			= TERM_ENVI_TEMPERATURE + 1
-
-TERM_ENVI_AFFECT	= 0
-TERM_ENVI_OBJECT	= TERM_ENVI_AFFECT + 1
 #---------------------------------------------------------------------------------------
 class Agent:
 	s_possibleTarget = []
@@ -114,6 +78,7 @@ class Agent:
 		self.m_role = role
 		
 		self.m_supportActivity = []
+		self.m_terms = []
 	
 	def setTarget(self,newTarget):
 		self.m_target = newTarget
@@ -404,7 +369,7 @@ class Agent:
 		with open(tableFileName) as csvfile:
 			reader = csv.reader(csvfile)
 			for row in reader:
-				if row[TABLE_ID] == "ID"
+				if row[CommonEnum.TABLE_ID] == "ID"
 					continue
 				#read per row
 				#TODO: implement reading table
@@ -414,16 +379,48 @@ class Agent:
 		with open(tableFileName) as csvfile:
 			reader = csv.reader(csvfile)
 			for row in reader:
-				if row[TABLE_ID] == "ID"
+				if row[CommonEnum.TABLE_SA_ID] == "ID"
 					continue
-				self.m_supportActivity.append(Activity.SupportActivity(row[TABLE_SA_ID]), row[TABLE_SA_HABIT], Activity.SA_TYPE_BEFORE)
+				self.m_supportActivity.append(Activity.SupportActivity(row[CommonEnum.TABLE_SA_ID]), row[CommonEnum.TABLE_SA_HABIT], Activity.SA_TYPE_BEFORE)
 		tableFileName = resPath+"table_support_activity_after"self.m_role+".csv"
+		with open(tableFileName) as csvfile:
+			reader = csv.reader(csvfile)
+			for row in reader:
+				if row[CommonEnum.TABLE_SA_ID] == "ID"
+					continue
+				self.m_supportActivity.append(Activity.SupportActivity(row[CommonEnum.TABLE_SA_ID]), row[CommonEnum.TABLE_SA_HABIT], Activity.SA_TYPE_AFTER)
+	
+	def LoadTerms(self):
+		tableFileName = resPath+"table_term_"self.m_role+".csv"
 		with open(tableFileName) as csvfile:
 			reader = csv.reader(csvfile)
 			for row in reader:
 				if row[TABLE_ID] == "ID"
 					continue
-				self.m_supportActivity.append(Activity.SupportActivity(row[TABLE_SA_ID]), row[TABLE_SA_HABIT], Activity.SA_TYPE_AFTER)
+				id = row[CommonEnum.TABLE_TERM_ID]
+				ability = row[CommonEnum.TABLE_TERM_ABILITY]
+				
+				#environment factor
+				enviFactor = []
+				for i in range(0,CommonEnum.TERM_ENVI_TOTAL):
+					factor = []
+					factor.append(int(row[CommonEnum.TABLE_TERM_LIGHT + (i * 2)]))
+					factor.append(row[CommonEnum.TABLE_TERM_LIGHTOBJECT + (i * 2)].split(";"))
+					enviFactor.append(factor)
+				
+				#resource factor
+				resFactor = []
+				for i in range(0, CommonEnum.RES_COUNT):
+					res = row[CommonEnum.TABLE_TERM_RESOURCE1 + (i * 2)]
+					if res == "-":
+						continue
+					factor = []
+					#TODO: implement function ResourceToID
+					factor.append(ResourceToID(res))
+					factor.append(row[CommonEnum.TABLE_TERM_FAILRESOURCE1] + (i * 2))
+				
+				#TODO: implement for loading roomFactor and room priority
+				self.m_terms.append(Term)
 #-----------------------------------------------------------------------------------------------------------------------------------------
 
 def TranslateToGridPos(pos,mazeIndex):

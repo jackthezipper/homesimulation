@@ -42,23 +42,36 @@ class Energy:
 		self.m_totalUsage = 0;
 		self.m_currentUser = []
 
-class Room:
-	def __init__(self,temperature,lux,humidity,windSpeed,pollutionRate,noise,weather):
-		self.m_temperature = temperature
-		self.m_lux = lux
-		self.m_humidity = humidity
-		self.m_windSpeed = windSpeed
-		self.m_pollutionRate = m_pollutionRate
-		self.m_noise = noise
-		self.m_weather = weather
+#--------------------------------------------------------------------------------------------------------------
+#-------------Room Class---------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------------------------
 
+class Room:
+	def __init__(self,name,temperature,light):
+		m_name = name
+		self.m_temperature = temperature
+		self.m_light = light
+
+#--------------------------------------------------------------------------------------------------------------
+#-------------House Class--------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------------------------
 TMPL_ENERGY_TYPE	= 0
 TMPL_ENERGY_SUPPLY	= TMPL_ENERGY_TYPE + 1
 TMPL_ENERGY_PRICE	= TMPL_ENERGY_SUPPLY + 1
 
+#resource enum
+RES_WATER		= 0
+RES_ELECTRICITY	= RES_WATER + 1
+RES_GAS			= RES_ELECTRICITY + 1
+RES_FOOD		= RES_GAS + 1
+RES_FOOD_MTRIAL	= RES_FOOD + 1
+RES_READ_MTRIAL	= RES_FOOD_MTRIAL + 1
+RES_TOTAL		= RES_READ_MTRIAL + 1
+
 class House:
 	def __init__(self):
 		self.m_energies = []
+		self.m_resources = [0 for i in range(0,RES_TOTAL)]
 		self.loadHouseEnergy()
 	
 	def loadHouseEnergy(self):
