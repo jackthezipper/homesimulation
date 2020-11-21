@@ -2,4 +2,4 @@ ID,Ability,Light,LightObject,Temperature,TemperatureObject,Resource1,FailResourc
 BT,2,0,-,0,-,-,-,-,-,-,-,Bed,T4,-,-,RT Utama,-
 BD,2,1,L17,0,-,-,-,-,-,-,-,Bed,T4,-,-,RT Utama,-
 MD1,4,1,L10,0,-,Water,O1,WT03,-,-,-,Door,G3,-,-,KM,-
-MK2,2,1,L11;L6,1,J12;KP01,Food,G5,RC02,-,-,-,Chair;Carpet;Sofa,K1;Kr1;Sf1,,,R Makan,R Keluarga
+MK2,2,1,L11;L6,1,J12;KP01,Food,G5,RC02,-,-,-,Chair;Carpet;Sofa,K1;Kr1;Sf1,-,-,R Makan,R Keluarga

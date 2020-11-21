@@ -62,3 +62,53 @@ RES_FAILACTIVITY	= RES_TYPE + 1
 RES_OBJECT			= RES_FAILACTIVITY + 1
 
 RES_COUNT			= 2
+
+#resource type enum
+RES_WATER		= 0
+RES_ELECTRICITY	= RES_WATER + 1
+RES_GAS			= RES_ELECTRICITY + 1
+RES_FOOD		= RES_GAS + 1
+RES_FOOD_MTRIAL	= RES_FOOD + 1
+RES_READ_MTRIAL	= RES_FOOD_MTRIAL + 1
+RES_TOTAL		= RES_READ_MTRIAL + 1
+
+#room factor enum
+RF_CHAIR			= 0
+RF_SOFA				= RF_CHAIR + 1
+RF_CARPET			= RF_SOFA + 1
+RF_DOOR				= RF_CARPET + 1
+RF_BED				= RF_DOOR + 1
+RF_CLEANING_UTLTY	= RF_BED + 1
+RF_TOTAL			= RF_CLEANING_UTLTY + 1
+
+RF_COUNT			= 2
+
+def ResourceToID(res):
+	resLowerCase = res.lower()
+	if resLowerCase == "water":
+		return RES_WATER
+	elif resLowerCase == "electricity"
+		return RES_ELECTRICITY
+	elif resLowerCase == "gas"
+		return RES_GAS
+	elif resLowerCase == "food"
+		return RES_FOOD
+	elif resLowerCase == "food material"
+		return RES_FOOD_MTRIAL
+	else
+		return RES_READ_MTRIAL
+
+def RoomFactorToID(roomF):
+	rFactorLowerCase = roomF.lower()
+	if rFactorLowerCase == "chair":
+		return RF_CHAIR
+	elif rFactorLowerCase == "sofa":
+		return RF_SOFA
+	elif rFactorLowerCase == "carpet":
+		return RF_CARPET
+	elif rFactorLowerCase == "door":
+		return RF_DOOR
+	elif rFactorLowerCase == "bed":
+		return RF_BED
+	else:
+		return RF_CLEANING_UTLTY

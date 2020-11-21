@@ -1,4 +1,5 @@
 import time
+import CommonEnum
 import csv
 
 SCALE_TIME = 1
@@ -59,19 +60,10 @@ TMPL_ENERGY_TYPE	= 0
 TMPL_ENERGY_SUPPLY	= TMPL_ENERGY_TYPE + 1
 TMPL_ENERGY_PRICE	= TMPL_ENERGY_SUPPLY + 1
 
-#resource enum
-RES_WATER		= 0
-RES_ELECTRICITY	= RES_WATER + 1
-RES_GAS			= RES_ELECTRICITY + 1
-RES_FOOD		= RES_GAS + 1
-RES_FOOD_MTRIAL	= RES_FOOD + 1
-RES_READ_MTRIAL	= RES_FOOD_MTRIAL + 1
-RES_TOTAL		= RES_READ_MTRIAL + 1
-
 class House:
 	def __init__(self):
 		self.m_energies = []
-		self.m_resources = [0 for i in range(0,RES_TOTAL)]
+		self.m_resources = [0 for i in range(0,CommonEnum.RES_TOTAL)]
 		self.loadHouseEnergy()
 	
 	def loadHouseEnergy(self):

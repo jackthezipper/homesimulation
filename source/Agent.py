@@ -415,11 +415,22 @@ class Agent:
 					if res == "-":
 						continue
 					factor = []
-					#TODO: implement function ResourceToID
-					factor.append(ResourceToID(res))
+					factor.append(CommonEnum.ResourceToID(res))
 					factor.append(row[CommonEnum.TABLE_TERM_FAILRESOURCE1] + (i * 2))
 				
-				#TODO: implement for loading roomFactor and room priority
+				roomFactor = []
+				for i in range(0, CommonEnum.RF_COUNT):
+					res = row[CommonEnum.TABLE_TERM_ROOMFACTOR1 + (i * 2)]
+					if res == "-":
+						continue
+					factor = []
+					rf = row[CommonEnum.TABLE_TERM_ROOMFACTOR1 + (i * 2)].split(";")
+					rfId = []
+					for rfObj in fr:
+						rfId.append(CommonEnum.RoomFactorToID(rfObj))
+					factor.append(rfId)
+					factor.append(row[CommonEnum.TABLE_TERM_FAILROOMFACTOR1 + (i * 2)].split(";"))
+				#TODO: implement for loading room priority
 				self.m_terms.append(Term)
 #-----------------------------------------------------------------------------------------------------------------------------------------
 
