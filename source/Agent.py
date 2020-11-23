@@ -77,6 +77,7 @@ class Agent:
 		self.m_active = False
 		self.m_role = role
 		
+		self.m_activity = []
 		self.m_supportActivity = []
 		self.m_terms = []
 	
@@ -369,10 +370,34 @@ class Agent:
 		with open(tableFileName) as csvfile:
 			reader = csv.reader(csvfile)
 			for row in reader:
-				if row[CommonEnum.TABLE_ID] == "ID"
+				if row[CommonEnum.TABLE_ACTIVITY_ID] == "ID"
 					continue
 				#read per row
-				#TODO: implement reading table
+				id = row[CommonEnum.TABLE_ACTIVITY_ID]
+				interruptProperty = []
+				for i in range(0,CommonEnum.INTERRUPT_PROPERTY_COUNT):
+					interruptProperty.append(int(row[TABLE_ACTIVITY_CANINTERRUPT] + i))
+				
+				timeProperty = []
+				for i in range(0,CommonEnum.TIME_PROPERTY_COUNT):
+					if (i == CommonEnum.TIME_PROPERTY_COUNT - 1):
+						timeProperty.append(int(row[TABLE_ACTIVITY_STARTTIMECANSTART] + i))
+					else:
+						timeProperty.append(row[TABLE_ACTIVITY_STARTTIMECANSTART] + i)
+				
+				planProperty = []
+				for i in range(0,CommonEnum.PLAN_PROPERTY_COUNT):
+					planProperty.append(float(row[TABLE_ACTIVITY_PLAN + i]))
+				
+				bioEffect = []
+				for i in range(0,CommonEnum.BIOLOGICAL_PROPERTY_COUNT):
+					bioEffect.append(float(row[TABLE_ACTIVITY_EXHAUST + i]))
+				
+				esFactor = []
+				for i in range(0, CommonEnum.ES_PROPERTY_COUNT):
+					esFactor.append(float(row[TABLE_ACTIVITY_STRESS + i]))
+				
+				self.m_activity.append(Activity.CoreActivity(id, interruptProperty, timeProperty, planProperty, bioEffect, esFactor))
 	
 	def LoadSupportActivity(self):
 		tableFileName = resPath+"table_support_activity_before"self.m_role+".csv"
@@ -395,7 +420,7 @@ class Agent:
 		with open(tableFileName) as csvfile:
 			reader = csv.reader(csvfile)
 			for row in reader:
-				if row[TABLE_ID] == "ID"
+				if row[TABLE_TERM_ID] == "ID"
 					continue
 				id = row[CommonEnum.TABLE_TERM_ID]
 				ability = row[CommonEnum.TABLE_TERM_ABILITY]
@@ -430,8 +455,10 @@ class Agent:
 						rfId.append(CommonEnum.RoomFactorToID(rfObj))
 					factor.append(rfId)
 					factor.append(row[CommonEnum.TABLE_TERM_FAILROOMFACTOR1 + (i * 2)].split(";"))
-				#TODO: implement for loading room priority
-				self.m_terms.append(Term)
+				roomPrio = []
+				for i in range(0, CommonEnum.ROOM_PRIO_COUNT):
+					roomPrio.append(row[CommonEnum.TABLE_TERM_ROOMPRIO1 + i])
+				self.m_terms.append(Term.ActivityTerm(id, ability, enviFactor, resFactor, roomFactor, roomPrio))
 #-----------------------------------------------------------------------------------------------------------------------------------------
 
 def TranslateToGridPos(pos,mazeIndex):

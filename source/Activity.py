@@ -58,11 +58,10 @@ class Activity:
 #-------------------Core Activity Class----------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------------------
 class CoreActivity(Activity):
-	def __init__(self, ID, interruptProperty, timeProperty, rooms, planProperty, biologicalEffect, esFactor)
+	def __init__(self, ID, interruptProperty, timeProperty, planProperty, biologicalEffect, esFactor)
 		Activity.__init__(self, ID)
 		self.m_interruptProperty = interruptProperty
 		self.m_timeProperty = timeProperty
-		self.m_rooms = rooms
 		self.m_planProperty = planProperty
 		self.m_biologicalEffect = biologicalEffect
 		self.m_esFactor = esFactor
