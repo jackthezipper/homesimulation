@@ -80,6 +80,10 @@ class Agent:
 		self.m_activity = []
 		self.m_supportActivity = []
 		self.m_terms = []
+		
+		self.m_myBioStatus = []
+		self.m_myBioEffectRate = []
+		self.m_myESStatus = []
 	
 	def setTarget(self,newTarget):
 		self.m_target = newTarget
@@ -391,7 +395,7 @@ class Agent:
 				
 				bioEffect = []
 				for i in range(0,CommonEnum.BIOLOGICAL_PROPERTY_COUNT):
-					bioEffect.append(float(row[TABLE_ACTIVITY_EXHAUST + i]))
+					bioEffect.append(int(row[TABLE_ACTIVITY_EXHAUST + i]))
 				
 				esFactor = []
 				for i in range(0, CommonEnum.ES_PROPERTY_COUNT):
@@ -459,6 +463,20 @@ class Agent:
 				for i in range(0, CommonEnum.ROOM_PRIO_COUNT):
 					roomPrio.append(row[CommonEnum.TABLE_TERM_ROOMPRIO1 + i])
 				self.m_terms.append(Term.ActivityTerm(id, ability, enviFactor, resFactor, roomFactor, roomPrio))
+	
+	def UpdateBioStatus(self, dt):
+		elapseTime = (dt * Agent.s_scaleSpeed * TIMECONVERSION)
+		
+		for (bio,rate) in zip(self.m_myBioStatus,self.m_myBioEffectRate):
+			bio += elapseTime*rate
+	
+	def UpdateActivityOrder(self):
+		for activity in self.m_myActivity:
+			activity.CalculateActivityScore()
+		
+		self.m_myActivity.sort(key = lambda x: x.m_score, reverse = True)
+	
+	
 #-----------------------------------------------------------------------------------------------------------------------------------------
 
 def TranslateToGridPos(pos,mazeIndex):

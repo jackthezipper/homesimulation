@@ -26,6 +26,12 @@ class PlanningProperty:
 		self.m_habit = habit
 		self.m_rule = rule
 
+#plan
+PLAN_PLANNED	= 0
+PLAN_HABIT		= PLAN_PLANNED + 1
+PLAN_RULE		= PLAN_HABIT + 1
+PLAN_TOTAL		= PLAN_RULE + 1
+
 #biological effect index
 BIO_EXHAUSTED	= 0
 BIO_SLEEPY		= BIO_EXHAUSTED + 1
@@ -58,52 +64,36 @@ class Activity:
 #-------------------Core Activity Class----------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------------------
 class CoreActivity(Activity):
-	def __init__(self, ID, interruptProperty, timeProperty, planProperty, biologicalEffect, esFactor)
+	def __init__(self, ID, interruptProperty, timeProperty, planProperty, biologicalEffect, esFactor, agent)
 		Activity.__init__(self, ID)
 		self.m_interruptProperty = interruptProperty
 		self.m_timeProperty = timeProperty
 		self.m_planProperty = planProperty
 		self.m_biologicalEffect = biologicalEffect
 		self.m_esFactor = esFactor
+		self.m_agent = agent
+		self.m_score = 0
 	
-	#version using bio effect from agent
-	def CalculateActivityScore(self, agentBiologicalEffect, agentESFactor):
-		#current formula is:
-		# (SUM(bio effect)/COUNT(bio effect))*MULTIPLY(es factor)
-		totalScore = 0
-		bioFactorCount = BIO_TOTAL
-		for i in range(0,BIO_TOTAL):
-			if (self.m_biologicalEffect[i] == 0):
-				bioFactorCount -= 1
-			else
-				totalScore += agentBiologicalEffect[i]
-		
-		totalScore /= bioFactorCount
-		
-		for i in range(0,ES_TOTAL):
-			if self.m_esFactor[i] > 0:
-				totalScore *= agentESFactor[i]
-		
-		return totalScore
-	
-	#version using embedded in activity
+	#version using from rangkuma formula
 	def CalculateActivityScore(self):
-		#current formula is:
-		# (SUM(bio effect)/COUNT(bio effect))*MULTIPLY(es factor)
-		totalScore = 0
-		bioFactorCount = BIO_TOTAL
+		self.m_score = 0
+		factorCount = 0
+		
+		#calculating plan
+		for i in range(0,PLAN_TOTAL):
+			self.m_score += self.m_planProperty[i]
+			factorCount += (self.m_planProperty[i] != 0?1:0)
+		
+		#calculating biological factor
 		for i in range(0,BIO_TOTAL):
-			totalScore += self.m_biologicalEffect[i]
-			if (self.m_biologicalEffect[i] == 0):
-				bioFactorCount -= 1
+			self.m_score += self.m_biologicalEffect[i] * self.m_agent.m_myBioStatus[i]
+			factorCount += abs(self.m_biologicalEffect[i])
+		self.m_score /= factorCount
 		
-		totalScore /= bioFactorCount
-		
+		#calculating emotional effect
 		for i in range(0,ES_TOTAL):
-			if self.m_esFactor[i] > 0:
-				totalScore *= m_esFactor[i]
-		
-		return totalScore
+			if m_esFactor[i] != 0:
+				self.m_score *= m_esFactor[i]
 
 #------------------------------------------------------------------------------------------------------------
 #-------------------Support Activity Class-------------------------------------------------------------------
