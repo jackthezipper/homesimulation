@@ -5,7 +5,7 @@ TABLE_ACTIVITY_CANBEINTERRUPTED		= TABLE_ACTIVITY_CANINTERRUPT + 1
 TABLE_ACTIVITY_STARTTIMECANSTART	= TABLE_ACTIVITY_CANBEINTERRUPTED + 1
 TABLE_ACTIVITY_ENDTIMECANSTART		= TABLE_ACTIVITY_STARTTIMECANSTART + 1
 TABLE_ACTIVITY_DURATION				= TABLE_ACTIVITY_ENDTIMECANSTART + 1
-TABLE_ACTIVITY_PLAN					= TABLE_ACTIVITY_ROOM2 + 1
+TABLE_ACTIVITY_PLAN					= TABLE_ACTIVITY_DURATION + 1
 TABLE_ACTIVITY_HABIT				= TABLE_ACTIVITY_PLAN + 1
 TABLE_ACTIVITY_RULES				= TABLE_ACTIVITY_HABIT + 1
 TABLE_ACTIVITY_EXHAUST				= TABLE_ACTIVITY_RULES + 1
@@ -95,15 +95,15 @@ def ResourceToID(res):
 	resLowerCase = res.lower()
 	if resLowerCase == "water":
 		return RES_WATER
-	elif resLowerCase == "electricity"
+	elif resLowerCase == "electricity":
 		return RES_ELECTRICITY
-	elif resLowerCase == "gas"
+	elif resLowerCase == "gas":
 		return RES_GAS
-	elif resLowerCase == "food"
+	elif resLowerCase == "food":
 		return RES_FOOD
-	elif resLowerCase == "food material"
+	elif resLowerCase == "food material":
 		return RES_FOOD_MTRIAL
-	else
+	else:
 		return RES_READ_MTRIAL
 
 def RoomFactorToID(roomF):

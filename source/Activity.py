@@ -1,9 +1,10 @@
-from enum import Enum
 import random
 
 import csv
+import os
 #find resources path
-sourceFilePath	= ghenv.Component.OnPingDocument().FilePath
+# sourceFilePath	= ghenv.Component.OnPingDocument().FilePath
+sourceFilePath	= os.path.dirname(os.path.abspath(__file__))
 sourceDirPath	= sourceFilePath[0:sourceFilePath.rfind('\\')+1]
 resPath			= sourceDirPath+"..\\res\\"
 
@@ -64,7 +65,7 @@ class Activity:
 #-------------------Core Activity Class----------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------------------
 class CoreActivity(Activity):
-	def __init__(self, ID, interruptProperty, timeProperty, planProperty, biologicalEffect, esFactor, agent)
+	def __init__(self, ID, interruptProperty, timeProperty, planProperty, biologicalEffect, esFactor, agent):
 		Activity.__init__(self, ID)
 		self.m_interruptProperty = interruptProperty
 		self.m_timeProperty = timeProperty
@@ -82,7 +83,7 @@ class CoreActivity(Activity):
 		#calculating plan
 		for i in range(0,PLAN_TOTAL):
 			self.m_score += self.m_planProperty[i]
-			factorCount += (self.m_planProperty[i] != 0?1:0)
+			factorCount += (1 if self.m_planProperty[i] != 0 else 0)
 		
 		#calculating biological factor
 		for i in range(0,BIO_TOTAL):
@@ -113,7 +114,7 @@ class SupportActivity(Activity):
 		return random.random() < self.m_habitFactor
 	
 	def GetDuration(self):
-		return type == SA_TYPE_BEFORE ? g_SupportActivityBeforeDB[self.m_ID][DB_SUPPORT_ACTIVITY_DURATION] : g_SupportActivityAfterDB[self.m_ID][DB_SUPPORT_ACTIVITY_DURATION]
+		return type == g_SupportActivityBeforeDB[self.m_ID][DB_SUPPORT_ACTIVITY_DURATION] if SA_TYPE_BEFORE else g_SupportActivityAfterDB[self.m_ID][DB_SUPPORT_ACTIVITY_DURATION]
 
 #------------------------------------------------------------------------------------------------------------
 #------------------General Stuff_----------------------------------------------------------------------------
@@ -136,22 +137,22 @@ g_ActivityDB = {}
 g_SupportActivityBeforeDB = {}
 g_SupportActivityAfterDB = {}
 
-def LoadGeneralActivityDB()
+def LoadGeneralActivityDB():
 	tableFileName = resPath+"table_activity.csv"
 	with open(tableFileName) as csvfile:
 		reader = csv.reader(csvfile)
 		for row in reader:
-			if row[TABLE_ID] == "ID"
+			if row[TABLE_ID] == "ID":
 				continue
 			g_ActivityDB[row[MAIN_ACTIVITY_ID]] = [row[MAIN_ACTIVITY_DESC]]
 
-def LoadSupportActivityDB()
+def LoadSupportActivityDB():
 	#support activity before
 	tableFileName = resPath+"support_activity_before.csv"
 	with open(tableFileName) as csvfile:
 		reader = csv.reader(csvfile)
 		for row in reader:
-			if row[TABLE_ID] == "ID"
+			if row[TABLE_ID] == "ID":
 				continue
 			g_SupportActivityBeforeDB[TABLE_SUPPORT_ACTIVITY_ID] = [row[TABLE_SUPPORT_ACTIVITY_DESC],row[TABLESUPPORT_ACTIVITY_DURATION]]
 	
@@ -160,6 +161,6 @@ def LoadSupportActivityDB()
 	with open(tableFileName) as csvfile:
 		reader = csv.reader(csvfile)
 		for row in reader:
-			if row[TABLE_ID] == "ID"
+			if row[TABLE_ID] == "ID":
 				continue
 			g_SupportActivityBeforeDB[TABLE_SUPPORT_ACTIVITY_ID] = [row[TABLE_SUPPORT_ACTIVITY_DESC],row[TABLE_SUPPORT_ACTIVITY_DURATION]]

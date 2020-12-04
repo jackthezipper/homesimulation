@@ -2,6 +2,7 @@
 import random
 import math
 import sys
+import os
 
 #import custom file
 import Target
@@ -10,6 +11,7 @@ import Schedule
 Schedule = reload(Schedule)
 import csv
 import Activity
+Activity = reload(Activity)
 import CommonEnum
 
 from Rhino.Geometry import Point3d, Vector3f,Vector3d,Line,Polyline
@@ -31,7 +33,8 @@ TIMECONVERSION = 2 #to multiply dt
 TIMEFACTOR = 1000 #to multiply waitTime
 
 #find resources path
-sourceFilePath	= ghenv.Component.OnPingDocument().FilePath
+# sourceFilePath	= ghenv.Component.OnPingDocument().FilePath
+sourceFilePath	= os.path.dirname(os.path.abspath(__file__))
 sourceDirPath	= sourceFilePath[0:sourceFilePath.rfind('\\')+1]
 resPath			= sourceDirPath+"..\\res\\"
 
@@ -374,7 +377,7 @@ class Agent:
 		with open(tableFileName) as csvfile:
 			reader = csv.reader(csvfile)
 			for row in reader:
-				if row[CommonEnum.TABLE_ACTIVITY_ID] == "ID"
+				if row[CommonEnum.TABLE_ACTIVITY_ID] == "ID":
 					continue
 				#read per row
 				id = row[CommonEnum.TABLE_ACTIVITY_ID]
@@ -408,14 +411,14 @@ class Agent:
 		with open(tableFileName) as csvfile:
 			reader = csv.reader(csvfile)
 			for row in reader:
-				if row[CommonEnum.TABLE_SA_ID] == "ID"
+				if row[CommonEnum.TABLE_SA_ID] == "ID":
 					continue
 				self.m_supportActivity.append(Activity.SupportActivity(row[CommonEnum.TABLE_SA_ID]), row[CommonEnum.TABLE_SA_HABIT], Activity.SA_TYPE_BEFORE)
 		tableFileName = resPath+"table_support_activity_after"self.m_role+".csv"
 		with open(tableFileName) as csvfile:
 			reader = csv.reader(csvfile)
 			for row in reader:
-				if row[CommonEnum.TABLE_SA_ID] == "ID"
+				if row[CommonEnum.TABLE_SA_ID] == "ID":
 					continue
 				self.m_supportActivity.append(Activity.SupportActivity(row[CommonEnum.TABLE_SA_ID]), row[CommonEnum.TABLE_SA_HABIT], Activity.SA_TYPE_AFTER)
 	
@@ -424,7 +427,7 @@ class Agent:
 		with open(tableFileName) as csvfile:
 			reader = csv.reader(csvfile)
 			for row in reader:
-				if row[TABLE_TERM_ID] == "ID"
+				if row[TABLE_TERM_ID] == "ID":
 					continue
 				id = row[CommonEnum.TABLE_TERM_ID]
 				ability = row[CommonEnum.TABLE_TERM_ABILITY]
