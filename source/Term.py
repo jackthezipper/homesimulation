@@ -1,6 +1,7 @@
 import Activity
 import Agent
 import Global
+Global = reload(Global)
 import CommonEnum
 
 #------------------------------------------------------------------------------------------------------------
@@ -16,8 +17,8 @@ ACTIVITY_OBJECT_NONE	= "-"
 ROOM_DEVICE			= 0
 ROOM_FAILACTIVITY	= ROOM_DEVICE + 1
 
-class ActivityTerm()
-	def __init__(self, id, ability, environmentFactor, resourceFactor, roomFactor, roomPrio)
+class ActivityTerm():
+	def __init__(self, id, ability, environmentFactor, resourceFactor, roomFactor, roomPrio):
 		self.m_activityID = id
 		self.m_ability = ability
 		self.m_environmentFactor = environmentFactor #contain light and temperature factor;each factor contain affect/not, and object afected by terms

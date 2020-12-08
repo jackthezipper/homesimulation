@@ -1,6 +1,7 @@
 import time
 import CommonEnum
 import csv
+import os
 
 SCALE_TIME = 1
 
@@ -48,10 +49,11 @@ class Energy:
 #--------------------------------------------------------------------------------------------------------------
 
 class Room:
-	def __init__(self,name,temperature,light):
+	def __init__(self,name,temperature,light,targetCoord):
 		m_name = name
 		self.m_temperature = temperature
 		self.m_light = light
+		self.m_targetCoord = targetCoord
 
 #--------------------------------------------------------------------------------------------------------------
 #-------------House Class--------------------------------------------------------------------------------------
@@ -67,10 +69,11 @@ class House:
 		self.loadHouseEnergy()
 	
 	def loadHouseEnergy(self):
-		cFPath = ghenv.Component.OnPingDocument().FilePath
-		cpath = cFPath[0:cFPath.rfind('\\')+1]
-		my_path = cpath+'..\\res\\energy.csv'
+		#cFPath = ghenv.Component.OnPingDocument().FilePath
+		sourceFilePath	= os.path.dirname(os.path.abspath(__file__))
+		sourceDirPath	= sourceFilePath[0:sourceFilePath.rfind('\\')+1]
+		filename = sourceDirPath+'\\res\\energy.csv'
 		with open(filename) as csvfile:
 			reader = csv.reader(csvfile)
 			for row in reader:
-				m_energies.Append(Energy(row[TMPL_ENERGY_TYPE],row[TMPL_ENERGY_SUPPLY],row[TMPL_ENERGY_PRICE]))
+				self.m_energies.append(Energy(row[TMPL_ENERGY_TYPE],row[TMPL_ENERGY_SUPPLY],row[TMPL_ENERGY_PRICE]))

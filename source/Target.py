@@ -2,8 +2,8 @@ class Target:
 	s_unNamedCount = 0
 	def __init__(self,fIndex,tp = None, id = "UNNAMED"):
 		if id == "UNNAMED":
-			m_id = id+str(s_unNamedCount)
-			s_unNamedCount += 1
+			m_id = id+str(Target.s_unNamedCount)
+			Target.s_unNamedCount += 1
 		else:
 			m_id = id
 		self.m_id = id
