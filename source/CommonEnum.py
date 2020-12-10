@@ -31,8 +31,9 @@ BIOLOGICAL_PROPERTY_COUNT			= 9
 ES_PROPERTY_COUNT					= 4
 
 #table support activity column
-TABLE_SA_ID		= 0
-TABLE_SA_HABIT	= TABLE_SA_ID + 1
+TABLE_SA_ID			= 0
+TABLE_SA_HABIT		= TABLE_SA_ID + 1
+TABLE_SA_DURATION	= TABLE_SA_HABIT + 1
 
 #table terms column
 TABLE_TERM_ID					= 0

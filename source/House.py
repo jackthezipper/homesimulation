@@ -3,6 +3,8 @@ import CommonEnum
 import csv
 import os
 
+from Rhino.Geometry import Curve, Point3d
+
 SCALE_TIME = 1
 
 ENERGY_USER			= 0
@@ -49,11 +51,15 @@ class Energy:
 #--------------------------------------------------------------------------------------------------------------
 
 class Room:
-	def __init__(self,name,temperature,light,targetCoord):
+	def __init__(self,name,temperature,light,targetCoord,curve):
 		m_name = name
 		self.m_temperature = temperature
 		self.m_light = light
 		self.m_targetCoord = targetCoord
+		self.m_curve = curve
+	
+	def IsInRoom(self, point):
+		return self.m_curve.Contains(point)
 
 #--------------------------------------------------------------------------------------------------------------
 #-------------House Class--------------------------------------------------------------------------------------
@@ -67,6 +73,7 @@ class House:
 		self.m_energies = []
 		self.m_resources = [0 for i in range(0,CommonEnum.RES_TOTAL)]
 		self.loadHouseEnergy()
+		self.m_rooms = []
 	
 	def loadHouseEnergy(self):
 		#cFPath = ghenv.Component.OnPingDocument().FilePath

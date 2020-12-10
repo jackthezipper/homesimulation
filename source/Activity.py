@@ -58,6 +58,20 @@ ES_TOTAL		= ES_LONELINESS + 1
 class Activity:
 	def __init__(self, ID):
 		self.m_ID = ID
+		self.m_duration = 0
+		self.m_runningTimeLeft = 0
+	
+	def UpdateTimeLeft(self, dt):
+		if self.m_runningTimeLeft > 0:
+			self.m_runningTimeLeft -= dt
+		if self.m_runningTimeLeft < 0:
+			self.m_runningTimeLeft = 0
+	
+	def Start(self, runTime):
+		self.m_runningTimeLeft = runTime
+	
+	def IsDone(self):
+		return (self.m_runningTimeLeft <= 0)
 
 	def GetDescription():
 		return g_ActivityDB[self.m_ID]
@@ -105,10 +119,11 @@ SA_TYPE_BEFORE	= 0
 SA_TYPE_AFTER	= SA_TYPE_BEFORE + 1
 
 class SupportActivity(Activity):
-	def __init__(self, ID, habitFactor, type):
+	def __init__(self, ID, habitFactor, duration, type):
 		Activity.__init__(self, ID)
 		self.m_habitFactor = habitFactor
 		self.m_type = type
+		self.m_duration = duration
 	
 	def IsActivityExecuted(self):
 		return random.random() < self.m_habitFactor

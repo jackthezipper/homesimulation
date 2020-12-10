@@ -58,7 +58,7 @@ class Agent:
 		self.hasNewTarget = False
 		self.waitTime = (Schedule.SCHEDULE[index][0][1] * TIMEFACTOR)
 		self.myPath = None
-		self.pathIndex = 0
+		self.m_pathIndex = 0
 		self.m_target = None
 		self.moveDir = Vector3f(0,1,0)
 		self.pathCalculated = False
@@ -90,6 +90,9 @@ class Agent:
 		self.m_myBioEffectRate = []
 		self.m_myESStatus = []
 		
+		self.m_currentActivity = None
+		self.m_targetRoom = None
+		
 		self.LoadActivityList()
 		self.LoadSupportActivity()
 		self.LoadTerms()
@@ -109,8 +112,11 @@ class Agent:
 		if not self.m_active:
 			return self.pos
 		
+		self.UpdateBioStatus(dt)
+		self.UpdateActivityOrder()
+		
 		if self.m_state != STATE_MOVE:
-			self.pathIndex = 1
+			self.m_pathIndex = 1
 			if self.waitTime > 0:
 				self.waitTime -= (dt * Agent.s_scaleSpeed * TIMECONVERSION)
 				return self.pos
@@ -152,12 +158,12 @@ class Agent:
 				self.myPath.append(stairEntry.target.m_targetPoint)
 			elif self.entryPoint.pos != self.entryPoint.target.m_targetPoint:
 				self.myPath.append(self.entryPoint.target.m_targetPoint)
-			self.pathIndex = 1
+			self.m_pathIndex = 1
 			self.recalculateMoveDir()
 			self.m_state = STATE_MOVE
 			return self.pos
 		else:
-			destination  = self.myPath[self.pathIndex]
+			destination  = self.myPath[self.m_pathIndex]
 			distance = self.pos.DistanceTo(destination)
 			distanceCovered = float(dt) * Agent.s_scaleSpeed / 1000
 			if distance > distanceCovered:#self.m_speedFactor:
@@ -175,7 +181,7 @@ class Agent:
 					angle = math.degrees(angle)
 					if angle > 60 and (abs(myGrid[0]-PathFinding.Map.liveBlock[self.m_blockedBy][0][0]) > PathFinding.OVERLAP_LIMIT or abs(myGrid[1]-PathFinding.Map.liveBlock[self.m_blockedBy][0][1]) > PathFinding.OVERLAP_LIMIT):
 						blocked = False
-					if self.entryPoint.pos != self.entryPoint.target.m_targetPoint and self.pathIndex == (len(self.myPath) - 1):
+					if self.entryPoint.pos != self.entryPoint.target.m_targetPoint and self.m_pathIndex == (len(self.myPath) - 1):
 						blocked = False
 				
 				
@@ -199,13 +205,13 @@ class Agent:
 					#No path found. Wait a moment
 					if midPath == None:
 						self.blockCounter += 1
-						if self.blockCounter > 10 and self.m_myIndex > self.m_blockedBy and self.pathIndex > 2:
+						if self.blockCounter > 10 and self.m_myIndex > self.m_blockedBy and self.m_pathIndex > 2:
 							self.pos = rs.PointAdd(self.pos,(Vector3d.Multiply(self.moveDir,self.m_speedFactor) * (-1)))
 						return self.pos
 					
 					if self.entryPoint.pos != self.entryPoint.target.m_targetPoint:
 						midPath.append(self.entryPoint.target.m_targetPoint)
-					del self.myPath[self.pathIndex-1:]
+					del self.myPath[self.m_pathIndex-1:]
 					self.myPath.extend(midPath)
 					self.m_hasWait = False
 					self.recalculateMoveDir()
@@ -221,10 +227,10 @@ class Agent:
 				remainingDistance = distanceCovered - distance
 				while (remainingDistance > 0):
 					self.pos = destination
-					self.pathIndex+=1
-					if self.pathIndex < len(self.myPath):
+					self.m_pathIndex+=1
+					if self.m_pathIndex < len(self.myPath):
 						self.recalculateMoveDir()
-						destination  = self.myPath[self.pathIndex]
+						destination  = self.myPath[self.m_pathIndex]
 						distance = self.pos.DistanceTo(destination)
 						if remainingDistance < distance:
 							self.pos = rs.PointAdd(self.pos,Vector3d.Multiply(self.moveDir,remainingDistance))
@@ -242,7 +248,7 @@ class Agent:
 						self.myPath.insert(0,self.pos)
 						if self.entryPoint.pos != self.entryPoint.target.m_targetPoint:
 							self.myPath.append(self.entryPoint.target.m_targetPoint)
-						self.pathIndex = 1
+						self.m_pathIndex = 1
 						self.recalculateMoveDir()
 						self.needStair = False
 						distance = self.pos.DistanceTo(destination)
@@ -299,7 +305,7 @@ class Agent:
 		self.entryPoint = entryPointL[selectedEntry]
 
 	def recalculateMoveDir(self):
-		destination  = self.myPath[self.pathIndex]
+		destination  = self.myPath[self.m_pathIndex]
 		self.moveDir = Vector3f.Subtract(Vector3f(destination.X,destination.Y,destination.Z),Vector3f(self.pos.X,self.pos.Y,self.pos.Z))
 		self.moveDir.Unitize()
 		
@@ -419,20 +425,20 @@ class Agent:
 				self.m_activity.append(Activity.CoreActivity(id, interruptProperty, timeProperty, planProperty, bioEffect, esFactor, self))
 	
 	def LoadSupportActivity(self):
-		tableFileName = resPath+"table_support_activity_before"+self.m_role+".csv"
+		tableFileName = resPath+"table_support_activity_before_"+self.m_role+".csv"
 		with open(tableFileName) as csvfile:
 			reader = csv.reader(csvfile)
 			for row in reader:
 				if row[CommonEnum.TABLE_SA_ID] == "ID":
 					continue
-				self.m_supportActivity.append(Activity.SupportActivity(row[CommonEnum.TABLE_SA_ID]), row[CommonEnum.TABLE_SA_HABIT], Activity.SA_TYPE_BEFORE)
-		tableFileName = resPath+"table_support_activity_after"+self.m_role+".csv"
+				self.m_supportActivity.append(Activity.SupportActivity(row[CommonEnum.TABLE_SA_ID], row[CommonEnum.TABLE_SA_HABIT], row[CommonEnum.TABLE_SA_DURATION], Activity.SA_TYPE_BEFORE))
+		tableFileName = resPath+"table_support_activity_after_"+self.m_role+".csv"
 		with open(tableFileName) as csvfile:
 			reader = csv.reader(csvfile)
 			for row in reader:
 				if row[CommonEnum.TABLE_SA_ID] == "ID":
 					continue
-				self.m_supportActivity.append(Activity.SupportActivity(row[CommonEnum.TABLE_SA_ID]), row[CommonEnum.TABLE_SA_HABIT], Activity.SA_TYPE_AFTER)
+				self.m_supportActivity.append(Activity.SupportActivity(row[CommonEnum.TABLE_SA_ID], row[CommonEnum.TABLE_SA_HABIT], row[CommonEnum.TABLE_SA_DURATION], Activity.SA_TYPE_AFTER))
 	
 	def LoadTerms(self):
 		tableFileName = resPath+"table_terms_"+self.m_role+".csv"
@@ -493,7 +499,46 @@ class Agent:
 		
 		self.m_myActivity.sort(key = lambda x: x.m_score, reverse = True)
 	
+	def SetupInitialBioStatusAndRate(self, initialBioStatus, bioEffectRate):
+		self.m_myBioStatus = initialBioStatus
+		self.m_myBioEffectRate = bioEffectRate
 	
+	def UpdateAgentActivity(self, dt):
+		firstID = self.m_myActivity[0].m_ID
+		if firstID == self.m_currentActivity:
+			return
+		term = next((trm for trm in self.m_terms if trm.m_ID == firstID),None)
+		if term != None:
+			roomName = term.m_roomPrio[0]
+			isSameRoom = (self.m_targetRoom != None) and (roomName == self.m_targetRoom.m_name)
+			if not isSameRoom:
+				self.m_targetRoom = next((room for room in Global.g_myHouse.m_rooms if room.m_name == roomName),None)
+			
+			self.m_pathIndex = 1
+			
+			start = None
+			if self.oldEntryPoint != None:
+				start = TranslateToGridPos(self.oldEntryPoint.pos,self.m_myFloorIndex)
+			else:
+				start = TranslateToGridPos(self.pos,self.m_myFloorIndex)
+			
+			self.needStair = (self.m_target.m_floorIndex != self.m_myFloorIndex)
+			
+			if self.needStair:
+				stairIndex = "STAIRS_"+str(self.m_myFloorIndex)
+				stairTarget = next(trgt for trgt in Agent.s_possibleTarget if trgt.hasActivity(stairIndex))
+				stairEntry = next(entry for entry in Agent.s_entryPointList if entry.target == stairTarget)
+				end = TranslateToGridPos(stairEntry.pos,self.m_myFloorIndex)
+			elif isSameRoom:
+				end = TranslateToGridPos(self.entryPoint.pos,self.m_myFloorIndex)
+			else:
+				end = TranslateToGridPos(self.m_targetRoom.m_targetCoord, self.m_myFloorIndex)
+			self.myPath = PathFinding.astarv3(start,end,self.m_myIndex,self.m_myFloorIndex)
+			
+			#No path found. Wait a moment
+			if self.myPath == None:
+				return self.pos
+			
 #-----------------------------------------------------------------------------------------------------------------------------------------
 
 def TranslateToGridPos(pos,mazeIndex):
