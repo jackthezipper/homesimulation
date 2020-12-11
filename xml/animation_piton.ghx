@@ -358,14 +358,14 @@ class MyComponent(component):
                     continue
                 self.NEIGHBOR_CHECK.append((i,j))
     
-    def GenerateRooms(self,objectList):
+    def GenerateRooms(self,objectList,idx):
         sc.doc = rh.RhinoDoc.ActiveDoc
         roomIndex = sc.doc.Layers.Find("ROOM_AREA",True)
         sc.doc = ghdoc
         for oi in objectList:
             if oi.Attributes.LayerIndex == roomIndex:
                 pos = rs.GetUserText(oi,"TargetCoord").split(",")
-                self.m_rooms.append(House.Room(rs.GetUserText(oi,"RName"),27,100,Point3d(float(pos[0]),float(pos[1]),0),oi.Geometry))
+                self.m_rooms.append(House.Room(rs.GetUserText(oi,"RName"),27,100,Point3d(float(pos[0]),float(pos[1]),0),oi.Geometry,idx))
         
     def InitializeGrid(self,area,idx):
         print "intinialisazuuuu "+str(idx)
@@ -465,7 +465,7 @@ class MyComponent(component):
                                 curGrids[j][i] = STATE_BLOCKED
                                 #self.polina.append(cRect)
             
-            self.GenerateRooms(objectList)
+            self.GenerateRooms(objectList,idx)
             
         #make way for entry
         for (epObject,ep) in zip(entryPointObject,curEntries):

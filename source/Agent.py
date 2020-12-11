@@ -28,6 +28,12 @@ PathFinding = reload(PathFinding)
 STATE_IDLE = 0
 STATE_MOVE = STATE_IDLE + 1
 STATE_WAIT = STATE_MOVE + 1
+
+#target type
+TARGET_NONE		= -1
+TARGET_ROOM		= 0
+TARGET_POINT	= TARGET_ROOM + 1
+
 errPause = False
 
 #30 min -> 15 sec
@@ -89,9 +95,12 @@ class Agent:
 		self.m_myBioStatus = []
 		self.m_myBioEffectRate = []
 		self.m_myESStatus = []
+		self.m_environmentThreshold = []
 		
 		self.m_currentActivity = None
 		self.m_targetRoom = None
+		self.m_targetType = TARGET_NONE
+		self.m_currentTerm = None
 		
 		self.LoadActivityList()
 		self.LoadSupportActivity()
@@ -482,16 +491,16 @@ class Agent:
 					factor.append(row[CommonEnum.TABLE_TERM_FAILROOMFACTOR1 + (i * 2)].split(";"))
 				roomPrio = []
 				for i in range(0, CommonEnum.ROOM_PRIO_COUNT):
-					roomPrio.append(row[CommonEnum.TABLE_TERM_ROOMPRIO1 + i])
+					room = row[CommonEnum.TABLE_TERM_ROOMPRIO1 + i]
+					if room != "-":
+						roomPrio.append(room)
 				self.m_terms.append(Term.ActivityTerm(id, ability, enviFactor, resFactor, roomFactor, roomPrio))
-		# for term in self.m_terms:
-			# print term.m_activityID+" "+term.m_ability+" "+str(term.m_environmentFactor)
 	
 	def UpdateBioStatus(self, dt):
 		elapseTime = (dt * Agent.s_scaleSpeed * TIMECONVERSION)
 		
-		for (bio,rate) in zip(self.m_myBioStatus,self.m_myBioEffectRate):
-			bio += elapseTime*rate
+		for i in range(0,len(self.m_myBioStatus)):
+			self.m_myBioStatus[i] += elapseTime * self.m_myBioEffectRate[i]
 	
 	def UpdateActivityOrder(self):
 		for activity in self.m_myActivity:
@@ -503,42 +512,195 @@ class Agent:
 		self.m_myBioStatus = initialBioStatus
 		self.m_myBioEffectRate = bioEffectRate
 	
+	def GeneratePath(self, start, end, stair = None):
+		pStart = TranslateToGridPos(start)
+		pEnd = TranslateToGridPos(end)
+		path = PathFinding.astarv3(pStart,pEnd,self.m_myIndex,self.m_myFloorIndex)
+		
+		#No path found. Wait a moment
+		if self.myPath == None:
+			return
+		
+		#path found
+		if self.oldEntryPoint != None and self.myPath[0] != self.pos:
+			path.insert(0,self.pos)
+		
+		if self.needStair:
+			path.append(stair.target.m_targetPoint)
+		elif (self.m_targetRoom == None or self.m_targetRoom.IsInRoom(self.pos)) and self.entryPoint.pos != self.entryPoint.target.m_targetPoint:
+			path.append(self.entryPoint.target.m_targetPoint)
+		self.m_pathIndex = 1
+	
 	def UpdateAgentActivity(self, dt):
 		firstID = self.m_myActivity[0].m_ID
-		if firstID == self.m_currentActivity:
+		if firstID == self.m_currentActivity.m_ID or (not self.m_myActivity[0].CanInterrupt()) or (not self.m_currentActivity.CanBeInterrupted()):
 			return
-		term = next((trm for trm in self.m_terms if trm.m_ID == firstID),None)
-		if term != None:
-			roomName = term.m_roomPrio[0]
+		self.m_currentTerm = next((trm for trm in self.m_terms if trm.m_ID == firstID),None)
+		if self.m_currentTerm != None:
+			roomName = self.m_currentTerm.m_roomPrio[0]
 			isSameRoom = (self.m_targetRoom != None) and (roomName == self.m_targetRoom.m_name)
 			if not isSameRoom:
 				self.m_targetRoom = next((room for room in Global.g_myHouse.m_rooms if room.m_name == roomName),None)
+			else:
+				self.FindTargetAndEntryPointForActivity(firstID)
 			
 			self.m_pathIndex = 1
 			
 			start = None
 			if self.oldEntryPoint != None:
-				start = TranslateToGridPos(self.oldEntryPoint.pos,self.m_myFloorIndex)
+				start = self.oldEntryPoint.pos
 			else:
-				start = TranslateToGridPos(self.pos,self.m_myFloorIndex)
+				start = self.pos
 			
-			self.needStair = (self.m_target.m_floorIndex != self.m_myFloorIndex)
+			self.needStair = self.m_targetRoom.m_floorIndex != self.m_myFloorIndex
 			
+			stairEntry = None
 			if self.needStair:
 				stairIndex = "STAIRS_"+str(self.m_myFloorIndex)
 				stairTarget = next(trgt for trgt in Agent.s_possibleTarget if trgt.hasActivity(stairIndex))
 				stairEntry = next(entry for entry in Agent.s_entryPointList if entry.target == stairTarget)
-				end = TranslateToGridPos(stairEntry.pos,self.m_myFloorIndex)
+				end = stairEntry.pos
+				self.m_targetType = TARGET_ROOM
 			elif isSameRoom:
-				end = TranslateToGridPos(self.entryPoint.pos,self.m_myFloorIndex)
+				end = self.entryPoint.pos
+				self.m_targetType = TARGET_POINT
 			else:
-				end = TranslateToGridPos(self.m_targetRoom.m_targetCoord, self.m_myFloorIndex)
-			self.myPath = PathFinding.astarv3(start,end,self.m_myIndex,self.m_myFloorIndex)
+				end = self.m_targetRoom.m_targetCoord
+				self.m_targetType = TARGET_ROOM
 			
-			#No path found. Wait a moment
-			if self.myPath == None:
-				return self.pos
+			if not isSameRoom or self.pos != end:
+				self.myPath = self.GeneratePath(start, end, stairEntry)
+				self.m_state = STATE_MOVE
 			
+			self.m_currentActivity = self.m_myActivity[0]
+	
+	def UpdateAgentMovement(self, dt):
+		if self.m_state != STATE_MOVE:
+			return
+		destination  = self.myPath[self.m_pathIndex]
+		distance = self.pos.DistanceTo(destination)
+		distanceCovered = float(dt) * Agent.s_scaleSpeed / 1000
+		if distance > distanceCovered and (self.m_targetRoom == None or (not self.m_targetRoom.IsInRoom(self.pos))):
+			#there still distance within the path
+			myGrid = TranslateToGridPos(self.pos,self.m_myFloorIndex)
+			self.m_blockedBy,blocked = PathFinding.IsBlocked(myGrid,self.m_myFloorIndex)
+			
+			if blocked:
+				#path maybe blocked
+				blockPos = PathFinding.TranslateToRealPos(PathFinding.Map.liveBlock[self.m_blockedBy][0],self.m_myFloorIndex)
+				blockDir = Vector3f.Subtract(Vector3f(blockPos[0],blockPos[1],0),Vector3f(self.pos.X,self.pos.Y,0))
+				blockDir = Vector3f.Divide(blockDir,blockDir.Length)
+				dotP = (blockDir.X*self.moveDir.X) + (blockDir.Y*self.moveDir.Y)
+				angle = math.acos(dotP)
+				angle = math.degrees(angle)
+				if angle > 60 and (abs(myGrid[0]-PathFinding.Map.liveBlock[self.m_blockedBy][0][0]) > PathFinding.OVERLAP_LIMIT or abs(myGrid[1]-PathFinding.Map.liveBlock[self.m_blockedBy][0][1]) > PathFinding.OVERLAP_LIMIT):
+					blocked = False
+				if self.entryPoint.pos != self.entryPoint.target.m_targetPoint and self.m_pathIndex == (len(self.myPath) - 1):
+					blocked = False
+			
+			if blocked:
+				#path is blocked
+				if self.blockCounter < 10 and self.m_myIndex > self.m_blockedBy:
+					if not self.m_hasWait:
+						self.blockCounter += 1
+						return self.pos
+					else:
+						self.m_hasWait = True
+				
+				if self.needStair:
+					stairIndex = "STAIRS_"+str(self.m_myFloorIndex)
+					stairEntry = next(trgt for trgt in Agent.s_possibleTarget if trgt.hasActivity(stairIndex))
+					myNextDest = stairEntry.pos
+				elif self.m_targetRoom.IsInRoom(self.pos):
+					myNextDest = self.entryPoint.pos
+				else:
+					myNextDest = self.m_targetRoom.m_targetCoord
+				midPath = GeneratePath(self.pos,myNextDest)
+				
+				#No path found. Wait a moment
+				if midPath == None:
+					self.blockCounter += 1
+					if self.blockCounter > 10 and self.m_myIndex > self.m_blockedBy and self.m_pathIndex > 2:
+						self.pos = rs.PointAdd(self.pos,(Vector3d.Multiply(self.moveDir,self.m_speedFactor) * (-1)))
+					return
+				
+				del self.myPath[self.m_pathIndex-1:]
+				self.myPath.extend(midPath)
+				self.m_hasWait = False
+				self.recalculateMoveDir()
+			else:
+				#not blocked, continue to move
+				self.blockCounter = 0
+				self.m_blockedBy = -1
+			
+			#update agent position
+			self.pos = rs.PointAdd(self.pos,Vector3d.Multiply(self.moveDir,distanceCovered))
+			
+		else:
+			if self.m_targetType == TARGET_ROOM:
+			#already in the same room as target
+				if self.m_targetRoom.IsInRoom(self.pos):
+					satisfied, preActivity, objectID = self.m_currentTerm.CheckEnvironmentSatisfied(self.m_environmentThreshold, self.m_targetRoom)
+					
+					if satisfied:
+						satisfied, preActivity, objectID = self.m_currentTerm.CheckRoomSatisfied(self.m_targetRoom)
+					
+					if satisfied:
+						if preActivity != None:
+							self.FindTargetAndEntryPointForObject(objectID)
+						else:
+							self.FindTargetAndEntryPointForActivity(self.m_currentActivity.m_ID)
+					else:
+						if len(self.m_currentTerm.m_roomPrio) > 1 and self.m_targetRoom.name != self.m_currentTerm.m_roomPrio[1]:
+							self.m_targetRoom = self.m_currentTerm.m_roomPrio[1]
+							self.m_targetType = TARGET_ROOM
+						else:
+							self.m_currentActivity.Suspend()
+							return
+						
+					self.myPath = self.GeneratePath(self.pos, self.entryPoint.pos)
+					self.m_targetType = TARGET_POINT
+			else:
+			#already close with destination
+				remainingDistance = distanceCovered - distance
+				while (remainingDistance > 0):
+					self.pos = destination
+					self.m_pathIndex+=1
+					if self.m_pathIndex < len(self.myPath):
+						self.recalculateMoveDir()
+						destination  = self.myPath[self.m_pathIndex]
+						distance = self.pos.DistanceTo(destination)
+						if remainingDistance < distance:
+							self.pos = rs.PointAdd(self.pos,Vector3d.Multiply(self.moveDir,remainingDistance))
+						remainingDistance = remainingDistance - distance
+					elif self.needStair:
+						nextStairIndex = "STAIRS_"+str(self.m_target.m_floorIndex)
+						nextStairTarget = next(trgt for trgt in Agent.s_possibleTarget if trgt.hasActivity(nextStairIndex))
+						nextStairEntry = next(entry for entry in Agent.s_entryPointList if entry.target == nextStairTarget)
+						self.m_myFloorIndex = self.m_target.m_floorIndex
+						start = TranslateToGridPos(nextStairEntry.pos,self.m_myFloorIndex)
+						end = TranslateToGridPos(self.entryPoint.pos,self.m_myFloorIndex)
+						
+						self.myPath = PathFinding.astarv3(start,end,self.m_myIndex,self.m_myFloorIndex)
+						self.pos = nextStairTarget.m_targetPoint
+						self.myPath.insert(0,self.pos)
+						if self.entryPoint.pos != self.entryPoint.target.m_targetPoint:
+							self.myPath.append(self.entryPoint.target.m_targetPoint)
+						self.m_pathIndex = 1
+						self.recalculateMoveDir()
+						self.needStair = False
+						distance = self.pos.DistanceTo(destination)
+						if remainingDistance < distance:
+							self.pos = rs.PointAdd(self.pos,Vector3d.Multiply(self.moveDir,remainingDistance))
+						remainingDistance = remainingDistance - distance
+					else:
+						self.m_canGetNewTarget = True
+						self.m_state = STATE_WAIT
+						self.waitTime = (Schedule.SCHEDULE[self.m_myIndex][self.targetIndex][1] * TIMEFACTOR)
+						remainingDistance = 0
+	
+	def FindTargetAndEntryPointForObject(self, ID):
+		self.entryPoint = next(entry for entry in Agent.s_entryPointList if entry.target.m_id == ID)
 #-----------------------------------------------------------------------------------------------------------------------------------------
 
 def TranslateToGridPos(pos,mazeIndex):

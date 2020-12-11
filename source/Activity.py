@@ -109,6 +109,12 @@ class CoreActivity(Activity):
 		for i in range(0,ES_TOTAL):
 			if m_esFactor[i] != 0:
 				self.m_score *= m_esFactor[i]
+	
+	def CanInterrupt(self):
+		return self.m_interruptProperty[CommonEnum.INTERRUPT_CAN_INTERRUPT]\
+	
+	def CanBeInterrupted(self):
+		return self.m_interruptProperty[CommonEnum.INTERRUPT_CAN_BE_INTERRUPTED]
 
 #------------------------------------------------------------------------------------------------------------
 #-------------------Support Activity Class-------------------------------------------------------------------

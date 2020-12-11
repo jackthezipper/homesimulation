@@ -1,8 +1,8 @@
 ID,Ability,Light,LightObject,Temperature,TemperatureObject,Resource1,FailResource1,Resource1Object,Resource2,FailResource2,Resource2Object,RoomFactor1,FailRoomFactor1,RoomFactor2,FailRoomFactor2,RoomPrio1,RoomPrio2
 BT,2,0,-,0,-,-,-,-,-,-,-,Bed,T4,-,-,RT Utama,-
 BD,2,1,L18,0,-,-,-,-,-,-,-,Bed,T4,-,-,RT Utama,-
-MD1,4,1,L10,0,-,Water,O1,WT03,-,-,-,Door,G3,-,-,KM ,-
-MA1,4,1,L10,0,-,Water,O1,WT03,-,-,-,Door,G4,-,-,KM ,-
+MD1,4,1,L10,0,-,Water,O1,WT03,-,-,-,Door,G2,-,-,KM ,-
+MA1,4,1,L10,0,-,Water,O1,WT03,-,-,-,Door,G2,-,-,KM ,-
 MK2,2,1,L11,0,-,Food,G5,RC02,-,-,-,Chair;Carpet;Sofa,K1/KR1/SF1,-,-,R MaKan,-
 MC3,4,1,L6;L4;L5,0,-,Electricity ,S6,-,-,-,-,Chair;Carpet;Sofa,K1/KR1/SF1,Chair;Carpet;Sofa,K1/KR1/SF1,R Keluarga,R Tamu 
 KJ1,4,0,-,0,-,-,-,-,-,-,-,-,-,-,-,Garasi ,-

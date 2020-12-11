@@ -51,12 +51,13 @@ class Energy:
 #--------------------------------------------------------------------------------------------------------------
 
 class Room:
-	def __init__(self,name,temperature,light,targetCoord,curve):
+	def __init__(self,name,temperature,light,targetCoord,curve, floorIndex = 0):
 		m_name = name
 		self.m_temperature = temperature
 		self.m_light = light
 		self.m_targetCoord = targetCoord
 		self.m_curve = curve
+		self.m_floorIndex = floorIndex
 	
 	def IsInRoom(self, point):
 		return self.m_curve.Contains(point)

@@ -26,33 +26,34 @@ class ActivityTerm():
 		self.m_roomFactor = roomFactor #contain object need to be available in the room, and corresponding activity for each object
 		self.m_roomPrio = roomPrio
 	
-	def CheckEnvironmentSatisfied(self, agentEnvironmentFactor, agentEnvironmentThreshold, room):
-		satisfied = False
+	def CheckEnvironmentSatisfied(self, agentEnvironmentThreshold, room):
+		satisfied = True
 		
 		#check light factor
 		if self.m_environmentFactor[CommonEnum.TERM_ENVI_LIGHT][CommonEnum.TERM_ENVI_AFFECT] != 0:
 			satisfied = room.m_light >= agentEnvironmentThreshold[CommonEnum.TERM_ENVI_LIGHT]
 			if not satisfied:
-				return ACTIVITY_TURN_ONLIGHT,self.m_environmentFactor[CommonEnum.TERM_ENVI_LIGHT][CommonEnum.TERM_ENVI_OBJECT]
+				return satisfied,ACTIVITY_TURN_ONLIGHT,self.m_environmentFactor[CommonEnum.TERM_ENVI_LIGHT][CommonEnum.TERM_ENVI_OBJECT]
 
 		#check temperature factor
 		if self.m_environmentFactor[CommonEnum.TERM_ENVI_TEMPERATURE][CommonEnum.TERM_ENVI_AFFECT] != 0:
 			satisfied = room.m_temperature < agentEnvironmentThreshold[CommonEnum.TERM_ENVI_TEMPERATURE]
 			if not satisfied:
-				return ACTIVITY_TURN_ONTEMP,self.m_environmentFactor[CommonEnum.TERM_ENVI_TEMPERATURE][CommonEnum.TERM_ENVI_OBJECT]
+				return satisfied, ACTIVITY_TURN_ONTEMP, self.m_environmentFactor[CommonEnum.TERM_ENVI_TEMPERATURE][CommonEnum.TERM_ENVI_OBJECT]
 		
 		#all condition satisfied
-		return None,None
+		return satisfied, None, None
+	
+	def CheckRoomSatisfied(self, room):
+		for roomFactor in self.m_roomFactor:
+			for (device,activity) in zip(roomFactor[ROOM_DEVICE],roomFactor[ROOM_FAILACTIVITY]):
+				available, objectID = room.HasAndAvailable(device)
+				if available:
+					return True, activity, objectID
+		return (len(self.m_roomFactor) == 0), None, None
 	
 	def CheckResourcesSatisfied(self):
 		for res in self.m_resourceFactor:
 			if Global.g_myHouse.m_resources[res[CommonEnum.RES_TYPE]] <= 0:
 				return res[CommonEnum.RES_FAILACTIVITY],res[CommonEnum.RES_OBJECT]
 		return None,None
-	
-	def CheckRoomSatisfied(self, room):
-		for roomFactor in self.m_roomFactor:
-			for (device,activity) in zip(roomFactor[ROOM_DEVICE],roomFactor[ROOM_FAILACTIVITY]):
-				if not room.HasAndAvailable(device):
-					return activity
-		return None
