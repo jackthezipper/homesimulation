@@ -1,0 +1,6 @@
+Role,IC_Exhaust,IC_Sleepy,IC_Dirty,IC_Urinate,IC_Defecate,IC_Energy,IC_Hunger,IC_Thirsty,IC_Ability,Rate_Exhaust,Rate_Sleepy,Rate_Dirty,Rate_Urinate,Rate_Defecate,Rate_Energy,Rate_Hunger,Rate_Thirsty,Rate_Ability
+ayah,5,5,5,5,5,5,5,5,5,0.02,0.02,0.013,0.002,0.001,0.01,0.027,0.055,0
+ibu,5,5,5,5,5,5,5,5,5,0.02,0.02,0.013,0.002,0.001,0.01,0.027,0.055,0
+nenek,5,5,5,5,5,5,5,5,5,0.02,0.02,0.013,0.002,0.001,0.01,0.027,0.055,0
+kakak,5,5,5,5,5,5,5,5,5,0.02,0.02,0.013,0.002,0.001,0.01,0.027,0.055,0
+adik,5,5,5,5,5,5,5,5,5,0.02,0.02,0.013,0.002,0.001,0.01,0.027,0.055,0

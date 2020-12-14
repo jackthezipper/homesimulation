@@ -98,9 +98,10 @@ class Agent:
 		self.m_environmentThreshold = []
 		
 		self.m_currentActivity = None
+		self.m_currentTerm = None
+		self.m_currentSupportActivity = None
 		self.m_targetRoom = None
 		self.m_targetType = TARGET_NONE
-		self.m_currentTerm = None
 		
 		self.LoadActivityList()
 		self.LoadSupportActivity()
@@ -403,6 +404,7 @@ class Agent:
 					continue
 				#read per row
 				id = row[CommonEnum.TABLE_ACTIVITY_ID]
+				chance = row[CommonEnum.TABLE_ACTIVITY_CHANCE]
 				interruptProperty = []
 				for i in range(0,CommonEnum.INTERRUPT_PROPERTY_COUNT):
 					interruptProperty.append(int(row[CommonEnum.TABLE_ACTIVITY_CANINTERRUPT + i]))
@@ -496,12 +498,14 @@ class Agent:
 						roomPrio.append(room)
 				self.m_terms.append(Term.ActivityTerm(id, ability, enviFactor, resFactor, roomFactor, roomPrio))
 	
+	#update status biologis
 	def UpdateBioStatus(self, dt):
 		elapseTime = (dt * Agent.s_scaleSpeed * TIMECONVERSION)
 		
 		for i in range(0,len(self.m_myBioStatus)):
 			self.m_myBioStatus[i] += elapseTime * self.m_myBioEffectRate[i]
 	
+	#menghitung nilai tiap aktivitas lalu diurutkan
 	def UpdateActivityOrder(self):
 		for activity in self.m_myActivity:
 			activity.CalculateActivityScore()
@@ -531,10 +535,28 @@ class Agent:
 			path.append(self.entryPoint.target.m_targetPoint)
 		self.m_pathIndex = 1
 	
+	#update aktivitas agent
 	def UpdateAgentActivity(self, dt):
 		firstID = self.m_myActivity[0].m_ID
-		if firstID == self.m_currentActivity.m_ID or (not self.m_myActivity[0].CanInterrupt()) or (not self.m_currentActivity.CanBeInterrupted()):
+		if self.m_currentActivity != None and (irstID == self.m_currentActivity.m_ID or (not self.m_myActivity[0].CanInterrupt()) or (not self.m_currentActivity.CanBeInterrupted())):
+			if self.m_supportActivity != None and (not self.m_supportActivity.IsDone()):
+				self.m_supportActivity.UpdateTimer(dt)
+				
+				if self.m_supportActivity.IsDone():
+					#aktivitas pendukung selesai dijalankan, memeriksa apakah masih ada aktivitas pendukung lain yang perlu dijalankan
+					self.m_supportActivity.Stop()
+					self.m_supportActivity = None
+					self.CheckSupportPreActivity()
+			
+			else:
+				self.m_currentActivity.UpdateTimer(dt)
+				if self.m_currentActivity.IsDone():
+					#aktivitas selesai dijalankan
+					self.m_supportActivity.Stop()
+					self.m_currentActivity = None
 			return
+		
+		#ada aktivitas baru	yang akan dikerjakan
 		self.m_currentTerm = next((trm for trm in self.m_terms if trm.m_ID == firstID),None)
 		if self.m_currentTerm != None:
 			roomName = self.m_currentTerm.m_roomPrio[0]
@@ -568,25 +590,28 @@ class Agent:
 				end = self.m_targetRoom.m_targetCoord
 				self.m_targetType = TARGET_ROOM
 			
+			#jika aktivitas baru akan dilakukan di tempat yang berbeda dengan posisi agent sekarang, maka mencari jalur untuk bergerak
 			if not isSameRoom or self.pos != end:
 				self.myPath = self.GeneratePath(start, end, stairEntry)
 				self.m_state = STATE_MOVE
 			
 			self.m_currentActivity = self.m_myActivity[0]
 	
+	#update pergerakan dan posisi agent
 	def UpdateAgentMovement(self, dt):
 		if self.m_state != STATE_MOVE:
 			return
 		destination  = self.myPath[self.m_pathIndex]
 		distance = self.pos.DistanceTo(destination)
 		distanceCovered = float(dt) * Agent.s_scaleSpeed / 1000
-		if distance > distanceCovered and (self.m_targetRoom == None or (not self.m_targetRoom.IsInRoom(self.pos))):
-			#there still distance within the path
+		if distance > distanceCovered:
+#		and (self.m_targetRoom == None or (not self.m_targetRoom.IsInRoom(self.pos))):
+			#masih ada jarak yang perlu ditempuh
 			myGrid = TranslateToGridPos(self.pos,self.m_myFloorIndex)
 			self.m_blockedBy,blocked = PathFinding.IsBlocked(myGrid,self.m_myFloorIndex)
 			
 			if blocked:
-				#path maybe blocked
+				#jalur kemungkinan terhalang
 				blockPos = PathFinding.TranslateToRealPos(PathFinding.Map.liveBlock[self.m_blockedBy][0],self.m_myFloorIndex)
 				blockDir = Vector3f.Subtract(Vector3f(blockPos[0],blockPos[1],0),Vector3f(self.pos.X,self.pos.Y,0))
 				blockDir = Vector3f.Divide(blockDir,blockDir.Length)
@@ -599,11 +624,11 @@ class Agent:
 					blocked = False
 			
 			if blocked:
-				#path is blocked
+				#jalur terhalang
 				if self.blockCounter < 10 and self.m_myIndex > self.m_blockedBy:
 					if not self.m_hasWait:
 						self.blockCounter += 1
-						return self.pos
+						return
 					else:
 						self.m_hasWait = True
 				
@@ -636,71 +661,85 @@ class Agent:
 			#update agent position
 			self.pos = rs.PointAdd(self.pos,Vector3d.Multiply(self.moveDir,distanceCovered))
 			
+			if self.IsArriveInRoom():
+				self.CheckSupportPreActivity()
+			
 		else:
-			if self.m_targetType == TARGET_ROOM:
-			#already in the same room as target
-				if self.m_targetRoom.IsInRoom(self.pos):
-					satisfied, preActivity, objectID = self.m_currentTerm.CheckEnvironmentSatisfied(self.m_environmentThreshold, self.m_targetRoom)
-					
-					if satisfied:
-						satisfied, preActivity, objectID = self.m_currentTerm.CheckRoomSatisfied(self.m_targetRoom)
-					
-					if satisfied:
-						if preActivity != None:
-							self.FindTargetAndEntryPointForObject(objectID)
-						else:
-							self.FindTargetAndEntryPointForActivity(self.m_currentActivity.m_ID)
-					else:
-						if len(self.m_currentTerm.m_roomPrio) > 1 and self.m_targetRoom.name != self.m_currentTerm.m_roomPrio[1]:
-							self.m_targetRoom = self.m_currentTerm.m_roomPrio[1]
-							self.m_targetType = TARGET_ROOM
-						else:
-							self.m_currentActivity.Suspend()
-							return
-						
-					self.myPath = self.GeneratePath(self.pos, self.entryPoint.pos)
-					self.m_targetType = TARGET_POINT
-			else:
 			#already close with destination
-				remainingDistance = distanceCovered - distance
-				while (remainingDistance > 0):
-					self.pos = destination
-					self.m_pathIndex+=1
-					if self.m_pathIndex < len(self.myPath):
-						self.recalculateMoveDir()
-						destination  = self.myPath[self.m_pathIndex]
-						distance = self.pos.DistanceTo(destination)
-						if remainingDistance < distance:
-							self.pos = rs.PointAdd(self.pos,Vector3d.Multiply(self.moveDir,remainingDistance))
-						remainingDistance = remainingDistance - distance
-					elif self.needStair:
-						nextStairIndex = "STAIRS_"+str(self.m_target.m_floorIndex)
-						nextStairTarget = next(trgt for trgt in Agent.s_possibleTarget if trgt.hasActivity(nextStairIndex))
-						nextStairEntry = next(entry for entry in Agent.s_entryPointList if entry.target == nextStairTarget)
-						self.m_myFloorIndex = self.m_target.m_floorIndex
-						start = TranslateToGridPos(nextStairEntry.pos,self.m_myFloorIndex)
-						end = TranslateToGridPos(self.entryPoint.pos,self.m_myFloorIndex)
-						
-						self.myPath = PathFinding.astarv3(start,end,self.m_myIndex,self.m_myFloorIndex)
-						self.pos = nextStairTarget.m_targetPoint
-						self.myPath.insert(0,self.pos)
-						if self.entryPoint.pos != self.entryPoint.target.m_targetPoint:
-							self.myPath.append(self.entryPoint.target.m_targetPoint)
-						self.m_pathIndex = 1
-						self.recalculateMoveDir()
-						self.needStair = False
-						distance = self.pos.DistanceTo(destination)
-						if remainingDistance < distance:
-							self.pos = rs.PointAdd(self.pos,Vector3d.Multiply(self.moveDir,remainingDistance))
-						remainingDistance = remainingDistance - distance
+			remainingDistance = distanceCovered - distance
+			while (remainingDistance > 0):
+				self.pos = destination
+				self.m_pathIndex+=1
+				if self.m_pathIndex < len(self.myPath):
+					self.recalculateMoveDir()
+					destination  = self.myPath[self.m_pathIndex]
+					distance = self.pos.DistanceTo(destination)
+					if remainingDistance < distance:
+						self.pos = rs.PointAdd(self.pos,Vector3d.Multiply(self.moveDir,remainingDistance))
+					remainingDistance = remainingDistance - distance
+				elif self.needStair:
+					nextStairIndex = "STAIRS_"+str(self.m_target.m_floorIndex)
+					nextStairTarget = next(trgt for trgt in Agent.s_possibleTarget if trgt.hasActivity(nextStairIndex))
+					nextStairEntry = next(entry for entry in Agent.s_entryPointList if entry.target == nextStairTarget)
+					self.m_myFloorIndex = self.m_target.m_floorIndex
+					start = TranslateToGridPos(nextStairEntry.pos,self.m_myFloorIndex)
+					end = TranslateToGridPos(self.entryPoint.pos,self.m_myFloorIndex)
+					
+					self.myPath = PathFinding.astarv3(start,end,self.m_myIndex,self.m_myFloorIndex)
+					self.pos = nextStairTarget.m_targetPoint
+					self.myPath.insert(0,self.pos)
+					if self.entryPoint.pos != self.entryPoint.target.m_targetPoint:
+						self.myPath.append(self.entryPoint.target.m_targetPoint)
+					self.m_pathIndex = 1
+					self.recalculateMoveDir()
+					self.needStair = False
+					distance = self.pos.DistanceTo(destination)
+					if remainingDistance < distance:
+						self.pos = rs.PointAdd(self.pos,Vector3d.Multiply(self.moveDir,remainingDistance))
+					remainingDistance = remainingDistance - distance
+				else:
+					self.m_state = STATE_WAIT
+					
+					#tiba di tempat, mulai menjalankan aktivitas (pendukung ataupun utama)
+					remainingDistance = 0
+					if self.m_supportActivity != None:
+						self.m_supportActivity.Start()
 					else:
-						self.m_canGetNewTarget = True
-						self.m_state = STATE_WAIT
-						self.waitTime = (Schedule.SCHEDULE[self.m_myIndex][self.targetIndex][1] * TIMEFACTOR)
-						remainingDistance = 0
-	
+						self.m_currentActivity.Start()
+							
 	def FindTargetAndEntryPointForObject(self, ID):
 		self.entryPoint = next(entry for entry in Agent.s_entryPointList if entry.target.m_id == ID)
+		
+	#memeriksa jika agent telah tiba di ruang untuk melakukan aktivitas
+	def IsArriveInRoom(self):
+		return self.m_targetType == TARGET_ROOM and self.m_targetRoom.IsInRoom(self.pos)
+	
+	#memeriksa aktivitas pendukung sebelum
+	def CheckSupportPreActivity(self):
+		#memeriksa faktor lingkungan dan ruang					
+		satisfied, preActivity, objectID = self.m_currentTerm.CheckEnvironmentSatisfied(self.m_environmentThreshold, self.m_targetRoom)
+		
+		if satisfied:
+			satisfied, preActivity, objectID = self.m_currentTerm.CheckRoomSatisfied(self.m_targetRoom)
+		
+		if satisfied:
+			if preActivity != None:
+				#ada aktivitas pendukung yang harus dilakukan sebelum bisa memulai aktivitas
+				self.FindTargetAndEntryPointForObject(objectID)
+				self.m_currentSupportActivity = next(sActivity for sActivity in self.m_supportActivity if sActivity.m_ID == preActivity)
+			else:
+				self.FindTargetAndEntryPointForActivity(self.m_currentActivity.m_ID)
+		else:
+			#tidak memungkinkan untuk melakukan aktivitas yang dituju di ruang tersebut, memeriksa apakah bisa di ruangan lain, atau menunda aktivitas
+			if len(self.m_currentTerm.m_roomPrio) > 1 and self.m_targetRoom.name != self.m_currentTerm.m_roomPrio[1]:
+				self.m_targetRoom = self.m_currentTerm.m_roomPrio[1]
+				self.m_targetType = TARGET_ROOM
+			else:
+				self.m_currentActivity.Suspend()
+				return
+			
+		self.myPath = self.GeneratePath(self.pos, self.entryPoint.pos)
+		self.m_targetType = TARGET_POINT
 #-----------------------------------------------------------------------------------------------------------------------------------------
 
 def TranslateToGridPos(pos,mazeIndex):

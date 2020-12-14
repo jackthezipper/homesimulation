@@ -59,19 +59,16 @@ class Activity:
 	def __init__(self, ID):
 		self.m_ID = ID
 		self.m_duration = 0
-		self.m_runningTimeLeft = 0
+		self.m_runningTime = 0
 	
-	def UpdateTimeLeft(self, dt):
-		if self.m_runningTimeLeft > 0:
-			self.m_runningTimeLeft -= dt
-		if self.m_runningTimeLeft < 0:
-			self.m_runningTimeLeft = 0
+	def UpdateTimer(self, dt):
+		self.m_runningTime += dt
 	
 	def Start(self, runTime):
 		self.m_runningTimeLeft = runTime
 	
 	def IsDone(self):
-		return (self.m_runningTimeLeft <= 0)
+		return (self.m_runningTime <= self.m_duration)
 
 	def GetDescription():
 		return g_ActivityDB[self.m_ID]
@@ -79,8 +76,9 @@ class Activity:
 #-------------------Core Activity Class----------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------------------
 class CoreActivity(Activity):
-	def __init__(self, ID, interruptProperty, timeProperty, planProperty, biologicalEffect, esFactor, agent):
+	def __init__(self, ID, chance, interruptProperty, timeProperty, planProperty, biologicalEffect, esFactor, agent):
 		Activity.__init__(self, ID)
+		self.m_chance = chance
 		self.m_interruptProperty = interruptProperty
 		self.m_timeProperty = timeProperty
 		self.m_planProperty = planProperty
@@ -89,32 +87,40 @@ class CoreActivity(Activity):
 		self.m_agent = agent
 		self.m_score = 0
 	
-	#version using from rangkuma formula
+	#menghitung skor aktivitas
 	def CalculateActivityScore(self):
 		self.m_score = 0
 		factorCount = 0
 		
-		#calculating plan
+		#kalkulasi rencana
 		for i in range(0,PLAN_TOTAL):
 			self.m_score += self.m_planProperty[i]
 			factorCount += (1 if self.m_planProperty[i] != 0 else 0)
 		
-		#calculating biological factor
+		#kalkulasi faktor biologi
 		for i in range(0,BIO_TOTAL):
 			self.m_score += self.m_biologicalEffect[i] * self.m_agent.m_myBioStatus[i]
 			factorCount += abs(self.m_biologicalEffect[i])
 		self.m_score /= factorCount
 		
-		#calculating emotional effect
+		#peluang
+		self.m_score *= self.m_chance
+		
+		#kalkulasi faktor emosi-sosial
 		for i in range(0,ES_TOTAL):
 			if m_esFactor[i] != 0:
 				self.m_score *= m_esFactor[i]
 	
 	def CanInterrupt(self):
-		return self.m_interruptProperty[CommonEnum.INTERRUPT_CAN_INTERRUPT]\
+		return self.m_interruptProperty[CommonEnum.INTERRUPT_CAN_INTERRUPT]
 	
 	def CanBeInterrupted(self):
 		return self.m_interruptProperty[CommonEnum.INTERRUPT_CAN_BE_INTERRUPTED]
+	
+	def Start(self, duration = 0):
+		if duration == 0:
+			duration = self.m_timeProperty[TIME_PROPERTY_DURATION]
+		Activity.Start(self, duration)
 
 #------------------------------------------------------------------------------------------------------------
 #-------------------Support Activity Class-------------------------------------------------------------------

@@ -26,24 +26,26 @@ class ActivityTerm():
 		self.m_roomFactor = roomFactor #contain object need to be available in the room, and corresponding activity for each object
 		self.m_roomPrio = roomPrio
 	
+	#memeriksa faktor lingkungan
 	def CheckEnvironmentSatisfied(self, agentEnvironmentThreshold, room):
 		satisfied = True
 		
-		#check light factor
+		#memeriksa pencahayaan
 		if self.m_environmentFactor[CommonEnum.TERM_ENVI_LIGHT][CommonEnum.TERM_ENVI_AFFECT] != 0:
 			satisfied = room.m_light >= agentEnvironmentThreshold[CommonEnum.TERM_ENVI_LIGHT]
 			if not satisfied:
 				return satisfied,ACTIVITY_TURN_ONLIGHT,self.m_environmentFactor[CommonEnum.TERM_ENVI_LIGHT][CommonEnum.TERM_ENVI_OBJECT]
 
-		#check temperature factor
+		#memeriksa suhu
 		if self.m_environmentFactor[CommonEnum.TERM_ENVI_TEMPERATURE][CommonEnum.TERM_ENVI_AFFECT] != 0:
 			satisfied = room.m_temperature < agentEnvironmentThreshold[CommonEnum.TERM_ENVI_TEMPERATURE]
 			if not satisfied:
 				return satisfied, ACTIVITY_TURN_ONTEMP, self.m_environmentFactor[CommonEnum.TERM_ENVI_TEMPERATURE][CommonEnum.TERM_ENVI_OBJECT]
 		
-		#all condition satisfied
+		#kondisi terpenuhi
 		return satisfied, None, None
 	
+	#memeriksa faktor ruang
 	def CheckRoomSatisfied(self, room):
 		for roomFactor in self.m_roomFactor:
 			for (device,activity) in zip(roomFactor[ROOM_DEVICE],roomFactor[ROOM_FAILACTIVITY]):
