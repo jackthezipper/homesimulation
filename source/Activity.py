@@ -107,9 +107,9 @@ class CoreActivity(Activity):
 		self.m_score *= self.m_chance
 		
 		#kalkulasi faktor emosi-sosial
-		for i in range(0,ES_TOTAL):
+		for i in range(0,CommonEnum.ES_PROPERTY_COUNT):
 			if m_esFactor[i] != 0:
-				self.m_score *= m_esFactor[i]
+				self.m_score *= self.m_agent.m_myESStatus[i]
 	
 	def CanInterrupt(self):
 		return self.m_interruptProperty[CommonEnum.INTERRUPT_CAN_INTERRUPT]

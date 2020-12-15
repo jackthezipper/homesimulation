@@ -95,6 +95,7 @@ class Agent:
 		self.m_myBioStatus = []
 		self.m_myBioEffectRate = []
 		self.m_myESStatus = []
+		self.m_myESRate = []
 		self.m_environmentThreshold = []
 		
 		self.m_currentActivity = None
@@ -504,6 +505,13 @@ class Agent:
 		
 		for i in range(0,len(self.m_myBioStatus)):
 			self.m_myBioStatus[i] += elapseTime * self.m_myBioEffectRate[i]
+			
+	#update status emosi sosial
+	def UpdateESStatus(self, dt):
+		elapseTime = (dt * Agent.s_scaleSpeed * TIMECONVERSION)
+		
+		for i in range(0,len(self.m_myBioStatus)):
+			self.m_myESStatus[i] += elapseTime * self.m_myESRate[i]
 	
 	#menghitung nilai tiap aktivitas lalu diurutkan
 	def UpdateActivityOrder(self):
