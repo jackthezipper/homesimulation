@@ -95,6 +95,7 @@ class Agent:
 		self.m_myBioStatus = []
 		self.m_myBioEffectRate = []
 		self.m_myESStatus = []
+		self.m_myESNormal = []
 		self.m_myESRate = []
 		self.m_environmentThreshold = []
 		
@@ -501,17 +502,20 @@ class Agent:
 	
 	#update status biologis
 	def UpdateBioStatus(self, dt):
-		elapseTime = (dt * Agent.s_scaleSpeed * TIMECONVERSION)
+		elapseTime = (dt * Agent.s_scaleSpeed * TIMECONVERSION) / TIMEFACTOR
 		
 		for i in range(0,len(self.m_myBioStatus)):
 			self.m_myBioStatus[i] += elapseTime * self.m_myBioEffectRate[i]
+		#TODO: implement activity effect on bio status
 			
 	#update status emosi sosial
 	def UpdateESStatus(self, dt):
-		elapseTime = (dt * Agent.s_scaleSpeed * TIMECONVERSION)
+		elapseTime = (dt * Agent.s_scaleSpeed * TIMECONVERSION) / TIMEFACTOR
 		
-		for i in range(0,len(self.m_myBioStatus)):
-			self.m_myESStatus[i] += elapseTime * self.m_myESRate[i]
+		for i in range(0,len(self.m_myESStatus)):
+			self.m_myESStatus[i] = self.m_my_ESNormal[i] if (abs(self.m_my_ESNormal[i] - self.m_myESRate[i]) < self.m_myESRate[i]) else (self.m_myESStatus[i] + (elapseTime * self.m_myESRate[i]) * (-1 if (self.m_myESNormal[i] < self.m_myESRate[i]) else 1))
+		
+		#TODO: implement activity effect on ES
 	
 	#menghitung nilai tiap aktivitas lalu diurutkan
 	def UpdateActivityOrder(self):
