@@ -1,6 +1,6 @@
 class Target:
 	s_unNamedCount = 0
-	def __init__(self,fIndex,tp = None, id = "UNNAMED"):
+	def __init__(self,fIndex, type, tp = None, id = "UNNAMED"):
 		if id == "UNNAMED":
 			m_id = id+str(Target.s_unNamedCount)
 			Target.s_unNamedCount += 1
@@ -12,6 +12,7 @@ class Target:
 		self.m_available = True
 		self.activities = []
 		self.m_specificAgent = []
+		self.m_type = type
 		
 	def setTargetPoint(self,point):
 		self.m_targetPoint = point

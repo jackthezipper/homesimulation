@@ -116,6 +116,23 @@ class Agent:
 		if newTarget != None:
 			self.m_target.m_available = False
 	
+	def Update(self,dt):
+		if not self.initialized:
+			self.AssignToClosestTarget()
+			self.initialized = True
+		
+		if not self.m_active:
+			return self.pos
+		
+		self.UpdateBioStatus(dt)
+		self.UpdateESStatus(dt)
+		self.UpdateActivityOrder()
+		self.UpdateAgentActivity(dt)
+		self.UpdateAgentMovement(dt)
+		
+		
+		
+	
 	def update(self, dt):
 		if not self.initialized:
 			self.AssignToClosestTarget()
@@ -527,6 +544,11 @@ class Agent:
 	def SetupInitialBioStatusAndRate(self, initialBioStatus, bioEffectRate):
 		self.m_myBioStatus = initialBioStatus
 		self.m_myBioEffectRate = bioEffectRate
+	
+	def SetupInitialES(self, initial, normal, rate):
+		self.m_myESStatus = initial
+		self.m_myESNormal = normal
+		self.m_myESRate = rate
 	
 	def GeneratePath(self, start, end, stair = None):
 		pStart = TranslateToGridPos(start)

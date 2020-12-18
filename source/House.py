@@ -3,6 +3,8 @@ import CommonEnum
 import csv
 import os
 
+import Target
+
 from Rhino.Geometry import Curve, Point3d
 
 SCALE_TIME = 1
@@ -58,9 +60,22 @@ class Room:
 		self.m_targetCoord = targetCoord
 		self.m_curve = curve
 		self.m_floorIndex = floorIndex
+		self.m_items = []
 	
 	def IsInRoom(self, point):
 		return self.m_curve.Contains(point)
+	
+	def CheckAndAddItem(self, item):
+		if self.IsInRoom(item.m_targetPoint):
+			self.m_items.append(item)
+			return True
+		return False
+	
+	def HasAndAvailable(self, itemType):
+		for item in self.m_items:
+			if item.m_type == itemType and item.m_available:
+				return True
+		return False
 
 #--------------------------------------------------------------------------------------------------------------
 #-------------House Class--------------------------------------------------------------------------------------

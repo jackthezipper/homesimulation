@@ -13,11 +13,18 @@ class Timer:
 	def Update(self, dt):
 		self.m_time += dt
 	
-	def GetDay(self):
-		return math.floor((self.m_time * TIMECONVERSION) / (TIMEFACTOR * MINUTE_IN_HOUR * HOUR_IN_DAY))
+	def GetDay(self, time):
+		return math.floor((time * TIMECONVERSION) / (TIMEFACTOR * MINUTE_IN_HOUR * HOUR_IN_DAY))
 	
-	def GetHour(self):
-		return math.floor(((self.m_time * TIMECONVERSION) / (TIMEFACTOR * MINUTE_IN_HOUR)) % HOUR_IN_DAY)
+	def GetHour(self, time):
+		return math.floor(((time * TIMECONVERSION) / (TIMEFACTOR * MINUTE_IN_HOUR)) % HOUR_IN_DAY)
 	
-	def GetMinute(self):
-		return math.floor( ((self.m_time * TIMECONVERSION) / TIMEFACTOR) % MINUTE_IN_HOUR )
+	def GetMinute(self, time):
+		return math.floor( ((time * TIMECONVERSION) / TIMEFACTOR) % MINUTE_IN_HOUR )
+	
+	def GetReadableTime(self, time):
+		return self.GetDay(time), self.GetHour(time), self.GetMinute(time)
+	
+	def GetCurrentReadableTime(self):
+		return self.GetReadableTime(self.m_time)
+	
