@@ -48,10 +48,10 @@
             <chunk name="Projection">
               <items count="2">
                 <item name="Target" type_name="gh_drawing_point" type_code="30">
-                  <X>89</X>
-                  <Y>-7</Y>
+                  <X>135</X>
+                  <Y>34</Y>
                 </item>
-                <item name="Zoom" type_name="gh_single" type_code="5">1.62833273</item>
+                <item name="Zoom" type_name="gh_single" type_code="5">0.85</item>
               </items>
             </chunk>
             <chunk name="Views">
@@ -115,7 +115,10 @@ if not my_path in sys.path:
     sys.path.append(my_path)
 
 import Door
-
+Door = reload(Door)
+DIRECTION_CCW = -1
+DIRECTION_CW = 1
+OFFSET = 0.01
 class MyComponent(component):
     
     def RunScript(self,x):
@@ -128,9 +131,11 @@ class MyComponent(component):
         
         __author__ = "remote"
         __version__ = "2020.12.18"
-        
+        sc.doc = ghdoc
         import rhinoscriptsyntax as rs
+        print x
         rectArea = rs.coercecurve(x)
+        print rectArea
         rc,pl = rectArea.TryGetPolyline()
         #print rc
         #print pl
@@ -152,7 +157,7 @@ class MyComponent(component):
                 print rs.GetUserText(oo,"Part")
                 part = rs.GetUserText(oo,"Part")
                 
-                if part == "Door":
+                if part == "Panel":
                     doorPanelObject.append(oo)
                     for group in groupList:
                         doorPanelGroup.append(group)
@@ -198,48 +203,115 @@ class MyComponent(component):
                 print panelObj.GetType()
                 pClone = panelObj.DuplicateGeometry()
                 print pClone.GetType()
-                doorObject.append(Door.Door(panelObj,rh.Geometry.BoundingBox.Union(doorFrameObject[index][0].Geometry.GetBoundingBox(True),doorFrameObject[index][1].Geometry.GetBoundingBox(True)),1))
+                frameBoundingBox = rh.Geometry.BoundingBox.Union(doorFrameObject[index][0].Geometry.GetBoundingBox(True),doorFrameObject[index][1].Geometry.GetBoundingBox(True))
+                rotCenter, rotDir = self.DetermineRotationCenterAndDir(frameBoundingBox,panelObj)
+                doorObject.append(Door.Door(panelObj,frameBoundingBox,rotCenter,rotDir,Door.DOOR_OPEN))
+        for do in doorObject:
+            do.Close()
         # return outputs if you have them; here I try it for you:
         #rs.AddPoints(
-        pClone.Translate(1.0,0.0,0.0)
+        #pClone.Translate(1.0,0.0,0.0)
         #listClone = []
         #listClone.append(pClone)
-        listCenter = []
+        #listCenter = []
         #rh.DocObjects.InstanceObject.InstanceDefinition.Index
         #rh.Geometry.InstanceReferenceGeometry.Xform
-        corona = tesObj.Geometry.GetBoundingBox(True).GetCorners()
-        print "ago"
-        print corona
-        print "bego"
-        print tesObj.Geometry.GetBoundingBox(True).Center
+        #corona = tesObj.Geometry.GetBoundingBox(True).GetCorners()
+        #print "ago"
+        #print corona
+        #print "bego"
+        #print tesObj.Geometry.GetBoundingBox(True).Center
         #tesObj.Geometry.Translate(1.0,0.0,0.0)
-        centerRotation = tesObj.Geometry.GetBoundingBox(True).GetCorners()[3]
-        print centerRotation
-        centerRotation.X += 0.01
-        print "lembu"
-        print centerRotation
-        tesObj.Geometry.Rotate(math.radians(90),Vector3d.ZAxis,centerRotation) 
-        goo = tesObj.CommitChanges()
-        print goo
-        print tesObj.Geometry.GetBoundingBox(True).Center
-        print tesObj.Index
-        print tesObj.Geometry.Xform
-        gai = rh.RhinoDoc.ActiveDoc.Objects.AddInstanceObject(tesObj.InstanceDefinition.Index,tesObj.Geometry.Xform)
-        print gai
+        #centerRotation = tesObj.Geometry.GetBoundingBox(True).GetCorners()[3]
+        #print centerRotation
+        #centerRotation.X += 0.01
+        #print "lembu"
+        #print centerRotation
+        #sc.doc = rh.RhinoDoc.ActiveDoc
+        #tesObj.Geometry.Rotate(math.radians(90),Vector3d.ZAxis,centerRotation) 
+        #goo = tesObj.CommitChanges()
+        #sc.doc = ghdoc
+        #print goo
+        #rh.DocObjects.InstanceObject.Id,centerRotation,90)
+        #print tesObj.Geometry.GetBoundingBox(True).Center
+        #print tesObj.InstanceDefinition.Index
+        #print tesObj.Geometry.Xform
+        #print tesObj.Id
+        #rs.RotateObject(
+        #cero = rs.coerce3dpoint(centerRotation,True)
+        #axu = rs.coerce3dvector(Vector3d.ZAxis,True)
+        #xf = rh.Geometry.Transform.Rotation(math.radians(90), axu, cero)
+        #print cero
+        #print axu
+        #print xf
+        #tok = rs.RotateObject(tesObj,centerRotation,90,Vector3d.ZAxis)
+        #print tok
+        #sc.doc = ghdoc
+        #gai = rh.RhinoDoc.ActiveDoc.Objects.AddInstanceObject(tesObj.InstanceDefinition.Index,tesObj.Geometry.Xform)
+        #print gai
         #rh.RhinoDoc.ActiveDoc.Objects.AddPoint(pClone.GetBoundingBox(True).Center)
         #rh.RhinoDoc.ActiveDoc.Objects.AddRhinoObject(
         #rs.AddPoint(pClone.GetBoundingBox(True).Center)
         #return pClone.GetBoundingBox(True).Center
         return None#listClone#.GetBoundingBox(True).Center
-</item>
+
+    def DetermineRotationCenterAndDir(self, frameBox, panel):
+        panelBox = panel.Geometry.GetBoundingBox(True)
+        panelCenter = panelBox.Center
+        
+        frameCenter = frameBox.Center
+        
+        panelCorner = panelBox.GetCorners()
+        isPanelVertical = (panelCorner[2].X - panelCorner[0].X &lt; panelCorner[2].Y - panelCorner[0].Y)
+        index = 0
+        direction = DIRECTION_CCW
+        if isPanelVertical:
+            if frameCenter.X &gt; panelCenter.X:
+                if frameCenter.Y &gt; panelCenter.Y:
+                    index = 3
+                else:
+                    index = 0
+                    direction = DIRECTION_CW
+            else:
+                if frameCenter.Y &gt; panelCenter.Y:
+                    index = 2
+                    direction = DIRECTION_CW
+                else:
+                    index = 1
+        else:
+            if frameCenter.X &gt; panelCenter.X:
+                if frameCenter.Y &gt; panelCenter.Y:
+                    index = 1
+                    direction = DIRECTION_CW
+                else:
+                    index = 2
+            else:
+                if frameCenter.Y &gt; panelCenter.Y:
+                    index = 0
+                else:
+                    index = 3
+                    direction = DIRECTION_CW
+        rotationCenter = panelCorner[index]
+        
+        if isPanelVertical:
+            if index == 0 or index == 3:
+                rotationCenter.X += OFFSET
+            else:
+                rotationCenter.X -= OFFSET
+        else:
+            if index == 0 or index == 1:
+                rotationCenter.Y += OFFSET
+            else:
+                rotationCenter.Y -= OFFSET
+        return rotationCenter, direction</item>
                     <item name="Description" type_name="gh_string" type_code="10">GhPython provides a Python script component</item>
                     <item name="EditorLocation" type_name="gh_drawing_point" type_code="30">
-                      <X>597</X>
-                      <Y>145</Y>
+                      <X>605</X>
+                      <Y>0</Y>
                     </item>
                     <item name="EditorSize" type_name="gh_drawing_size" type_code="32">
-                      <W>558</W>
-                      <H>794</H>
+                      <W>656</W>
+                      <H>992</H>
                     </item>
                     <item name="HideInput" type_name="gh_bool" type_code="1">true</item>
                     <item name="HideOutput" type_name="gh_bool" type_code="1">true</item>
@@ -382,8 +454,8 @@ class MyComponent(component):
                             <chunk name="Item" index="0">
                               <items count="2">
                                 <item name="Plane" type_name="gh_plane" type_code="72">
-                                  <Ox>3.73626052932133</Ox>
-                                  <Oy>15.8320100364852</Oy>
+                                  <Ox>3.82401614143771</Ox>
+                                  <Oy>12.0393606747514</Oy>
                                   <Oz>0</Oz>
                                   <Xx>1</Xx>
                                   <Xy>0</Xy>
@@ -393,10 +465,10 @@ class MyComponent(component):
                                   <Yz>0</Yz>
                                 </item>
                                 <item name="Size" type_name="gh_interval2d" type_code="61">
-                                  <Au>-0.813568364719099</Au>
-                                  <Bu>0.813568364719099</Bu>
-                                  <Av>-0.770574914551016</Av>
-                                  <Bv>0.770574914551014</Bv>
+                                  <Au>-1.01488685869588</Au>
+                                  <Bu>1.01488685869588</Bu>
+                                  <Av>-4.74246195652279</Av>
+                                  <Bv>4.74246195652279</Bv>
                                 </item>
                               </items>
                             </chunk>
@@ -450,7 +522,7 @@ class MyComponent(component):
     <chunk name="Thumbnail">
       <items count="1">
         <item name="Thumbnail" type_name="gh_drawing_bitmap" type_code="37">
-          <bitmap length="2171">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</bitmap>
+          <bitmap length="1175">iVBORw0KGgoAAAANSUhEUgAAAJYAAABkCAIAAADrOV6nAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQsSURBVHhe7dfbaxxlHMbx/B16pxeC2hsrWIoV64WWIrHGi57EiypUpAhKDwgVjGDEQsWmnlpQY1OQhIoJWY1xk26TJuya3eyue5iZ3Z3Z0xyz2W1zZS/rb81Qk6YXYmYKjzwfhmXYd8hefPO+87499H9wm2D9k9AkQEwIjwnhMSE8JoTHhPCYEF4wCW3bdhxHPu/c+AMUvgASuq6r67qmaYZhlMtlRVFqtZp86Q9TyLaa0PO8eDyeSCQkXjQazeVylmXFYrFUKsWK98dWE7ZarampqYmJCWk2NDQ0NjZWLBZHRkai079pZcV/iMK01YRCXn7pdHpxcTGbzS4tLcmMlLm40mr/oaSMWkUmpf8chSOAhELWzPUkqmXaaXWh0aybJhOGK5iEd7Etp1QtZMoLLbftOq7nenLJjVyyY/UfooCEktCxvGR5ulSVzWm5qCnZQkYuRVPzBbWiG/9maZVjiTy29nnnxh+jjYJPKEuo3lDTxtVkIfGre+6buY/6v+7vv/Dht3MD1zpf/JK/1Kzb1qbVtZvJkhNld5rKlC2VSvl8vvsv8PcpRV6uzWaTFe8p+ISu1UpXY+VGbqE4ffHW7rdGd/S+2/fKe/uP/bhz6Paz36snnHrHNp1uMMtzrWXHcuWVWampqp4rlrNapXB9YXZ0dFSOK5OTk5FIpFqtynZJvpHdr/8btE4YCZdztfnFWmTs+vBge9frw9tfOLa39/jLbww/+dWfT59PHFWVkmEqWj1bqP6e0eeSpZmUFsuW4sVKpmQosonVNFVOKbOzs+Pj43I+mZmZkZbz8/MS1f8NWif4hEJmmFQcuPTOgL7j8IVtL53s2/P23v2Dj58xn3o/sm/86uVU8+ekPpUx5pRqutrQZe11bK+7ilqOrJayoTXNpirTUtcNw5BFtVKpyEbX/+u0USgJxU33VjT90yfOE4cuPrrryO7n3nz+te+2fba6/fPkUa+x6lkrst7KfLUtd/N7UaxtYdbzB2iTsBK23dXJpR8+MB/qHXxg55FnHnnxsX1fPvhx5+FPE6/a9fY9s9F/E1bCZWclXrh2NnH49JWDB072HTzVd/rKobPJA5fjZ1xzxX+IghBWwqbZlK2mbD6X7c6NTudm54bc2LV2tx9nYKDCSrhGFsy7Ln+AghNuQroPmBAeE8JjQnhMCI8J4TEhPCaEx4TwmBAeE8JjQnhMCI8J4TEhPCaEx4TwmBAeE8JjQnhMCI8J4TEhPCaEx4TwmBAeE8JjQnhMCI8J4TEhPCaEx4TwmBAeE8JjQnhMCI8J4TEhPCaEx4TwmBAeE8JjQnhMCI8J4TEhPCaEx4TwmBAeE8JjQnhMCI8J4TEhPCaEx4TwmBAeE8JjQnhMCI8J4TEhPCaEx4TwmBAeE8JjQnhMCI8J4TEhPCaEtyEhgfITErCenr8ArIoMTXB8j+EAAAAASUVORK5CYII=</bitmap>
         </item>
       </items>
     </chunk>
