@@ -1,4 +1,5 @@
 import random
+import CommonEnum
 
 import csv
 import os
@@ -6,7 +7,7 @@ import os
 # sourceFilePath	= ghenv.Component.OnPingDocument().FilePath
 sourceFilePath	= os.path.dirname(os.path.abspath(__file__))
 sourceDirPath	= sourceFilePath[0:sourceFilePath.rfind('\\')+1]
-resPath			= sourceDirPath+"..\\res\\"
+resPath			= sourceDirPath+"res\\"+sc.sticky["MapName"]+"\\"
 
 
 class InterruptProperty:
@@ -161,6 +162,8 @@ DB_SUPPORT_ACTIVITY_DESC		= 0
 DB_SUPPORT_ACTIVITY_DURATION	= TABLE_SUPPORT_ACTIVITY_DESC + 1
 
 g_ActivityDB = {}
+g_ActivityEffectRun = {}
+g_ActivityEffectPending = {}
 g_SupportActivityBeforeDB = {}
 g_SupportActivityAfterDB = {}
 
@@ -172,6 +175,58 @@ def LoadGeneralActivityDB():
 			if row[TABLE_ID] == "ID":
 				continue
 			g_ActivityDB[row[MAIN_ACTIVITY_ID]] = [row[MAIN_ACTIVITY_DESC]]
+
+def LoadActivityEffect():
+	tableFileName = resPath+"table_effect_run"
+	with open(tableFileName) as csvfile:
+		reader = csv.reader(csvfile)
+		for row in reader:
+			if row[CommonEnum.TBLE_EFFECT_ID] == "ID":
+				continue
+			data = []
+			for i in range(CommonEnum.TABLE_EFFECT_BIO_START, CommonEnum.TABLE_EFFECT_ES_START):
+				data.append(float(row[i]))
+			env = []
+			for i in range(0,CommonEnum.EFFECT_ENVI_COUNT):
+				obj = row[CommonEnum.TABLE_EFFECT_ENV_OBJ1 + i*2]
+				if obj != "-":
+					env.append([obj,int(row[CommonEnum.TABLE_EFFECT_ENV_VAL1 + i*2])])
+			data.append(env)
+			g_ActivityEffectRun.append(data)
+	tableFileName = resPath+"table_effect_pending"
+	with open(tableFileName) as csvfile:
+		reader = csv.reader(csvfile)
+		for row in reader:
+			if row[CommonEnum.TBLE_EFFECT_ID] == "ID":
+				continue
+			data = []
+			for i in range(CommonEnum.TABLE_EFFECT_BIO_START, CommonEnum.TABLE_EFFECT_ES_START):
+				data.append(float(row[i]))
+			env = []
+			for i in range(0,CommonEnum.EFFECT_ENVI_COUNT):
+				obj = row[CommonEnum.TABLE_EFFECT_ENV_OBJ1 + i*2]
+				if obj != "-":
+					env.append([obj,int(row[CommonEnum.TABLE_EFFECT_ENV_VAL1 + i*2])])
+			data.append(env)
+			g_ActivityEffectPending.append(data)
+
+def GetActivityBioEffect(activityId, effect, run):
+	if run:
+		return g_ActivityEffectRun[activityId][effect]
+	else:
+		return g_ActivityEffectPending[activityId][effect]
+
+def GetActivityESEffect(activityId, run):
+	if run:
+		return g_ActivityEffectRun[activityId][CommonEnum.BIOLOGICAL_PROPERTY_COUNT]
+	else:
+		return g_ActivityEffectPending[activityId][CommonEnum.BIOLOGICAL_PROPERTY_COUNT]
+
+def GetActivityEnviEffect(activityId, run):
+	if run:
+		return g_ActivityEffectRun[activityId][len(g_ActivityEffectRun) - 1]
+	else:
+		return g_ActivityEffectPending[activityId][len(g_ActivityEffectPending) - 1]
 
 def LoadSupportActivityDB():
 	#support activity before

@@ -28,3 +28,5 @@ class Timer:
 	def GetCurrentReadableTime(self):
 		return self.GetReadableTime(self.m_time)
 	
+	def ConvertTime(self, day, hour, min):
+		return ((((day * HOUR_IN_DAY) + hour) * MINUTE_IN_HOUR) + min) * TIMEFACTOR / TIMECONVERSION
