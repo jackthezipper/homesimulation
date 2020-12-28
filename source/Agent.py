@@ -15,6 +15,7 @@ Activity = reload(Activity)
 import CommonEnum
 import Term
 Term = reload(Term)
+import Global
 
 from Rhino.Geometry import Point3d, Vector3f,Vector3d,Line,Polyline
 import rhinoscriptsyntax as rs
@@ -433,7 +434,12 @@ class Agent:
 					if (i == CommonEnum.TIME_PROPERTY_COUNT - 1):
 						timeProperty.append(int(row[CommonEnum.TABLE_ACTIVITY_STARTTIMECANSTART + i]))
 					else:
-						timeProperty.append(row[CommonEnum.TABLE_ACTIVITY_STARTTIMECANSTART + i])
+						timeStr = row[CommonEnum.TABLE_ACTIVITY_STARTTIMECANSTART + i]
+						if timeStr == "-":
+							timeProperty.append([-1,-1])
+						else:
+							timeArr = timeStr.split(':')
+							timeProperty.append([int(timeArr[0]),int(timeArr[1])])
 				
 				planProperty = []
 				for i in range(0,CommonEnum.PLAN_PROPERTY_COUNT):

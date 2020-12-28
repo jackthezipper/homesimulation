@@ -25,6 +25,9 @@ class Timer:
 	def GetReadableTime(self, time):
 		return self.GetDay(time), self.GetHour(time), self.GetMinute(time)
 	
+	def GetCurrentDay(self):
+		return self.GetDay(self.m_time)
+	
 	def GetCurrentReadableTime(self):
 		return self.GetReadableTime(self.m_time)
 	

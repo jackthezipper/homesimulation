@@ -1,6 +1,9 @@
-import random
-import CommonEnum
+import scriptcontext as sc
 
+import CommonEnum
+import Global
+
+import random
 import csv
 import os
 #find resources path
@@ -93,6 +96,9 @@ class CoreActivity(Activity):
 		self.m_score = 0
 		factorCount = 0
 		
+		if not self.CanStartBase():
+			return
+		
 		#kalkulasi rencana
 		for i in range(0,PLAN_TOTAL):
 			self.m_score += self.m_planProperty[i]
@@ -122,6 +128,15 @@ class CoreActivity(Activity):
 		if duration == 0:
 			duration = self.m_timeProperty[TIME_PROPERTY_DURATION]
 		Activity.Start(self, duration)
+	
+	def CanStartBase(self):
+		if self.m_timeProperty[CommonEnum.TIME_PROPERTY_STARTTIME_CANSTART][0] == -1:
+			#can start any time
+			return True
+		
+		startTime = Global.g_timer.ConvertTime(Global.g_timer.GetCurrentDay(), self.m_timeProperty[CommonEnum.TIME_PROPERTY_STARTTIME_CANSTART][0], self.m_timeProperty[CommonEnum.TIME_PROPERTY_STARTTIME_CANSTART][1])
+		endTime = Global.g_timer.ConvertTime(Global.g_timer.GetCurrentDay(), self.m_timeProperty[CommonEnum.TIME_PROPERTY_ENDTIME_CANSTART][0], self.m_timeProperty[CommonEnum.TIME_PROPERTY_ENDTIME_CANSTART][1])
+		return (Global.g_timer.m_time > startTime and Global.g_timer.m_time < endTime)
 
 #------------------------------------------------------------------------------------------------------------
 #-------------------Support Activity Class-------------------------------------------------------------------
@@ -172,16 +187,16 @@ def LoadGeneralActivityDB():
 	with open(tableFileName) as csvfile:
 		reader = csv.reader(csvfile)
 		for row in reader:
-			if row[TABLE_ID] == "ID":
+			if row[MAIN_ACTIVITY_ID] == "ID":
 				continue
 			g_ActivityDB[row[MAIN_ACTIVITY_ID]] = [row[MAIN_ACTIVITY_DESC]]
 
 def LoadActivityEffect():
-	tableFileName = resPath+"table_effect_run"
+	tableFileName = resPath+"table_effect_run.csv"
 	with open(tableFileName) as csvfile:
 		reader = csv.reader(csvfile)
 		for row in reader:
-			if row[CommonEnum.TBLE_EFFECT_ID] == "ID":
+			if row[CommonEnum.TABLE_EFFECT_ID] == "ID":
 				continue
 			data = []
 			for i in range(CommonEnum.TABLE_EFFECT_BIO_START, CommonEnum.TABLE_EFFECT_ES_START):
@@ -192,12 +207,12 @@ def LoadActivityEffect():
 				if obj != "-":
 					env.append([obj,int(row[CommonEnum.TABLE_EFFECT_ENV_VAL1 + i*2])])
 			data.append(env)
-			g_ActivityEffectRun.append(data)
-	tableFileName = resPath+"table_effect_pending"
+			g_ActivityEffectRun[row[CommonEnum.TABLE_EFFECT_ID]] = data
+	tableFileName = resPath+"table_effect_pending.csv"
 	with open(tableFileName) as csvfile:
 		reader = csv.reader(csvfile)
 		for row in reader:
-			if row[CommonEnum.TBLE_EFFECT_ID] == "ID":
+			if row[CommonEnum.TABLE_EFFECT_ID] == "ID":
 				continue
 			data = []
 			for i in range(CommonEnum.TABLE_EFFECT_BIO_START, CommonEnum.TABLE_EFFECT_ES_START):
@@ -208,7 +223,7 @@ def LoadActivityEffect():
 				if obj != "-":
 					env.append([obj,int(row[CommonEnum.TABLE_EFFECT_ENV_VAL1 + i*2])])
 			data.append(env)
-			g_ActivityEffectPending.append(data)
+			g_ActivityEffectPending[row[CommonEnum.TABLE_EFFECT_ID]] = data
 
 def GetActivityBioEffect(activityId, effect, run):
 	if run:
