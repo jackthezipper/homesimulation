@@ -54,7 +54,7 @@ class Energy:
 
 class Room:
 	def __init__(self,name,temperature,light,targetCoord,curve, floorIndex = 0):
-		m_name = name
+		self.m_name = name
 		self.m_temperature = temperature
 		self.m_light = light
 		self.m_targetCoord = targetCoord

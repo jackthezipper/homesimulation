@@ -424,7 +424,7 @@ class Agent:
 					continue
 				#read per row
 				id = row[CommonEnum.TABLE_ACTIVITY_ID]
-				chance = row[CommonEnum.TABLE_ACTIVITY_CHANCE]
+				chance = float(row[CommonEnum.TABLE_ACTIVITY_CHANCE])
 				interruptProperty = []
 				for i in range(0,CommonEnum.INTERRUPT_PROPERTY_COUNT):
 					interruptProperty.append(int(row[CommonEnum.TABLE_ACTIVITY_CANINTERRUPT + i]))
@@ -456,9 +456,9 @@ class Agent:
 				
 				esFactor = []
 				for i in range(0, CommonEnum.ES_PROPERTY_COUNT):
-					esFactor.append(float(row[CommonEnum.TABLE_ACTIVITY_STRESS + i]))
+					esFactor.append(float(row[CommonEnum.TABLE_ACTIVITY_EMOTION + i]))
 				
-				self.m_activity.append(Activity.CoreActivity(id, interruptProperty, timeProperty, planProperty, bioEffect, esFactor, self))
+				self.m_activity.append(Activity.CoreActivity(id, chance, interruptProperty, timeProperty, planProperty, bioEffect, esFactor, self))
 	
 	def LoadSupportActivity(self):
 		tableFileName = resPath+"table_support_activity_before_"+self.m_role+".csv"
@@ -536,16 +536,16 @@ class Agent:
 		elapseTime = (dt * Agent.s_scaleSpeed * TIMECONVERSION) / TIMEFACTOR
 		
 		for i in range(0,len(self.m_myESStatus)):
-			self.m_myESStatus[i] = self.m_my_ESNormal[i] if (abs(self.m_my_ESNormal[i] - self.m_myESRate[i]) < self.m_myESRate[i]) else (self.m_myESStatus[i] + (elapseTime * self.m_myESRate[i]) * (-1 if (self.m_myESNormal[i] < self.m_myESRate[i]) else 1))
+			self.m_myESStatus[i] = self.m_myESNormal[i] if (abs(self.m_myESNormal[i] - self.m_myESRate[i]) < self.m_myESRate[i]) else (self.m_myESStatus[i] + (elapseTime * self.m_myESRate[i]) * (-1 if (self.m_myESNormal[i] < self.m_myESRate[i]) else 1))
 		
 		#TODO: implement activity effect on ES
 	
 	#menghitung nilai tiap aktivitas lalu diurutkan
 	def UpdateActivityOrder(self):
-		for activity in self.m_myActivity:
+		for activity in self.m_activity:
 			activity.CalculateActivityScore()
 		
-		self.m_myActivity.sort(key = lambda x: x.m_score, reverse = True)
+		self.m_activity.sort(key = lambda x: x.m_score, reverse = True)
 	
 	def SetupInitialBioStatusAndRate(self, initialBioStatus, bioEffectRate):
 		self.m_myBioStatus = initialBioStatus
@@ -577,8 +577,8 @@ class Agent:
 	
 	#update aktivitas agent
 	def UpdateAgentActivity(self, dt):
-		firstID = self.m_myActivity[0].m_ID
-		if self.m_currentActivity != None and (irstID == self.m_currentActivity.m_ID or (not self.m_myActivity[0].CanInterrupt()) or (not self.m_currentActivity.CanBeInterrupted())):
+		firstID = self.m_activity[0].m_ID
+		if self.m_currentActivity != None and (irstID == self.m_currentActivity.m_ID or (not self.m_activity[0].CanInterrupt()) or (not self.m_currentActivity.CanBeInterrupted())):
 			if self.m_supportActivity != None and (not self.m_supportActivity.IsDone()):
 				self.m_supportActivity.UpdateTimer(dt)
 				
@@ -597,7 +597,7 @@ class Agent:
 			return
 		
 		#ada aktivitas baru	yang akan dikerjakan
-		self.m_currentTerm = next((trm for trm in self.m_terms if trm.m_ID == firstID),None)
+		self.m_currentTerm = next((trm for trm in self.m_terms if trm.m_activityID == firstID),None)
 		if self.m_currentTerm != None:
 			roomName = self.m_currentTerm.m_roomPrio[0]
 			isSameRoom = (self.m_targetRoom != None) and (roomName == self.m_targetRoom.m_name)
@@ -635,7 +635,7 @@ class Agent:
 				self.myPath = self.GeneratePath(start, end, stairEntry)
 				self.m_state = STATE_MOVE
 			
-			self.m_currentActivity = self.m_myActivity[0]
+			self.m_currentActivity = self.m_activity[0]
 	
 	#update pergerakan dan posisi agent
 	def UpdateAgentMovement(self, dt):
