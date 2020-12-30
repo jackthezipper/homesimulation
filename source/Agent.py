@@ -601,10 +601,18 @@ class Agent:
 		if self.m_currentTerm != None:
 			roomName = self.m_currentTerm.m_roomPrio[0]
 			isSameRoom = (self.m_targetRoom != None) and (roomName == self.m_targetRoom.m_name)
+			print "koranum 8"+roomName+"8 "
 			if not isSameRoom:
+				print "nosmora"
 				self.m_targetRoom = next((room for room in Global.g_myHouse.m_rooms if room.m_name == roomName),None)
+				print self.m_targetRoom
 			else:
-				self.FindTargetAndEntryPointForActivity(firstID)
+				# print "errant "+firstID
+				# self.FindTargetAndEntryPointForActivity(firstID)
+				self.CheckSupportPreActivity()
+			print len(Global.g_myHouse.m_rooms)
+			for room in Global.g_myHouse.m_rooms:
+				print "kompo 8"+room.m_name+"8 "+(str(room.m_name == roomName))
 			
 			self.m_pathIndex = 1
 			
