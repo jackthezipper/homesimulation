@@ -478,6 +478,7 @@ class Agent:
 	
 	def LoadTerms(self):
 		tableFileName = resPath+"table_terms_"+self.m_role+".csv"
+		# dFile = open(resPath+"dmp.txt","w")
 		with open(tableFileName) as csvfile:
 			reader = csv.reader(csvfile)
 			for row in reader:
@@ -503,6 +504,7 @@ class Agent:
 					factor = []
 					factor.append(CommonEnum.ResourceToID(res))
 					factor.append(row[CommonEnum.TABLE_TERM_FAILRESOURCE1 + (i * 2)])
+					resFactor.append(factor)
 				
 				roomFactor = []
 				for i in range(0, CommonEnum.RF_COUNT):
@@ -516,12 +518,16 @@ class Agent:
 						rfId.append(CommonEnum.RoomFactorToID(rfObj))
 					factor.append(rfId)
 					factor.append(row[CommonEnum.TABLE_TERM_FAILROOMFACTOR1 + (i * 2)].split(";"))
+					roomFactor.append(factor)
+				# dFile.write(id + str(roomFactor)+"\n")
+				
 				roomPrio = []
 				for i in range(0, CommonEnum.ROOM_PRIO_COUNT):
 					room = row[CommonEnum.TABLE_TERM_ROOMPRIO1 + i]
 					if room != "-":
 						roomPrio.append(room)
 				self.m_terms.append(Term.ActivityTerm(id, ability, enviFactor, resFactor, roomFactor, roomPrio))
+		# dFile.close()
 	
 	#update status biologis
 	def UpdateBioStatus(self, dt):
@@ -557,12 +563,15 @@ class Agent:
 		self.m_myESRate = rate
 	
 	def GeneratePath(self, start, end, stair = None):
-		pStart = TranslateToGridPos(start)
-		pEnd = TranslateToGridPos(end)
+		pStart = TranslateToGridPos(start,self.m_myFloorIndex)
+		pEnd = TranslateToGridPos(end,self.m_myFloorIndex)
+		print "start "+str(pStart)+" "+str(start)
+		print "end "+str(pEnd)+" "+str(end)
 		path = PathFinding.astarv3(pStart,pEnd,self.m_myIndex,self.m_myFloorIndex)
 		
 		#No path found. Wait a moment
-		if self.myPath == None:
+		if path == None:
+			print "nopopak"
 			return
 		
 		#path found
@@ -574,25 +583,27 @@ class Agent:
 		elif (self.m_targetRoom == None or self.m_targetRoom.IsInRoom(self.pos)) and self.entryPoint.pos != self.entryPoint.target.m_targetPoint:
 			path.append(self.entryPoint.target.m_targetPoint)
 		self.m_pathIndex = 1
+		print path
+		return path
 	
 	#update aktivitas agent
 	def UpdateAgentActivity(self, dt):
 		firstID = self.m_activity[0].m_ID
-		if self.m_currentActivity != None and (irstID == self.m_currentActivity.m_ID or (not self.m_activity[0].CanInterrupt()) or (not self.m_currentActivity.CanBeInterrupted())):
-			if self.m_supportActivity != None and (not self.m_supportActivity.IsDone()):
-				self.m_supportActivity.UpdateTimer(dt)
+		if self.m_currentActivity != None and (firstID == self.m_currentActivity.m_ID or (not self.m_activity[0].CanInterrupt()) or (not self.m_currentActivity.CanBeInterrupted())):
+			if self.m_currentSupportActivity != None and (not self.m_currentSupportActivity.IsDone()):
+				self.m_currentSupportActivity.UpdateTimer(dt)
 				
-				if self.m_supportActivity.IsDone():
+				if self.m_currentSupportActivity.IsDone():
 					#aktivitas pendukung selesai dijalankan, memeriksa apakah masih ada aktivitas pendukung lain yang perlu dijalankan
-					self.m_supportActivity.Stop()
-					self.m_supportActivity = None
+					self.m_currentSupportActivity.Stop()
+					self.m_currentSupportActivity = None
 					self.CheckSupportPreActivity()
 			
 			else:
 				self.m_currentActivity.UpdateTimer(dt)
 				if self.m_currentActivity.IsDone():
 					#aktivitas selesai dijalankan
-					self.m_supportActivity.Stop()
+					self.m_currentSupportActivity.Stop()
 					self.m_currentActivity = None
 			return
 		
@@ -610,9 +621,6 @@ class Agent:
 				# print "errant "+firstID
 				# self.FindTargetAndEntryPointForActivity(firstID)
 				self.CheckSupportPreActivity()
-			print len(Global.g_myHouse.m_rooms)
-			for room in Global.g_myHouse.m_rooms:
-				print "kompo 8"+room.m_name+"8 "+(str(room.m_name == roomName))
 			
 			self.m_pathIndex = 1
 			
@@ -751,7 +759,7 @@ class Agent:
 					#tiba di tempat, mulai menjalankan aktivitas (pendukung ataupun utama)
 					remainingDistance = 0
 					if self.m_supportActivity != None:
-						self.m_supportActivity.Start()
+						self.m_currentSupportActivity.Start()
 					else:
 						self.m_currentActivity.Start()
 							
@@ -768,8 +776,9 @@ class Agent:
 		satisfied, preActivity, objectID = self.m_currentTerm.CheckEnvironmentSatisfied(self.m_environmentThreshold, self.m_targetRoom)
 		
 		if satisfied:
+			print "cokiroom"
 			satisfied, preActivity, objectID = self.m_currentTerm.CheckRoomSatisfied(self.m_targetRoom)
-		
+		print str(self.m_currentTerm.m_activityID)+" "+str(satisfied)+" "+str(preActivity)+" "+str(objectID)
 		if satisfied:
 			if preActivity != None:
 				#ada aktivitas pendukung yang harus dilakukan sebelum bisa memulai aktivitas
@@ -779,8 +788,8 @@ class Agent:
 				self.FindTargetAndEntryPointForActivity(self.m_currentActivity.m_ID)
 		else:
 			#tidak memungkinkan untuk melakukan aktivitas yang dituju di ruang tersebut, memeriksa apakah bisa di ruangan lain, atau menunda aktivitas
-			if len(self.m_currentTerm.m_roomPrio) > 1 and self.m_targetRoom.name != self.m_currentTerm.m_roomPrio[1]:
-				self.m_targetRoom = self.m_currentTerm.m_roomPrio[1]
+			if len(self.m_currentTerm.m_roomPrio) > 1 and self.m_targetRoom.m_name != self.m_currentTerm.m_roomPrio[1]:
+				self.m_targetRoom = next((room for room in Global.g_myHouse.m_rooms if room.m_name == self.m_currentTerm.m_roomPrio[1]),None)
 				self.m_targetType = TARGET_ROOM
 			else:
 				self.m_currentActivity.Suspend()

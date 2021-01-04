@@ -3,35 +3,35 @@ BT,2,0,-,0,-,-,-,-,-,-,-,Bed,T4,-,-,RT Utama,-
 BD,2,1,L18,0,-,-,-,-,-,-,-,Bed,T4,-,-,RT Utama,-
 MD1,4,1,L10,0,-,Water,O1,WT03,-,-,-,Door,G2,-,-,KM,-
 MA1,4,1,L10,0,-,Water,O1,WT03,-,-,-,Door,G2,-,-,KM,-
-MK2,2,1,L11,0,-,Food,G5,RC02,-,-,-,Chair;Carpet;Sofa,K1/KR1/SF1,-,-,R Makan,-
-MC3,4,1,L6;L4;L5,0,-,Electricity ,S6,-,-,-,-,Chair;Carpet;Sofa,K1/KR1/SF1,Chair;Carpet;Sofa,K1/KR1/SF1,R Keluarga,R Tamu
+MK2,2,1,L11,0,-,Food,G5,RC02,-,-,-,Chair;Carpet;Sofa,K1;KR1;SF1,-,-,R Makan,-
+MC3,4,1,L6;L4;L5,0,-,Electricity ,S6,-,-,-,-,Chair;Carpet;Sofa,K1;KR1;SF1,Chair;Carpet;Sofa,K1;KR1;SF1,R Keluarga,R Tamu
 KJ1,4,0,-,0,-,-,-,-,-,-,-,-,-,-,-,Garasi ,-
 KJ3,4,0,-,0,-,-,-,-,-,-,-,-,-,-,-,Garasi ,-
 TDS,2,1,L3,1,AC01;KP02,-,-,-,-,-,-,Bed,T2,-,-,RT Utama,-
-MK4,2,1,L11,0,-,Food,G5,RC02,-,-,-,Chair;Carpet;Sofa,K1/KR1/SF1,-,-,R Makan,R Keluarga
+MK4,2,1,L11,0,-,Food,G5,RC02,-,-,-,Chair;Carpet;Sofa,K1;KR1;SF1,-,-,R Makan,R Keluarga
 GR,8,1,L2,0,-,-,-,-,-,-,-,Door,G2,-,-,Garasi ,-
 MD2,4,1,L10,0,-,Water,O1,WT03,-,-,-,Door,G2,-,-,KM ,-
 CP2,2,1,L13,0,-,-,-,-,-,-,-,Door,G2,-,-,R Cuci ,-
 CP3,2,1,L3,0,-,-,-,-,-,-,-,Door,G2,-,-,RT Utama ,-
-MK6,2,1,L11,0,-,Food,G5,RC02,-,-,-,Chair;Carpet;Sofa,K1/KR1/SF1,-,-,R Makan,R Keluarga
+MK6,2,1,L11,0,-,Food,G5,RC02,-,-,-,Chair;Carpet;Sofa,K1;KR1;SF1,-,-,R Makan,R Keluarga
 BP,2,1,L3,0,-,-,-,-,-,-,-,Door,G2,-,-,RT Utama,RT 2 
 TDM,2,1,L3;L18,1,AC01;KP02,-,-,-,-,-,-,Bed,T2,-,-,RT Utama,-
 TD,2,1,L3;L18,1,AC01;KP02,-,-,-,-,-,-,Bed,T2,-,-,RT Utama,-
 TO,4,1,L10,0,-,Water,O1,WT03,-,-,-,Door,G2,-,-,KM,-
 MD,4,1,L10,0,-,Water,O1,WT03,-,-,-,Door,G2,-,-,KM,-
 BK,6,1,L10,0,-,Water,O1,WT03,-,-,-,Door,G2,-,-,KM,-
-MK,2,1,L11;L6,0,-,Food,G5,RC02;RC01,-,-,-,Chair;Carpet;Sofa,K1/KR1/SF1,-,-,R Makan,R Keluarga
-MN1,2,1,L12;L11,0,-,Electricity ,L2,DP01,-,-,-,Chair;Carpet;Sofa,K1/KR1/SF1,-,-,Dapur,R Makan
-MN2,2,1,L12;L11,0,-,Electricity ,L2,DP01,-,-,-,Chair;Carpet;Sofa,K1/KR1/SF1,-,-,Dapur,R Makan
-MN3,2,1,L12;L11,0,-,Electricity ,L2,DP01,-,-,-,Chair;Carpet;Sofa,K1/KR1/SF1,-,-,Dapur,R Makan
-MN4,2,1,L12;L11,0,-,Electricity ,L2,DP01,-,-,-,Chair;Carpet;Sofa,K1/KR1/SF1,-,-,Dapur,R Makan
+MK,2,1,L11;L6,0,-,Food,G5,RC02;RC01,-,-,-,Chair;Carpet;Sofa,K1;KR1;SF1,-,-,R Makan,R Keluarga
+MN1,2,1,L12;L11,0,-,Electricity ,L2,DP01,-,-,-,Chair;Carpet;Sofa,K1;KR1;SF1,-,-,Dapur,R Makan
+MN2,2,1,L12;L11,0,-,Electricity ,L2,DP01,-,-,-,Chair;Carpet;Sofa,K1;KR1;SF1,-,-,Dapur,R Makan
+MN3,2,1,L12;L11,0,-,Electricity ,L2,DP01,-,-,-,Chair;Carpet;Sofa,K1;KR1;SF1,-,-,Dapur,R Makan
+MN4,2,1,L12;L11,0,-,Electricity ,L2,DP01,-,-,-,Chair;Carpet;Sofa,K1;KR1;SF1,-,-,Dapur,R Makan
 MP,8,1,-,0,-,Electricity ,L1,-,-,-,-,-,-,-,-,-,-
-BS,2,1,L3;L6,1,AC01;KP02,-,-,-,-,-,-,Bed,T2,Chair;Carpet;Sofa,K1/KR1/SF1,RT Utama,R Keluarga
+BS,2,1,L3;L6,1,AC01;KP02,-,-,-,-,-,-,Bed,T2,Chair;Carpet;Sofa,K1;KR1;SF1,RT Utama,R Keluarga
 GD1,2,1,L3;L7,0,-,Electricity ,L2,-,-,-,-,-,-,-,-,RT Utama,R Keluarga
-GD2,2,1,L3;L6,0,-,-,-,-,-,-,-,Bed,T2,Chair;Carpet;Sofa,K1/KR1/SF1,RT Utama,R Keluarga
-TV,2,1,L6,1,KP01,Electricity ,L2,TV01,-,-,-,Chair;Carpet;Sofa,K1/KR1/SF1,-,-,R Keluarga,-
-BM1,4,1,L6;L4;L5,1,KP01,-,-,-,-,-,-,Chair;Carpet;Sofa,K1/KR1/SF1,Chair;Carpet;Sofa,K1/KR1/SF1,R Keluarga,R Tamu
-MT,6,1,L4;L5;L6,0,-,-,-,-,-,-,-,Chair;Carpet;Sofa,K1/KR1/SF1,Chair;Carpet;Sofa,K1/KR1/SF1,R Tamu,R Keluarga
-KS,8,1,L4;L5;L2,0,-,-,-,-,-,-,-,Chair;Carpet;Sofa,K1/KR1/SF1,-,-,R Tamu,Garasi
-IB,4,1,L4;L5,0,-,-,-,-,-,-,-,Chair;Carpet;Sofa,K1/KR1/SF1,-,-,R Tamu,-
+GD2,2,1,L3;L6,0,-,-,-,-,-,-,-,Bed,T2,Chair;Carpet;Sofa,K1;KR1;SF1,RT Utama,R Keluarga
+TV,2,1,L6,1,KP01,Electricity ,L2,TV01,-,-,-,Chair;Carpet;Sofa,K1;KR1;SF1,-,-,R Keluarga,-
+BM1,4,1,L6;L4;L5,1,KP01,-,-,-,-,-,-,Chair;Carpet;Sofa,K1;KR1;SF1,Chair;Carpet;Sofa,K1;KR1;SF1,R Keluarga,R Tamu
+MT,6,1,L4;L5;L6,0,-,-,-,-,-,-,-,Chair;Carpet;Sofa,K1;KR1;SF1,Chair;Carpet;Sofa,K1;KR1;SF1,R Tamu,R Keluarga
+KS,8,1,L4;L5;L2,0,-,-,-,-,-,-,-,Chair;Carpet;Sofa,K1;KR1;SF1,-,-,R Tamu,Garasi
+IB,4,1,L4;L5,0,-,-,-,-,-,-,-,Chair;Carpet;Sofa,K1;KR1;SF1,-,-,R Tamu,-
 GL,8,1,L11,0,-,Electricity ,L1,DP01,-,-,-,-,-,-,-,R Makan,-

@@ -74,8 +74,8 @@ class Room:
 	def HasAndAvailable(self, itemType):
 		for item in self.m_items:
 			if item.m_type == itemType and item.m_available:
-				return True
-		return False
+				return True,item.m_id
+		return False, None
 
 #--------------------------------------------------------------------------------------------------------------
 #-------------House Class--------------------------------------------------------------------------------------

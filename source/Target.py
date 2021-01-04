@@ -2,11 +2,11 @@ class Target:
 	s_unNamedCount = 0
 	def __init__(self,fIndex, type, tp = None, id = "UNNAMED"):
 		if id == "UNNAMED":
-			m_id = id+str(Target.s_unNamedCount)
+			self.m_id = id+str(Target.s_unNamedCount)
 			Target.s_unNamedCount += 1
 		else:
-			m_id = id
-		self.m_id = id
+			self.m_id = id
+		# self.m_id = id
 		self.m_targetPoint = tp
 		self.m_floorIndex = fIndex
 		self.m_available = True
