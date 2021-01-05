@@ -130,7 +130,11 @@ class Agent:
 		self.UpdateActivityOrder()
 		self.UpdateAgentActivity(dt)
 		self.UpdateAgentMovement(dt)
+		dFile = open(resPath+"dmp.txt","a+")
+		dFile.write("\n agent pos "+str(self.pos)+"\n")
+		dFile.close()
 		
+		return self.pos
 		
 		
 	
@@ -575,7 +579,7 @@ class Agent:
 			return
 		
 		#path found
-		if self.oldEntryPoint != None and self.myPath[0] != self.pos:
+		if self.oldEntryPoint != None and path[0] != self.pos:
 			path.insert(0,self.pos)
 		
 		if self.needStair:
@@ -589,6 +593,8 @@ class Agent:
 	#update aktivitas agent
 	def UpdateAgentActivity(self, dt):
 		firstID = self.m_activity[0].m_ID
+		dFile = open(resPath+"dmp.txt","a+")
+		dFile.write("Updating activity : current is "+("None" if self.m_currentActivity == None else self.m_currentActivity.m_ID)+"\n")
 		if self.m_currentActivity != None and (firstID == self.m_currentActivity.m_ID or (not self.m_activity[0].CanInterrupt()) or (not self.m_currentActivity.CanBeInterrupted())):
 			if self.m_currentSupportActivity != None and (not self.m_currentSupportActivity.IsDone()):
 				self.m_currentSupportActivity.UpdateTimer(dt)
@@ -603,19 +609,24 @@ class Agent:
 				self.m_currentActivity.UpdateTimer(dt)
 				if self.m_currentActivity.IsDone():
 					#aktivitas selesai dijalankan
+					dFile.write("Activity done\n")
 					self.m_currentSupportActivity.Stop()
 					self.m_currentActivity = None
+			dFile.close()
 			return
 		
 		#ada aktivitas baru	yang akan dikerjakan
+		dFile.write("New activity found ID : "+firstID+"\n")
 		self.m_currentTerm = next((trm for trm in self.m_terms if trm.m_activityID == firstID),None)
 		if self.m_currentTerm != None:
 			roomName = self.m_currentTerm.m_roomPrio[0]
 			isSameRoom = (self.m_targetRoom != None) and (roomName == self.m_targetRoom.m_name)
 			print "koranum 8"+roomName+"8 "
+			dFile.write("Room is "+("same\n" if isSameRoom else "different\n"))
 			if not isSameRoom:
 				print "nosmora"
 				self.m_targetRoom = next((room for room in Global.g_myHouse.m_rooms if room.m_name == roomName),None)
+				self.oldEntryPoint = self.entryPoint
 				print self.m_targetRoom
 			else:
 				# print "errant "+firstID
@@ -629,7 +640,7 @@ class Agent:
 				start = self.oldEntryPoint.pos
 			else:
 				start = self.pos
-			
+			dFile.write("Path start at "+str(start))
 			self.needStair = self.m_targetRoom.m_floorIndex != self.m_myFloorIndex
 			
 			stairEntry = None
@@ -646,20 +657,32 @@ class Agent:
 				end = self.m_targetRoom.m_targetCoord
 				self.m_targetType = TARGET_ROOM
 			
+			dFile.write(" end at "+str(end)+"\n")
+			dFile.close()
 			#jika aktivitas baru akan dilakukan di tempat yang berbeda dengan posisi agent sekarang, maka mencari jalur untuk bergerak
 			if not isSameRoom or self.pos != end:
 				self.myPath = self.GeneratePath(start, end, stairEntry)
 				self.m_state = STATE_MOVE
 			
 			self.m_currentActivity = self.m_activity[0]
+			dFile = open(resPath+"dmp.txt","a+")
+			dFile.write("Activity set to "+self.m_currentActivity.m_ID+"\n")
+			dFile.close()
 	
 	#update pergerakan dan posisi agent
 	def UpdateAgentMovement(self, dt):
 		if self.m_state != STATE_MOVE:
 			return
+		dFile = open(resPath+"dmp.txt","a+")
+		dFile.write("Update movement dt = "+str(dt)+"\n")
+		dFile.write("Path : ")
+		dFile.write(str(self.myPath))
+		dFile.write("\n current index "+str(self.m_pathIndex)+"\n")
 		destination  = self.myPath[self.m_pathIndex]
 		distance = self.pos.DistanceTo(destination)
 		distanceCovered = float(dt) * Agent.s_scaleSpeed / 1000
+		dFile.write("Distance "+str(distance)+" covered "+str(distanceCovered)+"\n")
+		dFile.close()
 		if distance > distanceCovered:
 #		and (self.m_targetRoom == None or (not self.m_targetRoom.IsInRoom(self.pos))):
 			#masih ada jarak yang perlu ditempuh
@@ -764,6 +787,7 @@ class Agent:
 						self.m_currentActivity.Start()
 							
 	def FindTargetAndEntryPointForObject(self, ID):
+		self.oldEntryPoint = self.entryPoint
 		self.entryPoint = next(entry for entry in Agent.s_entryPointList if entry.target.m_id == ID)
 		
 	#memeriksa jika agent telah tiba di ruang untuk melakukan aktivitas

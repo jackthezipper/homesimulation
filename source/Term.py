@@ -47,8 +47,10 @@ class ActivityTerm():
 	
 	#memeriksa faktor ruang
 	def CheckRoomSatisfied(self, room):
+		print self.m_roomFactor
 		for roomFactor in self.m_roomFactor:
 			for (device,activity) in zip(roomFactor[ROOM_DEVICE],roomFactor[ROOM_FAILACTIVITY]):
+				print "check "+str(device)+" "+str(activity)
 				available, objectID = room.HasAndAvailable(device)
 				if available:
 					return True, activity, objectID

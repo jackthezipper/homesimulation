@@ -11,6 +11,12 @@ STATUS_CHECKED = STATUS_INCHECK + 1
 
 OVERLAP_LIMIT = 6
 
+import os
+import scriptcontext as sc
+sourceFilePath	= os.path.dirname(os.path.abspath(__file__))
+sourceDirPath	= sourceFilePath[0:sourceFilePath.rfind('\\')+1]
+resPath			= sourceDirPath+"res\\"+sc.sticky["MapName"]+"\\"
+
 class Node():
 	"""A node class for A* Pathfinding"""
 
@@ -124,6 +130,7 @@ def astarv3(start, end,ignoreIndex,mazeIndex,liveBlocker = False):
 	
 	# Loop until you find the end
 	# iter = 0
+	debugStr = ""
 	while len(open_list) > 0:
 		current_node = open_list[0]
 		current_index = 0
@@ -132,16 +139,25 @@ def astarv3(start, end,ignoreIndex,mazeIndex,liveBlocker = False):
 		current_node.isOpen = False
 		current_node.isClosed = True
 		if current_node.equals(end_node):
+			# dFile = open(resPath+"dmp.txt","a+")
+			# dFile.write(debugStr)
+			# dFile.write("path found")
+			# dFile.close()
 			return reconstructPathv2(current_node,ignoreIndex,mazeIndex,liveBlocker)
 			break
 	
+		debugStr += "Checking node at pos "+str(current_node.position[0])+" "+str(current_node.position[1])+"\n"
 		for new_position in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
 			coord = (current_node.position[0]+new_position[0],current_node.position[1]+new_position[1])
+			debugStr += "Checking child at "+str(coord[0])+" "+str(coord[1])
 			if (coord[0] < 0) or (coord[1] < 0) or (coord[0] >= len(Map.maze[mazeIndex])) or (coord[1] >= len(Map.maze[mazeIndex][0])):
+				debugStr += " out of bond\n"
 				continue
 			if (Map.maze[mazeIndex][coord[0]][coord[1]] == STATE_BLOCKED):
+				debugStr += " wall\n"
 				continue
 			if (Map.maze[mazeIndex][coord[0]][coord[1]] == STATE_ENTRY and (coord[0] != end_node.position[0] or coord[1] != end_node.position[1])):
+				debugStr += " entry for other\n"
 				continue
 			
 			liveBlockerWeight = 0
@@ -162,18 +178,25 @@ def astarv3(start, end,ignoreIndex,mazeIndex,liveBlocker = False):
 				if overlapWithOther:
 					continue
 			nodeCheck = Map.allNode[mazeIndex][coord[0]][coord[1]]
+			debugStr += " : status = "+("open" if nodeCheck.isOpen else ("close" if nodeCheck.isClosed else "unknown"))
 			if not (nodeCheck.isClosed):
 				isOldNode = nodeCheck.isOpen
 				if not isOldNode:
 					nodeCheck.g = sys.maxint
 				newG = current_node.g + (Map.additionalWeight[mazeIndex][nodeCheck.position[0]][nodeCheck.position[1]]+liveBlockerWeight)**2
 				if newG < nodeCheck.g:
-					
 					nodeCheck.g = newG
 					nodeCheck.parent = current_node
+					debugStr += " set G to "+str(newG)
 				nodeCheck.f = nodeCheck.g + euclidian(nodeCheck.position,end)
 				if not isOldNode:
 					InsertNode(nodeCheck,open_list)
+					debugStr += " new node, insert to openlist"
+			debugStr+="\n"
+	# dFile = open(resPath+"dmp.txt","a+")
+	# dFile.write(debugStr)
+	# dFile.write("no path found")
+	# dFile.close()
 	return None
 
 def InsertNode(node,list):
@@ -261,7 +284,7 @@ def lineInSightv2(startX,startY,endX,endY,ignoreIndex,mazeIndex,liveBlocker = Fa
 		for i in range(1,diffY):
 			checkX = startY + i*dirY
 			checkY = startX + (diffX*i/diffY*dirX)
-			print "amazo "+str(mazeIndex)+" "+str(checkY)+" "+str(checkX)
+			# print "amazo "+str(mazeIndex)+" "+str(checkY)+" "+str(checkX)
 			if (Map.maze[mazeIndex][checkY][checkX] == STATE_BLOCKED) or ((Map.additionalWeight[mazeIndex][checkY][checkX] > 10)):
 				return False
 			if liveBlocker:
