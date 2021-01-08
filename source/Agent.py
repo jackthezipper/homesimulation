@@ -27,7 +27,8 @@ PathFinding = reload(PathFinding)
 
 #agent state
 STATE_IDLE = 0
-STATE_MOVE = STATE_IDLE + 1
+STATE_PRE_MOVE = STATE_IDLE + 1
+STATE_MOVE = STATE_PRE_MOVE + 1
 STATE_WAIT = STATE_MOVE + 1
 
 #target type
@@ -54,6 +55,26 @@ class Agent:
 	hasErr = False
 	agentList = []
 	s_scaleSpeed = 1.0
+	s_debugStr = ""
+	s_debugActive = True
+	
+	@staticmethod
+	def LogDebug(debugLog):
+		if Agent.s_debugActive:
+			Agent.s_debugStr += debugLog
+	
+	@staticmethod
+	def ResetDebug():
+		Agent.s_debugStr = ""
+	
+	@staticmethod
+	def DumpDebug():
+		if not Agent.s_debugActive:
+			return
+		dFile = open(resPath+"dmp.txt","a+")
+		dFile.write(Agent.s_debugStr)
+		dFile.close()
+		Agent.s_debugStr = ""
 	
 	def __init__(self,position,m_targetPoint,index,role = "ayah",state = STATE_IDLE):
 		self.pos = position
@@ -130,10 +151,9 @@ class Agent:
 		self.UpdateActivityOrder()
 		self.UpdateAgentActivity(dt)
 		self.UpdateAgentMovement(dt)
-		dFile = open(resPath+"dmp.txt","a+")
-		dFile.write("\n agent pos "+str(self.pos)+"\n")
-		dFile.close()
 		
+		Agent.LogDebug("\n agent pos "+str(self.pos)+"\n")
+		Agent.DumpDebug()
 		return self.pos
 		
 		
@@ -482,7 +502,6 @@ class Agent:
 	
 	def LoadTerms(self):
 		tableFileName = resPath+"table_terms_"+self.m_role+".csv"
-		# dFile = open(resPath+"dmp.txt","w")
 		with open(tableFileName) as csvfile:
 			reader = csv.reader(csvfile)
 			for row in reader:
@@ -523,7 +542,6 @@ class Agent:
 					factor.append(rfId)
 					factor.append(row[CommonEnum.TABLE_TERM_FAILROOMFACTOR1 + (i * 2)].split(";"))
 					roomFactor.append(factor)
-				# dFile.write(id + str(roomFactor)+"\n")
 				
 				roomPrio = []
 				for i in range(0, CommonEnum.ROOM_PRIO_COUNT):
@@ -531,7 +549,6 @@ class Agent:
 					if room != "-":
 						roomPrio.append(room)
 				self.m_terms.append(Term.ActivityTerm(id, ability, enviFactor, resFactor, roomFactor, roomPrio))
-		# dFile.close()
 	
 	#update status biologis
 	def UpdateBioStatus(self, dt):
@@ -584,7 +601,7 @@ class Agent:
 		
 		if self.needStair:
 			path.append(stair.target.m_targetPoint)
-		elif (self.m_targetRoom == None or self.m_targetRoom.IsInRoom(self.pos)) and self.entryPoint.pos != self.entryPoint.target.m_targetPoint:
+		elif (self.m_targetRoom == None or self.m_targetRoom.IsInRoom(self.pos)) and self.entryPoint != None and self.entryPoint.pos != self.entryPoint.target.m_targetPoint:
 			path.append(self.entryPoint.target.m_targetPoint)
 		self.m_pathIndex = 1
 		print path
@@ -593,8 +610,8 @@ class Agent:
 	#update aktivitas agent
 	def UpdateAgentActivity(self, dt):
 		firstID = self.m_activity[0].m_ID
-		dFile = open(resPath+"dmp.txt","a+")
-		dFile.write("Updating activity : current is "+("None" if self.m_currentActivity == None else self.m_currentActivity.m_ID)+"\n")
+		
+		Agent.LogDebug("Updating activity : current is "+("None" if self.m_currentActivity == None else self.m_currentActivity.m_ID)+"\n")
 		if self.m_currentActivity != None and (firstID == self.m_currentActivity.m_ID or (not self.m_activity[0].CanInterrupt()) or (not self.m_currentActivity.CanBeInterrupted())):
 			if self.m_currentSupportActivity != None and (not self.m_currentSupportActivity.IsDone()):
 				self.m_currentSupportActivity.UpdateTimer(dt)
@@ -609,24 +626,27 @@ class Agent:
 				self.m_currentActivity.UpdateTimer(dt)
 				if self.m_currentActivity.IsDone():
 					#aktivitas selesai dijalankan
-					dFile.write("Activity done\n")
+					Agent.LogDebug("Activity done\n")
 					self.m_currentSupportActivity.Stop()
 					self.m_currentActivity = None
-			dFile.close()
+			
+			if self.m_state == STATE_PRE_MOVE:
+				self.m_state = STATE_MOVE
 			return
 		
 		#ada aktivitas baru	yang akan dikerjakan
-		dFile.write("New activity found ID : "+firstID+"\n")
+		Agent.LogDebug("New activity found ID : "+firstID+"\n")
 		self.m_currentTerm = next((trm for trm in self.m_terms if trm.m_activityID == firstID),None)
 		if self.m_currentTerm != None:
 			roomName = self.m_currentTerm.m_roomPrio[0]
 			isSameRoom = (self.m_targetRoom != None) and (roomName == self.m_targetRoom.m_name)
 			print "koranum 8"+roomName+"8 "
-			dFile.write("Room is "+("same\n" if isSameRoom else "different\n"))
+			Agent.LogDebug("Room is "+("same\n" if isSameRoom else "different\n"))
 			if not isSameRoom:
 				print "nosmora"
 				self.m_targetRoom = next((room for room in Global.g_myHouse.m_rooms if room.m_name == roomName),None)
 				self.oldEntryPoint = self.entryPoint
+				self.entryPoint = None
 				print self.m_targetRoom
 			else:
 				# print "errant "+firstID
@@ -640,7 +660,7 @@ class Agent:
 				start = self.oldEntryPoint.pos
 			else:
 				start = self.pos
-			dFile.write("Path start at "+str(start))
+			Agent.LogDebug("Path start at "+str(start))
 			self.needStair = self.m_targetRoom.m_floorIndex != self.m_myFloorIndex
 			
 			stairEntry = None
@@ -657,32 +677,36 @@ class Agent:
 				end = self.m_targetRoom.m_targetCoord
 				self.m_targetType = TARGET_ROOM
 			
-			dFile.write(" end at "+str(end)+"\n")
-			dFile.close()
+			Agent.LogDebug(" end at "+str(end)+"\n")
+			
 			#jika aktivitas baru akan dilakukan di tempat yang berbeda dengan posisi agent sekarang, maka mencari jalur untuk bergerak
 			if not isSameRoom or self.pos != end:
 				self.myPath = self.GeneratePath(start, end, stairEntry)
-				self.m_state = STATE_MOVE
+				Agent.LogDebug("Generated path : ")
+				for path in self.myPath:
+					Agent.LogDebug("["+str(path.X)+","+str(path.Y)+"],")
+				Agent.LogDebug("\n")
+				self.m_state = STATE_PRE_MOVE
 			
 			self.m_currentActivity = self.m_activity[0]
-			dFile = open(resPath+"dmp.txt","a+")
-			dFile.write("Activity set to "+self.m_currentActivity.m_ID+"\n")
-			dFile.close()
+			
+			Agent.LogDebug("Activity set to "+self.m_currentActivity.m_ID+"\n")
 	
 	#update pergerakan dan posisi agent
 	def UpdateAgentMovement(self, dt):
 		if self.m_state != STATE_MOVE:
 			return
-		dFile = open(resPath+"dmp.txt","a+")
-		dFile.write("Update movement dt = "+str(dt)+"\n")
-		dFile.write("Path : ")
-		dFile.write(str(self.myPath))
-		dFile.write("\n current index "+str(self.m_pathIndex)+"\n")
+		
+		Agent.LogDebug("Update movement dt = "+str(dt)+"\n")
+		Agent.LogDebug("Path : ")
+		for path in self.myPath:
+			Agent.LogDebug("["+str(path.X)+","+str(path.Y)+"],")
+		Agent.LogDebug("\ncurrent index "+str(self.m_pathIndex)+"\n")
+		
 		destination  = self.myPath[self.m_pathIndex]
 		distance = self.pos.DistanceTo(destination)
 		distanceCovered = float(dt) * Agent.s_scaleSpeed / 1000
-		dFile.write("Distance "+str(distance)+" covered "+str(distanceCovered)+"\n")
-		dFile.close()
+		Agent.LogDebug("Distance "+str(distance)+" covered "+str(distanceCovered)+"\n")
 		if distance > distanceCovered:
 #		and (self.m_targetRoom == None or (not self.m_targetRoom.IsInRoom(self.pos))):
 			#masih ada jarak yang perlu ditempuh
@@ -820,6 +844,11 @@ class Agent:
 				return
 			
 		self.myPath = self.GeneratePath(self.pos, self.entryPoint.pos)
+		Agent.LogDebug("Generatepath pre activity : ")
+		for path in self.myPath:
+			s = "["+str(path.X)+","+str(path.Y)+"],"
+			Agent.LogDebug(s)
+		Agent.LogDebug("\n")
 		self.m_targetType = TARGET_POINT
 #-----------------------------------------------------------------------------------------------------------------------------------------
 
