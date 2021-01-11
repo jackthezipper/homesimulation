@@ -55,26 +55,26 @@ class Agent:
 	hasErr = False
 	agentList = []
 	s_scaleSpeed = 1.0
-	s_debugStr = ""
-	s_debugActive = True
+	# s_debugStr = ""
+	# s_debugActive = True
 	
-	@staticmethod
-	def LogDebug(debugLog):
-		if Agent.s_debugActive:
-			Agent.s_debugStr += debugLog
+	# @staticmethod
+	# def LogDebug(debugLog):
+		# if Agent.s_debugActive:
+			# Agent.s_debugStr += debugLog
 	
-	@staticmethod
-	def ResetDebug():
-		Agent.s_debugStr = ""
+	# @staticmethod
+	# def ResetDebug():
+		# Agent.s_debugStr = ""
 	
-	@staticmethod
-	def DumpDebug():
-		if not Agent.s_debugActive:
-			return
-		dFile = open(resPath+"dmp.txt","a+")
-		dFile.write(Agent.s_debugStr)
-		dFile.close()
-		Agent.s_debugStr = ""
+	# @staticmethod
+	# def DumpDebug():
+		# if not Agent.s_debugActive:
+			# return
+		# dFile = open(resPath+"dmp.txt","a+")
+		# dFile.write(Agent.s_debugStr)
+		# dFile.close()
+		# Agent.s_debugStr = ""
 	
 	def __init__(self,position,m_targetPoint,index,role = "ayah",state = STATE_IDLE):
 		self.pos = position
@@ -152,8 +152,8 @@ class Agent:
 		self.UpdateAgentActivity(dt)
 		self.UpdateAgentMovement(dt)
 		
-		Agent.LogDebug("\n agent pos "+str(self.pos)+"\n")
-		Agent.DumpDebug()
+		Global.Logger.LogDebug("\n agent pos "+str(self.pos)+"\n")
+		Global.Logger.DumpDebug()
 		return self.pos
 		
 		
@@ -601,7 +601,7 @@ class Agent:
 		
 		if self.needStair:
 			path.append(stair.target.m_targetPoint)
-		elif (self.m_targetRoom == None or self.m_targetRoom.IsInRoom(self.pos)) and self.entryPoint != None and self.entryPoint.pos != self.entryPoint.target.m_targetPoint:
+		elif (self.m_targetRoom == None or self.m_targetRoom.IsInRoom(self.pos)) and self.entryPoint.pos != self.entryPoint.target.m_targetPoint:
 			path.append(self.entryPoint.target.m_targetPoint)
 		self.m_pathIndex = 1
 		print path
@@ -611,7 +611,7 @@ class Agent:
 	def UpdateAgentActivity(self, dt):
 		firstID = self.m_activity[0].m_ID
 		
-		Agent.LogDebug("Updating activity : current is "+("None" if self.m_currentActivity == None else self.m_currentActivity.m_ID)+"\n")
+		Global.Logger.LogDebug("Updating activity : current is "+("None" if self.m_currentActivity == None else self.m_currentActivity.m_ID)+"\n")
 		if self.m_currentActivity != None and (firstID == self.m_currentActivity.m_ID or (not self.m_activity[0].CanInterrupt()) or (not self.m_currentActivity.CanBeInterrupted())):
 			if self.m_currentSupportActivity != None and (not self.m_currentSupportActivity.IsDone()):
 				self.m_currentSupportActivity.UpdateTimer(dt)
@@ -626,7 +626,7 @@ class Agent:
 				self.m_currentActivity.UpdateTimer(dt)
 				if self.m_currentActivity.IsDone():
 					#aktivitas selesai dijalankan
-					Agent.LogDebug("Activity done\n")
+					Global.Logger.LogDebug("Activity done\n")
 					self.m_currentSupportActivity.Stop()
 					self.m_currentActivity = None
 			
@@ -635,13 +635,13 @@ class Agent:
 			return
 		
 		#ada aktivitas baru	yang akan dikerjakan
-		Agent.LogDebug("New activity found ID : "+firstID+"\n")
+		Global.Logger.LogDebug("New activity found ID : "+firstID+"\n")
 		self.m_currentTerm = next((trm for trm in self.m_terms if trm.m_activityID == firstID),None)
 		if self.m_currentTerm != None:
 			roomName = self.m_currentTerm.m_roomPrio[0]
 			isSameRoom = (self.m_targetRoom != None) and (roomName == self.m_targetRoom.m_name)
 			print "koranum 8"+roomName+"8 "
-			Agent.LogDebug("Room is "+("same\n" if isSameRoom else "different\n"))
+			Global.Logger.LogDebug("Room is "+("same\n" if isSameRoom else "different\n"))
 			if not isSameRoom:
 				print "nosmora"
 				self.m_targetRoom = next((room for room in Global.g_myHouse.m_rooms if room.m_name == roomName),None)
@@ -660,7 +660,7 @@ class Agent:
 				start = self.oldEntryPoint.pos
 			else:
 				start = self.pos
-			Agent.LogDebug("Path start at "+str(start))
+			Global.Logger.LogDebug("Path start at "+str(start))
 			self.needStair = self.m_targetRoom.m_floorIndex != self.m_myFloorIndex
 			
 			stairEntry = None
@@ -675,38 +675,39 @@ class Agent:
 				self.m_targetType = TARGET_POINT
 			else:
 				end = self.m_targetRoom.m_targetCoord
+				self.entryPoint = self.m_targetRoom.m_targetCoord
 				self.m_targetType = TARGET_ROOM
 			
-			Agent.LogDebug(" end at "+str(end)+"\n")
+			Global.Logger.LogDebug(" end at "+str(end)+"\n")
 			
 			#jika aktivitas baru akan dilakukan di tempat yang berbeda dengan posisi agent sekarang, maka mencari jalur untuk bergerak
 			if not isSameRoom or self.pos != end:
 				self.myPath = self.GeneratePath(start, end, stairEntry)
-				Agent.LogDebug("Generated path : ")
+				Global.Logger.LogDebug("Generated path : ")
 				for path in self.myPath:
-					Agent.LogDebug("["+str(path.X)+","+str(path.Y)+"],")
-				Agent.LogDebug("\n")
+					Global.Logger.LogDebug("["+str(path.X)+","+str(path.Y)+"],")
+				Global.Logger.LogDebug("\n")
 				self.m_state = STATE_PRE_MOVE
 			
 			self.m_currentActivity = self.m_activity[0]
 			
-			Agent.LogDebug("Activity set to "+self.m_currentActivity.m_ID+"\n")
+			Global.Logger.LogDebug("Activity set to "+self.m_currentActivity.m_ID+"\n")
 	
 	#update pergerakan dan posisi agent
 	def UpdateAgentMovement(self, dt):
 		if self.m_state != STATE_MOVE:
 			return
 		
-		Agent.LogDebug("Update movement dt = "+str(dt)+"\n")
-		Agent.LogDebug("Path : ")
+		Global.Logger.LogDebug("Update movement dt = "+str(dt)+"\n")
+		Global.Logger.LogDebug("Path : ")
 		for path in self.myPath:
-			Agent.LogDebug("["+str(path.X)+","+str(path.Y)+"],")
-		Agent.LogDebug("\ncurrent index "+str(self.m_pathIndex)+"\n")
+			Global.Logger.LogDebug("["+str(path.X)+","+str(path.Y)+"],")
+		Global.Logger.LogDebug("\ncurrent index "+str(self.m_pathIndex)+"\n")
 		
 		destination  = self.myPath[self.m_pathIndex]
 		distance = self.pos.DistanceTo(destination)
 		distanceCovered = float(dt) * Agent.s_scaleSpeed / 1000
-		Agent.LogDebug("Distance "+str(distance)+" covered "+str(distanceCovered)+"\n")
+		Global.Logger.LogDebug("Distance "+str(distance)+" covered "+str(distanceCovered)+"\n")
 		if distance > distanceCovered:
 #		and (self.m_targetRoom == None or (not self.m_targetRoom.IsInRoom(self.pos))):
 			#masih ada jarak yang perlu ditempuh
@@ -844,11 +845,11 @@ class Agent:
 				return
 			
 		self.myPath = self.GeneratePath(self.pos, self.entryPoint.pos)
-		Agent.LogDebug("Generatepath pre activity : ")
+		Global.Logger.LogDebug("Generatepath pre activity : ")
 		for path in self.myPath:
 			s = "["+str(path.X)+","+str(path.Y)+"],"
-			Agent.LogDebug(s)
-		Agent.LogDebug("\n")
+			Global.Logger.LogDebug(s)
+		Global.Logger.LogDebug("\n")
 		self.m_targetType = TARGET_POINT
 #-----------------------------------------------------------------------------------------------------------------------------------------
 

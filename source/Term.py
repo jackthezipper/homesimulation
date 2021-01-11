@@ -47,6 +47,7 @@ class ActivityTerm():
 	
 	#memeriksa faktor ruang
 	def CheckRoomSatisfied(self, room):
+		print room.m_name
 		print self.m_roomFactor
 		for roomFactor in self.m_roomFactor:
 			for (device,activity) in zip(roomFactor[ROOM_DEVICE],roomFactor[ROOM_FAILACTIVITY]):

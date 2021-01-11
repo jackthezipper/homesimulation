@@ -1,8 +1,10 @@
+import CommonEnum
+
 class Target:
 	s_unNamedCount = 0
-	def __init__(self,fIndex, type, tp = None, id = "UNNAMED"):
-		if id == "UNNAMED":
-			self.m_id = id+str(Target.s_unNamedCount)
+	def __init__(self,fIndex, type, tp = None, id = None):
+		if id == None:
+			self.m_id = "UNNAMED"+str(Target.s_unNamedCount)
 			Target.s_unNamedCount += 1
 		else:
 			self.m_id = id
@@ -12,7 +14,7 @@ class Target:
 		self.m_available = True
 		self.activities = []
 		self.m_specificAgent = []
-		self.m_type = type
+		self.m_type = CommonEnum.RoomFactorToID(type)
 		
 	def setTargetPoint(self,point):
 		self.m_targetPoint = point

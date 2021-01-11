@@ -4,7 +4,9 @@ import csv
 import os
 
 import Target
+import Global
 
+import Rhino as rh
 from Rhino.Geometry import Curve, Point3d
 
 SCALE_TIME = 1
@@ -53,28 +55,45 @@ class Energy:
 #--------------------------------------------------------------------------------------------------------------
 
 class Room:
-	def __init__(self,name,temperature,light,targetCoord,curve, floorIndex = 0):
+	def __init__(self,name,temperature,light, curve, floorIndex = 0):
 		self.m_name = name
 		self.m_temperature = temperature
 		self.m_light = light
-		self.m_targetCoord = targetCoord
+		self.m_targetCoord = Point3d(0,0,0)
 		self.m_curve = curve
 		self.m_floorIndex = floorIndex
 		self.m_items = []
 	
+	def SetTargetCoord(self, coord):
+		self.m_targetCoord = coord
+	
 	def IsInRoom(self, point):
-		return self.m_curve.Contains(point)
+		return (self.m_curve.Contains(point) == rh.Geometry.PointContainment.Inside)
 	
 	def CheckAndAddItem(self, item):
+		# print "vojo"
+		# print item
+		# print item.m_targetPoint
+		# print("Room "+self.m_name+" check item "+str(item.m_id))
+		# Global.Logger.LogDebug("Room "+self.m_name+" check item "+item.m_id+" "+str(item.m_type)+" "+str(item.m_targetPoint))
+		# Global.Logger.LogDebug(" containment "+str(self.IsInRoom(item.m_targetPoint)))
 		if self.IsInRoom(item.m_targetPoint):
 			self.m_items.append(item)
+			Global.Logger.LogDebug("Add "+item.m_id+" inside "+self.m_name+"\n")
+			Global.Logger.DumpDebug()
 			return True
+		# Global.Logger.LogDebug(" outside\n")
+		# Global.Logger.DumpDebug()
 		return False
 	
 	def HasAndAvailable(self, itemType):
+		Global.Logger.LogDebug("Checking item "+str(itemType)+" in room "+self.m_name+" itemlength +"+str(len(self.m_items))+"\n")
 		for item in self.m_items:
+			Global.Logger.LogDebug("\titem "+str(item.m_type)+" "+str(item.m_available)+"\n")
 			if item.m_type == itemType and item.m_available:
+				Global.Logger.DumpDebug()
 				return True,item.m_id
+		Global.Logger.DumpDebug()
 		return False, None
 
 #--------------------------------------------------------------------------------------------------------------
