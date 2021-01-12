@@ -16,6 +16,7 @@ import CommonEnum
 import Term
 Term = reload(Term)
 import Global
+import EntryPoint
 
 from Rhino.Geometry import Point3d, Vector3f,Vector3d,Line,Polyline
 import rhinoscriptsyntax as rs
@@ -675,7 +676,7 @@ class Agent:
 				self.m_targetType = TARGET_POINT
 			else:
 				end = self.m_targetRoom.m_targetCoord
-				self.entryPoint = self.m_targetRoom.m_targetCoord
+				self.entryPoint = EntryPoint.EntryPoint(self.m_targetRoom.m_targetCoord,self.m_targetRoom.m_floorIndex)
 				self.m_targetType = TARGET_ROOM
 			
 			Global.Logger.LogDebug(" end at "+str(end)+"\n")
@@ -765,8 +766,6 @@ class Agent:
 			#update agent position
 			self.pos = rs.PointAdd(self.pos,Vector3d.Multiply(self.moveDir,distanceCovered))
 			
-			if self.IsArriveInRoom():
-				self.CheckSupportPreActivity()
 			
 		else:
 			#already close with destination
@@ -810,7 +809,10 @@ class Agent:
 						self.m_currentSupportActivity.Start()
 					else:
 						self.m_currentActivity.Start()
-							
+			
+		if self.m_targetType == TARGET_ROOM and self.IsArriveInRoom():
+			self.CheckSupportPreActivity()
+		
 	def FindTargetAndEntryPointForObject(self, ID):
 		self.oldEntryPoint = self.entryPoint
 		self.entryPoint = next(entry for entry in Agent.s_entryPointList if entry.target.m_id == ID)
@@ -821,29 +823,44 @@ class Agent:
 	
 	#memeriksa aktivitas pendukung sebelum
 	def CheckSupportPreActivity(self):
-		#memeriksa faktor lingkungan dan ruang					
+		#memeriksa faktor lingkungan dan ruang
+		Global.Logger.LogDebug("Checking pre activity\n")
 		satisfied, preActivity, objectID = self.m_currentTerm.CheckEnvironmentSatisfied(self.m_environmentThreshold, self.m_targetRoom)
+		
+		if self.m_targetType == TARGET_ROOM:
+			self.entryPoint = None
 		
 		if satisfied:
 			print "cokiroom"
 			satisfied, preActivity, objectID = self.m_currentTerm.CheckRoomSatisfied(self.m_targetRoom)
 		print str(self.m_currentTerm.m_activityID)+" "+str(satisfied)+" "+str(preActivity)+" "+str(objectID)
+		Global.Logger.LogDebug("Cond satisfied "+str(satisfied))
 		if satisfied:
 			if preActivity != None:
 				#ada aktivitas pendukung yang harus dilakukan sebelum bisa memulai aktivitas
 				self.FindTargetAndEntryPointForObject(objectID)
 				self.m_currentSupportActivity = next(sActivity for sActivity in self.m_supportActivity if sActivity.m_ID == preActivity)
+				Global.Logger.LogDebug(" checking pread\n")
 			else:
+				Global.Logger.LogDebug(" goto acti\n")
 				self.FindTargetAndEntryPointForActivity(self.m_currentActivity.m_ID)
 		else:
+			Global.Logger.LogDebug(" len room prio "+str(len(self.m_currentTerm.m_roomPrio)))
+			if(len(self.m_currentTerm.m_roomPrio) > 1):
+				Global.Logger.LogDebug(" cur target name "+self.m_targetRoom.m_name+" prio 1 "+self.m_currentTerm.m_roomPrio[1])
 			#tidak memungkinkan untuk melakukan aktivitas yang dituju di ruang tersebut, memeriksa apakah bisa di ruangan lain, atau menunda aktivitas
 			if len(self.m_currentTerm.m_roomPrio) > 1 and self.m_targetRoom.m_name != self.m_currentTerm.m_roomPrio[1]:
 				self.m_targetRoom = next((room for room in Global.g_myHouse.m_rooms if room.m_name == self.m_currentTerm.m_roomPrio[1]),None)
+				self.entryPoint = EntryPoint.EntryPoint(self.m_targetRoom.m_targetCoord,self.m_targetRoom.m_floorIndex)
 				self.m_targetType = TARGET_ROOM
+				Global.Logger.LogDebug(" should move away\n")
 			else:
 				self.m_currentActivity.Suspend()
+				Global.Logger.LogDebug(" suspend\n")
+				Global.Logger.DumpDebug()
 				return
 			
+		Global.Logger.DumpDebug()
 		self.myPath = self.GeneratePath(self.pos, self.entryPoint.pos)
 		Global.Logger.LogDebug("Generatepath pre activity : ")
 		for path in self.myPath:

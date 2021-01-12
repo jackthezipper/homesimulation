@@ -65,6 +65,7 @@ class Room:
 		self.m_items = []
 	
 	def SetTargetCoord(self, coord):
+		Global.Logger.LogDebug("Add coord "+self.m_name+" "+str(coord)+"\n")
 		self.m_targetCoord = coord
 	
 	def IsInRoom(self, point):
