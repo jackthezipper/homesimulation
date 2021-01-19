@@ -69,10 +69,13 @@ class Activity:
 		self.m_runningTime += dt
 	
 	def Start(self, runTime):
-		self.m_runningTimeLeft = runTime
+		self.m_duration = runTime
 	
 	def IsDone(self):
-		return (self.m_runningTime <= self.m_duration)
+		return (self.m_runningTime >= self.m_duration)
+	
+	def Stop(self):
+		pass
 
 	def GetDescription():
 		return g_ActivityDB[self.m_ID]

@@ -613,6 +613,8 @@ class Agent:
 		firstID = self.m_activity[0].m_ID
 		
 		Global.Logger.LogDebug("Updating activity : current is "+("None" if self.m_currentActivity == None else self.m_currentActivity.m_ID)+"\n")
+		# if self.m_currentActivity != None:
+			
 		if self.m_currentActivity != None and (firstID == self.m_currentActivity.m_ID or (not self.m_activity[0].CanInterrupt()) or (not self.m_currentActivity.CanBeInterrupted())):
 			if self.m_currentSupportActivity != None and (not self.m_currentSupportActivity.IsDone()):
 				self.m_currentSupportActivity.UpdateTimer(dt)
@@ -628,11 +630,8 @@ class Agent:
 				if self.m_currentActivity.IsDone():
 					#aktivitas selesai dijalankan
 					Global.Logger.LogDebug("Activity done\n")
-					self.m_currentSupportActivity.Stop()
+					self.m_currentActivity.Stop()
 					self.m_currentActivity = None
-			
-			if self.m_state == STATE_PRE_MOVE:
-				self.m_state = STATE_MOVE
 			return
 		
 		#ada aktivitas baru	yang akan dikerjakan
@@ -697,6 +696,8 @@ class Agent:
 	#update pergerakan dan posisi agent
 	def UpdateAgentMovement(self, dt):
 		if self.m_state != STATE_MOVE:
+			if self.m_state == STATE_PRE_MOVE:
+				self.m_state = STATE_MOVE
 			return
 		
 		Global.Logger.LogDebug("Update movement dt = "+str(dt)+"\n")
@@ -809,7 +810,10 @@ class Agent:
 						self.m_currentSupportActivity.Start()
 					else:
 						self.m_currentActivity.Start()
-			
+		Global.Logger.LogDebug("Target type "+str(self.m_targetType))
+		if(self.m_targetType == TARGET_ROOM):
+			Global.Logger.LogDebug(" target room "+self.m_targetRoom.m_name)
+		Global.Logger.LogDebug("\n")
 		if self.m_targetType == TARGET_ROOM and self.IsArriveInRoom():
 			self.CheckSupportPreActivity()
 		
@@ -834,7 +838,7 @@ class Agent:
 			print "cokiroom"
 			satisfied, preActivity, objectID = self.m_currentTerm.CheckRoomSatisfied(self.m_targetRoom)
 		print str(self.m_currentTerm.m_activityID)+" "+str(satisfied)+" "+str(preActivity)+" "+str(objectID)
-		Global.Logger.LogDebug("Cond satisfied "+str(satisfied))
+		Global.Logger.LogDebug("Cond satisfied "+str(satisfied)+" "+str(self.m_currentTerm.m_activityID)+" "+str(satisfied)+" "+str(preActivity)+" "+str(objectID))
 		if satisfied:
 			if preActivity != None:
 				#ada aktivitas pendukung yang harus dilakukan sebelum bisa memulai aktivitas
@@ -844,6 +848,7 @@ class Agent:
 			else:
 				Global.Logger.LogDebug(" goto acti\n")
 				self.FindTargetAndEntryPointForActivity(self.m_currentActivity.m_ID)
+			self.m_targetType = TARGET_POINT
 		else:
 			Global.Logger.LogDebug(" len room prio "+str(len(self.m_currentTerm.m_roomPrio)))
 			if(len(self.m_currentTerm.m_roomPrio) > 1):
@@ -867,7 +872,7 @@ class Agent:
 			s = "["+str(path.X)+","+str(path.Y)+"],"
 			Global.Logger.LogDebug(s)
 		Global.Logger.LogDebug("\n")
-		self.m_targetType = TARGET_POINT
+		Global.Logger.DumpDebug()
 #-----------------------------------------------------------------------------------------------------------------------------------------
 
 def TranslateToGridPos(pos,mazeIndex):
