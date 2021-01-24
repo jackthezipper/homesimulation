@@ -37,6 +37,10 @@ TARGET_NONE		= -1
 TARGET_ROOM		= 0
 TARGET_POINT	= TARGET_ROOM + 1
 
+TERM_ENVI		= 0
+TERM_ROOM		= TERM_ENVI + 1
+TERM_COUNT		= TERM_ROOM + 1
+
 errPause = False
 
 #30 min -> 15 sec
@@ -127,6 +131,7 @@ class Agent:
 		self.m_currentSupportActivity = None
 		self.m_targetRoom = None
 		self.m_targetType = TARGET_NONE
+		self.m_termChecklist = [0] * TERM_COUNT
 		
 		self.LoadActivityList()
 		self.LoadSupportActivity()
@@ -492,14 +497,15 @@ class Agent:
 			for row in reader:
 				if row[CommonEnum.TABLE_SA_ID] == "ID":
 					continue
-				self.m_supportActivity.append(Activity.SupportActivity(row[CommonEnum.TABLE_SA_ID], row[CommonEnum.TABLE_SA_HABIT], row[CommonEnum.TABLE_SA_DURATION], Activity.SA_TYPE_BEFORE))
+				self.m_supportActivity.append(Activity.SupportActivity(row[CommonEnum.TABLE_SA_ID], float(row[CommonEnum.TABLE_SA_HABIT]), int(row[CommonEnum.TABLE_SA_DURATION]), Activity.SA_TYPE_BEFORE))
 		tableFileName = resPath+"table_support_activity_after_"+self.m_role+".csv"
 		with open(tableFileName) as csvfile:
 			reader = csv.reader(csvfile)
 			for row in reader:
 				if row[CommonEnum.TABLE_SA_ID] == "ID":
 					continue
-				self.m_supportActivity.append(Activity.SupportActivity(row[CommonEnum.TABLE_SA_ID], row[CommonEnum.TABLE_SA_HABIT], row[CommonEnum.TABLE_SA_DURATION], Activity.SA_TYPE_AFTER))
+				print("komata "+row[CommonEnum.TABLE_SA_HABIT])
+				self.m_supportActivity.append(Activity.SupportActivity(row[CommonEnum.TABLE_SA_ID], float(row[CommonEnum.TABLE_SA_HABIT]), int(row[CommonEnum.TABLE_SA_DURATION]), Activity.SA_TYPE_AFTER))
 	
 	def LoadTerms(self):
 		tableFileName = resPath+"table_terms_"+self.m_role+".csv"
@@ -616,22 +622,28 @@ class Agent:
 		# if self.m_currentActivity != None:
 			
 		if self.m_currentActivity != None and (firstID == self.m_currentActivity.m_ID or (not self.m_activity[0].CanInterrupt()) or (not self.m_currentActivity.CanBeInterrupted())):
-			if self.m_currentSupportActivity != None and (not self.m_currentSupportActivity.IsDone()):
-				self.m_currentSupportActivity.UpdateTimer(dt)
+			if self.m_state == STATE_WAIT:
+				if self.m_currentSupportActivity != None and (not self.m_currentSupportActivity.IsDone()):
+					self.m_currentSupportActivity.UpdateTimer(dt)
+					
+					Global.Logger.LogDebug("Check support activity done "+str(self.m_currentSupportActivity.IsDone())+"\n")
+					if self.m_currentSupportActivity.IsDone():
+						#aktivitas pendukung selesai dijalankan, memeriksa apakah masih ada aktivitas pendukung lain yang perlu dijalankan
+						self.m_currentSupportActivity.Stop()
+						Global.Logger.LogDebug("Support activity done\n")
+						self.m_currentSupportActivity = None
+						self.CheckSupportPreActivity()
+						if self.m_currentSupportActivity == None:
+							Global.Logger.LogDebug("No more support activity needed. Starting activity\n")
+							self.m_currentActivity.Start()
 				
-				if self.m_currentSupportActivity.IsDone():
-					#aktivitas pendukung selesai dijalankan, memeriksa apakah masih ada aktivitas pendukung lain yang perlu dijalankan
-					self.m_currentSupportActivity.Stop()
-					self.m_currentSupportActivity = None
-					self.CheckSupportPreActivity()
-			
-			else:
-				self.m_currentActivity.UpdateTimer(dt)
-				if self.m_currentActivity.IsDone():
-					#aktivitas selesai dijalankan
-					Global.Logger.LogDebug("Activity done\n")
-					self.m_currentActivity.Stop()
-					self.m_currentActivity = None
+				else:
+					self.m_currentActivity.UpdateTimer(dt)
+					if self.m_currentActivity.IsDone():
+						#aktivitas selesai dijalankan
+						Global.Logger.LogDebug("Activity done\n")
+						self.m_currentActivity.Stop()
+						self.m_currentActivity = None
 			return
 		
 		#ada aktivitas baru	yang akan dikerjakan
@@ -670,6 +682,7 @@ class Agent:
 				stairEntry = next(entry for entry in Agent.s_entryPointList if entry.target == stairTarget)
 				end = stairEntry.pos
 				self.m_targetType = TARGET_ROOM
+				self.m_termChecklist = [0] * TERM_COUNT
 			elif isSameRoom:
 				end = self.entryPoint.pos
 				self.m_targetType = TARGET_POINT
@@ -677,6 +690,7 @@ class Agent:
 				end = self.m_targetRoom.m_targetCoord
 				self.entryPoint = EntryPoint.EntryPoint(self.m_targetRoom.m_targetCoord,self.m_targetRoom.m_floorIndex)
 				self.m_targetType = TARGET_ROOM
+				self.m_termChecklist = [0] * TERM_COUNT
 			
 			Global.Logger.LogDebug(" end at "+str(end)+"\n")
 			
@@ -806,10 +820,12 @@ class Agent:
 					
 					#tiba di tempat, mulai menjalankan aktivitas (pendukung ataupun utama)
 					remainingDistance = 0
-					if self.m_supportActivity != None:
+					Global.Logger.LogDebug("Try starting activity...\n")
+					if self.m_currentSupportActivity != None:
 						self.m_currentSupportActivity.Start()
 					else:
 						self.m_currentActivity.Start()
+					Global.Logger.LogDebug("Try starting activity DONE\n")
 		Global.Logger.LogDebug("Target type "+str(self.m_targetType))
 		if(self.m_targetType == TARGET_ROOM):
 			Global.Logger.LogDebug(" target room "+self.m_targetRoom.m_name)
@@ -829,27 +845,29 @@ class Agent:
 	def CheckSupportPreActivity(self):
 		#memeriksa faktor lingkungan dan ruang
 		Global.Logger.LogDebug("Checking pre activity\n")
-		satisfied, preActivity, objectID = self.m_currentTerm.CheckEnvironmentSatisfied(self.m_environmentThreshold, self.m_targetRoom)
+		satisfiedEnvi = False
+		satisfiedRoom = False
+		preActivity = None
+		objectID = None
+		if not self.m_termChecklist[TERM_ENVI]:
+			satisfiedEnvi, preActivity, objectID = self.m_currentTerm.CheckEnvironmentSatisfied(self.m_environmentThreshold, self.m_targetRoom)
 		
 		if self.m_targetType == TARGET_ROOM:
 			self.entryPoint = None
 		
-		if satisfied:
+		if satisfiedEnvi:
 			print "cokiroom"
-			satisfied, preActivity, objectID = self.m_currentTerm.CheckRoomSatisfied(self.m_targetRoom)
-		print str(self.m_currentTerm.m_activityID)+" "+str(satisfied)+" "+str(preActivity)+" "+str(objectID)
-		Global.Logger.LogDebug("Cond satisfied "+str(satisfied)+" "+str(self.m_currentTerm.m_activityID)+" "+str(satisfied)+" "+str(preActivity)+" "+str(objectID))
-		if satisfied:
+			self.m_termChecklist[TERM_ENVI] = True
+			satisfiedRoom, preActivity, objectID = self.m_currentTerm.CheckRoomSatisfied(self.m_targetRoom)
+		Global.Logger.LogDebug("Cond satisfied envi "+str(satisfiedEnvi)+" "+str(self.m_currentTerm.m_activityID)+" room "+str(satisfiedRoom)+" "+str(preActivity)+" "+str(objectID))
+		if (not satisfiedEnvi and not self.m_termChecklist[TERM_ENVI]) or (satisfiedRoom and self.m_termChecklist[TERM_ENVI] and not self.m_termChecklist[TERM_ROOM]):
 			if preActivity != None:
 				#ada aktivitas pendukung yang harus dilakukan sebelum bisa memulai aktivitas
 				self.FindTargetAndEntryPointForObject(objectID)
 				self.m_currentSupportActivity = next(sActivity for sActivity in self.m_supportActivity if sActivity.m_ID == preActivity)
 				Global.Logger.LogDebug(" checking pread\n")
-			else:
-				Global.Logger.LogDebug(" goto acti\n")
-				self.FindTargetAndEntryPointForActivity(self.m_currentActivity.m_ID)
 			self.m_targetType = TARGET_POINT
-		else:
+		elif not satisfiedRoom:
 			Global.Logger.LogDebug(" len room prio "+str(len(self.m_currentTerm.m_roomPrio)))
 			if(len(self.m_currentTerm.m_roomPrio) > 1):
 				Global.Logger.LogDebug(" cur target name "+self.m_targetRoom.m_name+" prio 1 "+self.m_currentTerm.m_roomPrio[1])
@@ -858,10 +876,19 @@ class Agent:
 				self.m_targetRoom = next((room for room in Global.g_myHouse.m_rooms if room.m_name == self.m_currentTerm.m_roomPrio[1]),None)
 				self.entryPoint = EntryPoint.EntryPoint(self.m_targetRoom.m_targetCoord,self.m_targetRoom.m_floorIndex)
 				self.m_targetType = TARGET_ROOM
+				self.m_termChecklist = [0] * TERM_COUNT
 				Global.Logger.LogDebug(" should move away\n")
 			else:
 				self.m_currentActivity.Suspend()
 				Global.Logger.LogDebug(" suspend\n")
+				Global.Logger.DumpDebug()
+				return
+		else:
+			if len(self.m_currentTerm.m_roomFactor) == 0:
+				self.entryPoint = EntryPoint.EntryPoint(self.m_targetRoom.m_targetCoord,self.m_targetRoom.m_floorIndex)
+				self.m_targetType = TARGET_POINT
+			else:
+				Global.Logger.LogDebug("Stay here\n")
 				Global.Logger.DumpDebug()
 				return
 			

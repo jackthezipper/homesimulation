@@ -67,9 +67,12 @@ class Activity:
 	
 	def UpdateTimer(self, dt):
 		self.m_runningTime += dt
+		Global.Logger.LogDebug("Update activity "+self.m_ID+" timer: dt = "+str(dt)+" runtime ="+str(self.m_runningTime)+" duration = "+str(self.m_duration)+"\n")
 	
-	def Start(self, runTime):
-		self.m_duration = runTime
+	def Start(self, runTime = 0):
+		Global.Logger.LogDebug("Start base activity "+self.m_ID+"\n")
+		if runTime != 0:
+			self.m_duration = runTime
 	
 	def IsDone(self):
 		return (self.m_runningTime >= self.m_duration)
@@ -128,8 +131,10 @@ class CoreActivity(Activity):
 		return self.m_interruptProperty[CommonEnum.INTERRUPT_CAN_BE_INTERRUPTED]
 	
 	def Start(self, duration = 0):
+		Global.Logger.LogDebug("Starting......\n Time property : "+str(self.m_timeProperty)+"\n")
 		if duration == 0:
-			duration = self.m_timeProperty[TIME_PROPERTY_DURATION]
+			duration = self.m_timeProperty[CommonEnum.TIME_PROPERTY_DURATION]
+		Global.Logger.LogDebug("Starting activity with duration "+str(duration)+"\n")
 		Activity.Start(self, duration)
 	
 	def CanStartBase(self):
