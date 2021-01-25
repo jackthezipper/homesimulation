@@ -845,29 +845,30 @@ class Agent:
 	def CheckSupportPreActivity(self):
 		#memeriksa faktor lingkungan dan ruang
 		Global.Logger.LogDebug("Checking pre activity\n")
-		satisfiedEnvi = False
+		satisfiedEnvi = self.m_termChecklist[TERM_ENVI]
 		satisfiedRoom = False
 		preActivity = None
 		objectID = None
 		if not self.m_termChecklist[TERM_ENVI]:
-			satisfiedEnvi, preActivity, objectID = self.m_currentTerm.CheckEnvironmentSatisfied(self.m_environmentThreshold, self.m_targetRoom)
+			self.m_termChecklist[TERM_ENVI], preActivity, objectID = self.m_currentTerm.CheckEnvironmentSatisfied(self.m_environmentThreshold, self.m_targetRoom)
 		
 		if self.m_targetType == TARGET_ROOM:
 			self.entryPoint = None
 		
-		if satisfiedEnvi:
+		if self.m_termChecklist[TERM_ENVI] and not self.m_termChecklist[TERM_ROOM]:
 			print "cokiroom"
 			self.m_termChecklist[TERM_ENVI] = True
 			satisfiedRoom, preActivity, objectID = self.m_currentTerm.CheckRoomSatisfied(self.m_targetRoom)
-		Global.Logger.LogDebug("Cond satisfied envi "+str(satisfiedEnvi)+" "+str(self.m_currentTerm.m_activityID)+" room "+str(satisfiedRoom)+" "+str(preActivity)+" "+str(objectID))
-		if (not satisfiedEnvi and not self.m_termChecklist[TERM_ENVI]) or (satisfiedRoom and self.m_termChecklist[TERM_ENVI] and not self.m_termChecklist[TERM_ROOM]):
+		Global.Logger.LogDebug("Cond satisfied envi "+str(self.m_termChecklist[TERM_ENVI])+" "+str(self.m_currentTerm.m_activityID)+" room "+str(satisfiedRoom)+" "+str(preActivity)+" "+str(objectID))
+		if (not self.m_termChecklist[TERM_ENVI]) or (satisfiedRoom and self.m_termChecklist[TERM_ENVI] and not self.m_termChecklist[TERM_ROOM]):
 			if preActivity != None:
 				#ada aktivitas pendukung yang harus dilakukan sebelum bisa memulai aktivitas
 				self.FindTargetAndEntryPointForObject(objectID)
 				self.m_currentSupportActivity = next(sActivity for sActivity in self.m_supportActivity if sActivity.m_ID == preActivity)
+				self.m_termChecklist[TERM_ROOM] = True
 				Global.Logger.LogDebug(" checking pread\n")
 			self.m_targetType = TARGET_POINT
-		elif not satisfiedRoom:
+		elif not satisfiedRoom and not self.m_termChecklist[TERM_ROOM]:
 			Global.Logger.LogDebug(" len room prio "+str(len(self.m_currentTerm.m_roomPrio)))
 			if(len(self.m_currentTerm.m_roomPrio) > 1):
 				Global.Logger.LogDebug(" cur target name "+self.m_targetRoom.m_name+" prio 1 "+self.m_currentTerm.m_roomPrio[1])
@@ -894,6 +895,7 @@ class Agent:
 			
 		Global.Logger.DumpDebug()
 		self.myPath = self.GeneratePath(self.pos, self.entryPoint.pos)
+		self.setTarget(self.entryPoint.target)
 		Global.Logger.LogDebug("Generatepath pre activity : ")
 		for path in self.myPath:
 			s = "["+str(path.X)+","+str(path.Y)+"],"
