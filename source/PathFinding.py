@@ -131,6 +131,8 @@ def astarv3(start, end,ignoreIndex,mazeIndex,liveBlocker = False):
 	# Loop until you find the end
 	# iter = 0
 	debugStr = ""
+	neighborPos = [(0, -1), (0, 1), (-1, 0), (1, 0)]
+	nodeCheck = None
 	while len(open_list) > 0:
 		current_node = open_list[0]
 		current_index = 0
@@ -146,18 +148,18 @@ def astarv3(start, end,ignoreIndex,mazeIndex,liveBlocker = False):
 			return reconstructPathv2(current_node,ignoreIndex,mazeIndex,liveBlocker)
 			break
 	
-		debugStr += "Checking node at pos "+str(current_node.position[0])+" "+str(current_node.position[1])+"\n"
-		for new_position in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
+		# debugStr += "Checking node at pos "+str(current_node.position[0])+" "+str(current_node.position[1])+"\n"
+		for new_position in neighborPos:
 			coord = (current_node.position[0]+new_position[0],current_node.position[1]+new_position[1])
-			debugStr += "Checking child at "+str(coord[0])+" "+str(coord[1])
+			# debugStr += "Checking child at "+str(coord[0])+" "+str(coord[1])
 			if (coord[0] < 0) or (coord[1] < 0) or (coord[0] >= len(Map.maze[mazeIndex])) or (coord[1] >= len(Map.maze[mazeIndex][0])):
-				debugStr += " out of bond\n"
+				# debugStr += " out of bond\n"
 				continue
 			if (Map.maze[mazeIndex][coord[0]][coord[1]] == STATE_BLOCKED):
-				debugStr += " wall\n"
+				# debugStr += " wall\n"
 				continue
 			if (Map.maze[mazeIndex][coord[0]][coord[1]] == STATE_ENTRY and (coord[0] != end_node.position[0] or coord[1] != end_node.position[1])):
-				debugStr += " entry for other\n"
+				# debugStr += " entry for other\n"
 				continue
 			
 			liveBlockerWeight = 0
@@ -178,7 +180,7 @@ def astarv3(start, end,ignoreIndex,mazeIndex,liveBlocker = False):
 				if overlapWithOther:
 					continue
 			nodeCheck = Map.allNode[mazeIndex][coord[0]][coord[1]]
-			debugStr += " : status = "+("open" if nodeCheck.isOpen else ("close" if nodeCheck.isClosed else "unknown"))
+			# debugStr += " : status = "+("open" if nodeCheck.isOpen else ("close" if nodeCheck.isClosed else "unknown"))
 			if not (nodeCheck.isClosed):
 				isOldNode = nodeCheck.isOpen
 				if not isOldNode:
@@ -187,12 +189,12 @@ def astarv3(start, end,ignoreIndex,mazeIndex,liveBlocker = False):
 				if newG < nodeCheck.g:
 					nodeCheck.g = newG
 					nodeCheck.parent = current_node
-					debugStr += " set G to "+str(newG)
+					# debugStr += " set G to "+str(newG)
 				nodeCheck.f = nodeCheck.g + euclidian(nodeCheck.position,end)
 				if not isOldNode:
 					InsertNode(nodeCheck,open_list)
-					debugStr += " new node, insert to openlist"
-			debugStr+="\n"
+					# debugStr += " new node, insert to openlist"
+			# debugStr+="\n"
 	# dFile = open(resPath+"dmp.txt","a+")
 	# dFile.write(debugStr)
 	# dFile.write("no path found")
