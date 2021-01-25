@@ -676,6 +676,7 @@ class Agent:
 			self.needStair = self.m_targetRoom.m_floorIndex != self.m_myFloorIndex
 			
 			stairEntry = None
+			end = self.pos
 			if self.needStair:
 				stairIndex = "STAIRS_"+str(self.m_myFloorIndex)
 				stairTarget = next(trgt for trgt in Agent.s_possibleTarget if trgt.hasActivity(stairIndex))
@@ -684,8 +685,9 @@ class Agent:
 				self.m_targetType = TARGET_ROOM
 				self.m_termChecklist = [0] * TERM_COUNT
 			elif isSameRoom:
-				end = self.entryPoint.pos
-				self.m_targetType = TARGET_POINT
+				if self.pos != self.entryPoint.target.m_targetPoint:
+					end = self.entryPoint.pos
+					self.m_targetType = TARGET_POINT
 			else:
 				end = self.m_targetRoom.m_targetCoord
 				self.entryPoint = EntryPoint.EntryPoint(self.m_targetRoom.m_targetCoord,self.m_targetRoom.m_floorIndex)
@@ -704,6 +706,10 @@ class Agent:
 				self.m_state = STATE_PRE_MOVE
 			
 			self.m_currentActivity = self.m_activity[0]
+			
+			if self.m_currentSupportActivity == None and isSameRoom:
+				Global.Logger.LogDebug("No support activity needed. Starting activity\n")
+				self.m_currentActivity.Start()
 			
 			Global.Logger.LogDebug("Activity set to "+self.m_currentActivity.m_ID+"\n")
 	

@@ -72,13 +72,14 @@ class Activity:
 	def Start(self, runTime = 0):
 		Global.Logger.LogDebug("Start base activity "+self.m_ID+"\n")
 		if runTime != 0:
-			self.m_duration = runTime
+			self.m_duration = Global.g_timer.ConvertTime(0,0,runTime)
 	
 	def IsDone(self):
 		return (self.m_runningTime >= self.m_duration)
 	
 	def Stop(self):
-		pass
+		self.m_runningTime = 0
+		# pass
 
 	def GetDescription(self):
 		return g_ActivityDB[self.m_ID]
@@ -162,7 +163,7 @@ class SupportActivity(Activity):
 		Activity.__init__(self, ID)
 		self.m_habitFactor = habitFactor
 		self.m_type = type
-		self.m_duration = duration
+		self.m_duration = Global.g_timer.ConvertTime(0,0,duration)
 	
 	def IsActivityExecuted(self):
 		return random.random() < self.m_habitFactor
