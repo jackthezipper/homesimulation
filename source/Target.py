@@ -14,7 +14,7 @@ class Target:
 		self.m_available = True
 		self.activities = []
 		self.m_specificAgent = []
-		self.m_type = CommonEnum.RoomFactorToID(type)
+		self.m_type = type
 		
 	def setTargetPoint(self,point):
 		self.m_targetPoint = point
@@ -39,4 +39,7 @@ class Target:
 		
 	def notHaveSpecific(self):
 		return (len(self.m_specificAgent) == 0)
+	
+	def CreateCopyForId(self, id):
+		return Target(self.m_floorIndex,self.m_type,self.m_targetPoint,id)
 	
