@@ -5,6 +5,6 @@ class EntryPoint:
 		self.m_floorIndex = fIndex
 	
 	def CreateCopyForTarget(self, newTarget):
-		entry = EntryPoint(self.pos,self,m_floorIndex)
+		entry = EntryPoint(self.pos,self.m_floorIndex)
 		entry.target = newTarget
 		return entry
