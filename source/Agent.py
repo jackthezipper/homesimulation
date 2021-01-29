@@ -41,6 +41,10 @@ TERM_ENVI		= 0
 TERM_ROOM		= TERM_ENVI + 1
 TERM_COUNT		= TERM_ROOM + 1
 
+AGENT_PREACT_ID		= 0
+AGENT_PREACT_OBJ	= AGENT_PREACT_ID + 1
+AGENT_PREACT_LOC	= AGENT_PREACT_OBJ + 1
+
 errPause = False
 
 #30 min -> 15 sec
@@ -131,7 +135,8 @@ class Agent:
 		self.m_currentSupportActivity = None
 		self.m_targetRoom = None
 		self.m_targetType = TARGET_NONE
-		self.m_termChecklist = [0] * TERM_COUNT
+		self.m_termChecklist = [0] * TERM_COUNT\
+		self.m_preActivityList = []
 		
 		self.LoadActivityList()
 		self.LoadSupportActivity()
@@ -632,7 +637,7 @@ class Agent:
 						self.m_currentSupportActivity.Stop()
 						Global.Logger.LogDebug("Support activity done\n")
 						self.m_currentSupportActivity = None
-						self.CheckSupportPreActivity()
+						self.CheckSupportPreActivity2()
 						if self.m_currentSupportActivity == None:
 							Global.Logger.LogDebug("No more support activity needed. Starting activity\n")
 							self.m_currentActivity.Start()
@@ -663,7 +668,7 @@ class Agent:
 			else:
 				# print "errant "+firstID
 				# self.FindTargetAndEntryPointForActivity(firstID)
-				self.CheckSupportPreActivity()
+				self.CheckSupportPreActivity2()
 			
 			self.m_pathIndex = 1
 			
@@ -837,7 +842,7 @@ class Agent:
 			Global.Logger.LogDebug(" target room "+self.m_targetRoom.m_name)
 		Global.Logger.LogDebug("\n")
 		if self.m_targetType == TARGET_ROOM and self.IsArriveInRoom():
-			self.CheckSupportPreActivity()
+			self.GenerateAndCheckPreActivityList()
 		
 	def FindTargetAndEntryPointForObject(self, ID):
 		self.oldEntryPoint = self.entryPoint
@@ -846,6 +851,30 @@ class Agent:
 	#memeriksa jika agent telah tiba di ruang untuk melakukan aktivitas
 	def IsArriveInRoom(self):
 		return self.m_targetType == TARGET_ROOM and self.m_targetRoom.IsInRoom(self.pos)
+	
+	def GenerateAndCheckPreActivityList(self):
+		self.m_preActivityList = self.m_currentTerm.CheckEnvironmentTerm(self.m_environmentThreshold, self.m_targetRoom)
+		stay, roomTerm = self.m_currentTerm.CheckRoomTerm(self.m_targetRoom)
+		if stay:
+			self.m_preactivityList.append(roomTerm)
+			self.CheckSupportPreActivity2()
+		else:
+			if len(self.m_currentTerm.m_roomPrio) > 1 and self.m_targetRoom.m_name != self.m_currentTerm.m_roomPrio[1]:
+				self.m_targetRoom = next((room for room in Global.g_myHouse.m_rooms if room.m_name == self.m_currentTerm.m_roomPrio[1]),None)
+				self.entryPoint = EntryPoint.EntryPoint(self.m_targetRoom.m_targetCoord,self.m_targetRoom.m_floorIndex)
+				self.m_targetType = TARGET_ROOM
+				self.myPath = self.GeneratePath(self.pos, self.entryPoint.pos)
+				self.setTarget(self.entryPoint.target)
+			else:
+				self.m_currentActivity.Suspend()
+				
+	def CheckSupportPreActivity2(self):
+		if len(self.m_preActivityList) > 0:
+			preAct = self.m_preActivityList.pop(0)
+			self.FindTargetAndEntryPointForObject(preAct[AGENT_PREACT_OBJ])
+			self.m_currentSupportActivity = next(sActivity for sActivity in self.m_supportActivity if sActivity.m_ID == preAct[AGENT_PREACT_ID])
+			self.myPath = self.GeneratePath(self.pos, self.entryPoint.pos)
+			self.setTarget(self.entryPoint.target)
 	
 	#memeriksa aktivitas pendukung sebelum
 	def CheckSupportPreActivity(self):
