@@ -29,11 +29,15 @@ class ActivityTerm():
 	def CheckEnvironmentTerm(self, agentEnvironmentThreshold, room):
 		enviTerm = []
 		if self.m_environmentFactor[CommonEnum.TERM_ENVI_LIGHT][CommonEnum.TERM_ENVI_AFFECT] != 0 and room.m_light >= agentEnvironmentThreshold[CommonEnum.TERM_ENVI_LIGHT]:
-			for obj in self.m_environmentFactor[CommonEnum.TERM_ENVI_LIGHT][CommonEnum.TERM_ENVI_OBJECT]:
-				enviTerm.append([ACTIVITY_TURN_ONLIGHT,obj])
+			index = CommonEnum.TERM_ENVI_OBJECT if room.m_name == self.m_roomPrio[0] else CommonEnum.TERM_ENVI_OBJECT2
+			for obj in self.m_environmentFactor[CommonEnum.TERM_ENVI_LIGHT][index]:
+				if obj != "-":
+					enviTerm.append([ACTIVITY_TURN_ONLIGHT,obj])
 		if self.m_environmentFactor[CommonEnum.TERM_ENVI_TEMPERATURE][CommonEnum.TERM_ENVI_AFFECT] != 0 and room.m_temperature > agentEnvironmentThreshold[CommonEnum.TERM_ENVI_TEMPERATURE]:
-			for obj in self.m_environmentFactor[CommonEnum.TERM_ENVI_TEMPERATURE][CommonEnum.TERM_ENVI_OBJECT]:
-				enviTerm.append([ACTIVITY_TURN_ONTEMP,obj])
+			index = CommonEnum.TERM_ENVI_OBJECT if room.m_name == self.m_roomPrio[0] else CommonEnum.TERM_ENVI_OBJECT2
+			for obj in self.m_environmentFactor[CommonEnum.TERM_ENVI_TEMPERATURE][index]:
+				if obj != "-":
+					enviTerm.append([ACTIVITY_TURN_ONTEMP,obj])
 		return enviTerm
 
 	#memeriksa faktor lingkungan

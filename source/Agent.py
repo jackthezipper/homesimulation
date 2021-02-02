@@ -135,7 +135,7 @@ class Agent:
 		self.m_currentSupportActivity = None
 		self.m_targetRoom = None
 		self.m_targetType = TARGET_NONE
-		self.m_termChecklist = [0] * TERM_COUNT\
+		self.m_termChecklist = [0] * TERM_COUNT
 		self.m_preActivityList = []
 		
 		self.LoadActivityList()
@@ -526,8 +526,9 @@ class Agent:
 				enviFactor = []
 				for i in range(0,CommonEnum.TERM_ENVI_TOTAL):
 					factor = []
-					factor.append(int(row[CommonEnum.TABLE_TERM_LIGHT + (i * 2)]))
-					factor.append(row[CommonEnum.TABLE_TERM_LIGHTOBJECT + (i * 2)].split(";"))
+					factor.append(int(row[CommonEnum.TABLE_TERM_LIGHT + (i * 3)]))
+					factor.append(row[CommonEnum.TABLE_TERM_LIGHTOBJECT + (i * 3)].split(";"))
+					factor.append(row[CommonEnum.TABLE_TERM_LIGHTOBJECT2 + (i * 3)].split(";"))
 					enviFactor.append(factor)
 				
 				#resource factor
@@ -720,12 +721,12 @@ class Agent:
 	
 	#update pergerakan dan posisi agent
 	def UpdateAgentMovement(self, dt):
+		Global.Logger.LogDebug("Update movement dt = "+str(dt)+" state "+str(self.m_state)+"\n")
 		if self.m_state != STATE_MOVE:
 			if self.m_state == STATE_PRE_MOVE:
 				self.m_state = STATE_MOVE
 			return
 		
-		Global.Logger.LogDebug("Update movement dt = "+str(dt)+"\n")
 		Global.Logger.LogDebug("Path : ")
 		for path in self.myPath:
 			Global.Logger.LogDebug("["+str(path.X)+","+str(path.Y)+"],")
