@@ -545,15 +545,16 @@ class Agent:
 				roomFactor = []
 				for i in range(0, CommonEnum.RF_COUNT):
 					res = row[CommonEnum.TABLE_TERM_ROOMFACTOR1 + (i * 2)]
-					if res == "-":
-						continue
+					# if res == "-":
+						# continue
 					factor = []
-					rf = row[CommonEnum.TABLE_TERM_ROOMFACTOR1 + (i * 2)].split(";")
 					rfId = []
-					for rfObj in rf:
-						rfId.append(CommonEnum.RoomFactorToID(rfObj))
+					if res != "-":
+						rf = row[CommonEnum.TABLE_TERM_ROOMFACTOR1 + (i * 2)].split(";")
+						for rfObj in rf:
+							rfId.append(CommonEnum.RoomFactorToID(rfObj))
 					factor.append(rfId)
-					factor.append(row[CommonEnum.TABLE_TERM_FAILROOMFACTOR1 + (i * 2)].split(";"))
+					factor.append([] if res == "-" else row[CommonEnum.TABLE_TERM_FAILROOMFACTOR1 + (i * 2)].split(";"))
 					roomFactor.append(factor)
 				
 				roomPrio = []
@@ -736,6 +737,7 @@ class Agent:
 		distance = self.pos.DistanceTo(destination)
 		distanceCovered = float(dt) * Agent.s_scaleSpeed / 1000
 		Global.Logger.LogDebug("Distance "+str(distance)+" covered "+str(distanceCovered)+"\n")
+		Global.Logger.DumpDebug()
 		if distance > distanceCovered:
 #		and (self.m_targetRoom == None or (not self.m_targetRoom.IsInRoom(self.pos))):
 			#masih ada jarak yang perlu ditempuh
@@ -843,11 +845,18 @@ class Agent:
 			Global.Logger.LogDebug(" target room "+self.m_targetRoom.m_name)
 		Global.Logger.LogDebug("\n")
 		if self.m_targetType == TARGET_ROOM and self.IsArriveInRoom():
+			Global.Logger.LogDebug("arrivia\n")
 			self.GenerateAndCheckPreActivityList()
 		
 	def FindTargetAndEntryPointForObject(self, ID):
 		self.oldEntryPoint = self.entryPoint
-		self.entryPoint = next(entry for entry in Agent.s_entryPointList if entry.target.m_id == ID)
+		if ID == CommonEnum.CP_ROOM:
+			self.entryPoint = EntryPoint.EntryPoint(self.m_targetRoom.m_targetCoord,self.m_targetRoom.m_floorIndex)
+			self.entryPoint.target = Target.Target(self.m_targetRoom.m_floorIndex,CommonEnum.RF_NONE,self.m_targetRoom.m_targetCoord,"TMP_CENTER")
+		else:
+			self.entryPoint = next(entry for entry in Agent.s_entryPointList if entry.target.m_id == ID)
+		Global.Logger.LogDebug("find entry for "+ID+" "+str(self.entryPoint)+"\n")
+		Global.Logger.DumpDebug()
 		
 	#memeriksa jika agent telah tiba di ruang untuk melakukan aktivitas
 	def IsArriveInRoom(self):
@@ -855,27 +864,61 @@ class Agent:
 	
 	def GenerateAndCheckPreActivityList(self):
 		self.m_preActivityList = self.m_currentTerm.CheckEnvironmentTerm(self.m_environmentThreshold, self.m_targetRoom)
+		Global.Logger.LogDebug("Gen pre activity \n")
+		for pr in self.m_preActivityList:
+			Global.Logger.LogDebug(str(pr)+"\n")
 		stay, roomTerm = self.m_currentTerm.CheckRoomTerm(self.m_targetRoom)
+		Global.Logger.LogDebug("stay "+str(stay)+" lo "+str(roomTerm)+"\n")
 		if stay:
-			self.m_preactivityList.append(roomTerm)
-			self.CheckSupportPreActivity2()
+			Global.Logger.LogDebug("uasu\n")
+			Global.Logger.DumpDebug()
+			self.m_preActivityList.extend(roomTerm)
+			Global.Logger.LogDebug("uasu2\n")
+			Global.Logger.DumpDebug()
+			if len(self.m_preActivityList) > 0:
+				self.CheckSupportPreActivity2()
+			else:
+				self.m_targetType = TARGET_POINT
+			Global.Logger.LogDebug("uasu3\n")
+			Global.Logger.DumpDebug()
 		else:
+			Global.Logger.LogDebug("uasu4\n")
+			Global.Logger.DumpDebug()
 			if len(self.m_currentTerm.m_roomPrio) > 1 and self.m_targetRoom.m_name != self.m_currentTerm.m_roomPrio[1]:
+				Global.Logger.LogDebug("uasu5\n")
+				Global.Logger.DumpDebug()
 				self.m_targetRoom = next((room for room in Global.g_myHouse.m_rooms if room.m_name == self.m_currentTerm.m_roomPrio[1]),None)
 				self.entryPoint = EntryPoint.EntryPoint(self.m_targetRoom.m_targetCoord,self.m_targetRoom.m_floorIndex)
 				self.m_targetType = TARGET_ROOM
 				self.myPath = self.GeneratePath(self.pos, self.entryPoint.pos)
 				self.setTarget(self.entryPoint.target)
 			else:
+				Global.Logger.LogDebug("uasu6\n")
+				Global.Logger.DumpDebug()
 				self.m_currentActivity.Suspend()
+		Global.Logger.LogDebug("gendon\n")
 				
 	def CheckSupportPreActivity2(self):
+		Global.Logger.LogDebug("ceka2222\n")
+		Global.Logger.DumpDebug()
 		if len(self.m_preActivityList) > 0:
 			preAct = self.m_preActivityList.pop(0)
+			Global.Logger.LogDebug("preta "+str(preAct)+"\n")
+			Global.Logger.DumpDebug()
 			self.FindTargetAndEntryPointForObject(preAct[AGENT_PREACT_OBJ])
+			Global.Logger.LogDebug("preta 1\n")
+			Global.Logger.DumpDebug()
 			self.m_currentSupportActivity = next(sActivity for sActivity in self.m_supportActivity if sActivity.m_ID == preAct[AGENT_PREACT_ID])
+			Global.Logger.LogDebug("preta 2\n")
+			Global.Logger.DumpDebug()
 			self.myPath = self.GeneratePath(self.pos, self.entryPoint.pos)
+			Global.Logger.LogDebug("preta 3\n")
+			Global.Logger.DumpDebug()
 			self.setTarget(self.entryPoint.target)
+			Global.Logger.LogDebug("preta 4\n")
+			Global.Logger.DumpDebug()
+			self.m_targetType = TARGET_POINT
+			self.m_state = STATE_PRE_MOVE
 	
 	#memeriksa aktivitas pendukung sebelum
 	def CheckSupportPreActivity(self):
@@ -923,6 +966,7 @@ class Agent:
 		else:
 			if len(self.m_currentTerm.m_roomFactor) == 0:
 				self.entryPoint = EntryPoint.EntryPoint(self.m_targetRoom.m_targetCoord,self.m_targetRoom.m_floorIndex)
+				self.entryPoint.target = Target.Target(self.m_targetRoom.m_floorIndex,CommonEnum.RF_NONE,self.m_targetRoom.m_targetCoord,"TMP_CENTER")
 				self.m_targetType = TARGET_POINT
 			else:
 				Global.Logger.LogDebug("Stay here\n")

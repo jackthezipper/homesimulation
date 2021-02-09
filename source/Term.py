@@ -3,6 +3,7 @@ import Agent
 import Global
 Global = reload(Global)
 import CommonEnum
+CommonEnum = reload(CommonEnum)
 
 #------------------------------------------------------------------------------------------------------------
 #------------------Terms for activity------------------------------------------------------------------------
@@ -10,6 +11,7 @@ import CommonEnum
 
 ACTIVITY_TURN_ONLIGHT	= "S1"
 ACTIVITY_TURN_ONTEMP	= "S2"
+ACTIVITY_WALK_TOROOM	= "J1"
 
 ACTIVITY_OBJECT_NONE	= "-"
 
@@ -61,12 +63,28 @@ class ActivityTerm():
 	
 	def CheckRoomTerm(self, room):
 		roomTerm = []
-		for roomFactor in self.m_roomFactor:
+		Global.Logger.LogDebug("Check room term "+room.m_name+"\n")
+		roomIdx = -1
+		for idx,roomFactor in enumerate(self.m_roomFactor):
+			if room.m_name != self.m_roomPrio[idx]:
+				Global.Logger.LogDebug("rumdif #"+room.m_name+"# !"+self.m_roomPrio[idx]+"!\n")
+				Global.Logger.DumpDebug()
+				continue
+			roomIdx = idx
+			Global.Logger.LogDebug("roufa "+str(roomFactor)+"\n")
+			if len(roomFactor[ROOM_DEVICE]) == 0:
+				roomTerm.append([ACTIVITY_WALK_TOROOM,CommonEnum.CP_ROOM])
 			for (device,activity) in zip(roomFactor[ROOM_DEVICE],roomFactor[ROOM_FAILACTIVITY]):
+				Global.Logger.LogDebug("depak "+str(device)+" "+str(activity)+"\n" )
+				if device == CommonEnum.RF_NONE:
+					continue
 				available, objectID = room.HasAndAvailable(device)
 				if available:
-					roomTerm.append([available, objectID])
-		return (len(self.m_roomFactor) == 0),roomTerm
+					Global.Logger.LogDebug("obedi "+str(objectID)+"\n")
+					roomTerm.append([activity, objectID])
+		Global.Logger.LogDebug("teratum "+str(roomTerm))
+		Global.Logger.DumpDebug()
+		return (roomIdx == -1 or (len(self.m_roomFactor[roomIdx][ROOM_DEVICE]) == 0) or (len(roomTerm) > 0)),roomTerm
 		
 	#memeriksa faktor ruang
 	def CheckRoomSatisfied(self, room):

@@ -122,7 +122,8 @@ RES_READ_MTRIAL	= RES_FOOD_MTRIAL + 1
 RES_TOTAL		= RES_READ_MTRIAL + 1
 
 #room factor enum
-RF_CHAIR			= 0
+RF_NONE				= 0
+RF_CHAIR			= RF_NONE + 1
 RF_SOFA				= RF_CHAIR + 1
 RF_CARPET			= RF_SOFA + 1
 RF_DOOR				= RF_CARPET + 1
@@ -152,6 +153,8 @@ def ResourceToID(res):
 
 def RoomFactorToID(roomF):
 	rFactorLowerCase = roomF.lower()
+	if rFactorLowerCase == "-":
+		return RF_NONE
 	if rFactorLowerCase == "chair":
 		return RF_CHAIR
 	elif rFactorLowerCase == "sofa":
@@ -164,3 +167,5 @@ def RoomFactorToID(roomF):
 		return RF_BED
 	else:
 		return RF_CLEANING_UTLTY
+
+CP_ROOM = "CENTER"
