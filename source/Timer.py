@@ -1,35 +1,50 @@
 import math
+
+import Common
+import Config
+
+HOUR_IN_DAY		= 24
+MINUTE_IN_HOUR	= 60
+
 #30 min -> 15 sec
 TIMECONVERSION	= 2 #to multiply dt
 TIMEFACTOR		= 1000 #to multiply waitTime
 
-MINUTE_IN_HOUR	= 60
-HOUR_IN_DAY		= 24
+K_ADJUSTER = TIMEFACTOR / TIMECONVERSION
 
-class Timer:
-	def __init__(self):
+class Timer():
+	s_timerInstance = None
+	def __init__(self, format = Common.FORMAT_TIME_HOUR):
+		self.m_format = format
 		self.m_time = 0
+		self.m_elapsedAjuster = K_ADJUSTER
+		self.m_time = MINUTE_IN_HOUR
+	
+	def GetHour(self):
+		return int(math.floor(self.m_time / MINUTE_IN_HOUR) % HOUR_IN_DAY)
+	
+	def GetHourForTime(self,time):
+		return int(math.floor(time / MINUTE_IN_HOUR) % HOUR_IN_DAY)
+	
+	def GetMinute(self):
+		return (self.m_time % MINUTE_IN_HOUR)
+	
+	def GetDay(self):
+		return int(self.m_time / (HOUR_IN_DAY * MINUTE_IN_HOUR))
 	
 	def Update(self, dt):
-		self.m_time += dt
+		self.m_elapsedAdjuster += dt
+		if self.m_elapsedAdjuster > K_ADJUSTER:
+			self.m_time += 1
+			self.m_elapsedAdjuster -= K_ADJUSTER
 	
-	def GetDay(self, time):
-		return math.floor((time * TIMECONVERSION) / (TIMEFACTOR * MINUTE_IN_HOUR * HOUR_IN_DAY))
-	
-	def GetHour(self, time):
-		return math.floor(((time * TIMECONVERSION) / (TIMEFACTOR * MINUTE_IN_HOUR)) % HOUR_IN_DAY)
-	
-	def GetMinute(self, time):
-		return math.floor( ((time * TIMECONVERSION) / TIMEFACTOR) % MINUTE_IN_HOUR )
-	
-	def GetReadableTime(self, time):
-		return self.GetDay(time), self.GetHour(time), self.GetMinute(time)
-	
-	def GetCurrentDay(self):
-		return self.GetDay(self.m_time)
-	
-	def GetCurrentReadableTime(self):
-		return self.GetReadableTime(self.m_time)
-	
-	def ConvertTime(self, day, hour, min):
-		return ((((day * HOUR_IN_DAY) + hour) * MINUTE_IN_HOUR) + min) * TIMEFACTOR / TIMECONVERSION
+	def GetFormattedHour(self):
+		return "{:02d}:{:02d}".format(self.GetHour(), self.GetMinute())
+
+def CreateInstance():
+	Timer.s_timerInstance = Timer(Common.FORMAT_TIME_MINUTE)
+
+def GetInstance():
+	if Timer.s_timerInstance == None:
+		CreateInstance()
+	return Timer.s_timerInstance

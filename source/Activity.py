@@ -1,275 +1,156 @@
-import scriptcontext as sc
-
-import CommonEnum
-import Global
-
-import random
 import csv
 import os
-#find resources path
-# sourceFilePath	= ghenv.Component.OnPingDocument().FilePath
-sourceFilePath	= os.path.dirname(os.path.abspath(__file__))
-sourceDirPath	= sourceFilePath[0:sourceFilePath.rfind('\\')+1]
-resPath			= sourceDirPath+"res\\"+sc.sticky["MapName"]+"\\"
+import re
 
+import Common
+import Timer
+import BioProperty3
+import Config
 
-class InterruptProperty:
-	def __init__(self, canInterrupt, canBeInterrupted):
-		self.m_canInterrupt = canInterrupt
-		self.m_canBeInterrupted = canBeInterrupted
-
-class TimeProperty:
-	def __init__(self, timeCanStartBegin, timeCanStartEnd, duration):
-		self.m_timeCanStartBegin = timeCanStartBegin
-		self.m_timeCanStartEnd = timeCanStartEnd
-		self.m_duration = duration
-
-class PlanningProperty:
-	def __init__(self, planned, urgency, habit, rule):
-		self.m_planned = planned
-		self.m_urgency = urgency
-		self.m_habit = habit
-		self.m_rule = rule
-
-#plan
-PLAN_PLANNED	= 0
-PLAN_HABIT		= PLAN_PLANNED + 1
-PLAN_RULE		= PLAN_HABIT + 1
-PLAN_TOTAL		= PLAN_RULE + 1
-
-#biological effect index
-BIO_EXHAUSTED	= 0
-BIO_SLEEPY		= BIO_EXHAUSTED + 1
-BIO_DIRTY		= BIO_SLEEPY + 1
-BIO_URINATE		= BIO_DIRTY + 1
-BIO_DEFECATE	= BIO_URINATE + 1
-BIO_ENERGY		= BIO_DEFECATE + 1
-BIO_HUNGER		= BIO_ENERGY + 1
-BIO_THIRSTY		= BIO_HUNGER + 1
-BIO_ABILITY		= BIO_THIRSTY + 1
-BIO_TOTAL		= BIO_ABILITY + 1
-
-#emotional-social index
-ES_STRESS		= 0
-ES_EMOTION		= ES_STRESS + 1
-ES_MOOD			= ES_EMOTION + 1
-ES_LONELINESS	= ES_MOOD + 1
-ES_TOTAL		= ES_LONELINESS + 1
-
-#------------------------------------------------------------------------------------------------------------
-#-------------------Base Activity Class----------------------------------------------------------------------
-#------------------------------------------------------------------------------------------------------------
-class Activity:
-	def __init__(self, ID):
-		self.m_ID = ID
-		self.m_duration = 0
-		self.m_runningTime = 0
+def GenerateActivity(dbFile):
+	sourceFilePath	= os.path.dirname(os.path.abspath(__file__))
+	inputFilePath	= sourceFilePath[0:sourceFilePath.rfind('\\')+1]+"input_file\\"+dbFile
+	activityList = {}
 	
-	def UpdateTimer(self, dt):
-		self.m_runningTime += dt
-		Global.Logger.LogDebug("Update activity "+self.m_ID+" timer: dt = "+str(dt)+" runtime ="+str(self.m_runningTime)+" duration = "+str(self.m_duration)+"\n")
+	with open(inputFilePath) as csvfile:
+		reader = csv.reader(csvfile)
+		for row in reader:
+			if row[Common.TABLE_ACTIVITY_ID] == "ID":
+				continue
+			activityID = row[Common.TABLE_ACTIVITY_ID]
+			activityData = []
+			activityData.append(row[Common.TABLE_ACTIVITY_DESC])
+			bioEffectRun = []
+			for i in range(Common.TABLE_ACTIVITY_BIO_EFFECT_RUN_START, Common.TABLE_ACTIVITY_EMO_EFFECT_RUN):
+				bioEffectRun.append(1.0 if row[i] == "" else float(row[i]))
+			activityData.append(bioEffectRun)
+			activityData.append(float(row[Common.TABLE_ACTIVITY_EMO_EFFECT_RUN]))
+			
+			bioEffectSuspend = []
+			for i in range(Common.TABLE_ACTIVITY_BIO_EFFECT_SUSPEND_START, Common.TABLE_ACTIVITY_EMO_EFFECT_SUSPEND):
+				bioEffectSuspend.append(1.0 if row[i] == "" else float(row[i]))
+			activityData.append(bioEffectSuspend)
+			activityData.append(float(row[Common.TABLE_ACTIVITY_EMO_EFFECT_SUSPEND]))
+			
+			duration = -1
+			if(row[Common.TABLE_ACTIVITY_DURATION]) != "-":
+				duration = int(row[Common.TABLE_ACTIVITY_DURATION])
+			
+			startTime = -1
+			match = re.match(r'(\d+):00', row[Common.TABLE_ACTIVITY_START])
+			if match != None:
+				startTime = int(match.group(1))
+			
+			bioStandard = []
+			for i in range(Common.TABLE_ACTIVITY_BIO_STD_START, Common.TABLE_ACTIVITY_EMO_STD):
+				bioStandard.append(0.0 if row[i] == "" else float(row[i]))
+			
+			planProperty = []
+			for i in range(Common.TABLE_ACTIVITY_PLAN_START, Common.TABLE_ACTIVITY_COUNT):
+				planProperty.append(0.0 if row[i] == "" else float(row[i]))
+			
+			rooms = [row[Common.TABLE_ACTIVITY_ROOMS], row[Common.TABLE_ACTIVITY_ROOMS + 1]]
+			
+			activity = Activity(row[Common.TABLE_ACTIVITY_ID], row[Common.TABLE_ACTIVITY_DESC], duration, (row[Common.TABLE_ACTIVITY_BIOACTIVITY] == "1"), [bioEffectRun, bioEffectSuspend], [float(row[Common.TABLE_ACTIVITY_EMO_EFFECT_RUN]), float(row[Common.TABLE_ACTIVITY_EMO_EFFECT_SUSPEND])], startTime, int(row[Common.TABLE_ACTIVITY_PRIORITY]), bioStandard, float(row[Common.TABLE_ACTIVITY_EMO_STD]), float(row[Common.TABLE_ACTIVITY_PHY_STD]), planProperty, rooms)
+			activityList[activityID] = activity
+	
+	return activityList
+
+
+EFFECT_RUN		= 0
+EFFECT_SUSPEND	= EFFECT_RUN + 1
+
+SUSPEND_TIME = [0, 6, 12, 24, 168]
+class Activity:
+	def __init__(self, ID, description, duration, isBioActivity, bioEffect, emotionalEffect, startTime, priority, bioStandard, emotionalStandard, phyStandard, planProperty, rooms):
+		self.m_ID = ID
+		self.m_duration = duration
+		self.m_runningTime = 0
+		self.m_isBioActivity = isBioActivity
+		self.m_bioEffect = bioEffect
+		self.m_emotionalEffect = emotionalEffect
+		self.m_startTime = startTime
+		self.m_description = description
+		self.m_status = Common.ACT_STATUS_NONE
+		self.m_forceStop = False
+		self.m_priority = priority
+		self.m_bioStandard = bioStandard
+		self.m_emotionalStandard = emotionalStandard
+		self.m_physicalStandard = phyStandard
+		self.m_planProperty = planProperty
+		self.m_score = 0
+		self.m_emotionalScore = 0
+		self.m_planScore = 0
+		self.m_isIncidental = False
+		self.m_remainingIncidentalTime = 0
+		self.m_rangeDuration = 0
+		self.m_alreadyDoIt = False
+		self.m_rooms = rooms
+	
+	def GetBioEffect(self, property):
+		return self.m_bioEffect[EFFECT_RUN if self.m_status == Common.ACT_STATUS_RUN else EFFECT_SUSPEND][BioProperty3.BIOPROPERTY[property]] if self.m_status != Common.ACT_STATUS_NONE else 0
+	
+	def GetEmotionalEffect(self):
+		return self.m_emotionalEffect[EFFECT_RUN if self.m_status == Common.ACT_STATUS_RUN else EFFECT_SUSPEND]
+	
+	def Update(self):
+		if self.IsRunning():
+			# print(self.m_ID+" udd me")
+			self.m_runningTime += 1
+		if self.m_isIncidental:
+			if self.m_remainingIncidentalTime > 0:
+				self.m_remainingIncidentalTime -= 1
+			if self.m_rangeDuration > 0:
+				self.m_rangeDuration -= 1
+			else:
+				self.m_isIncidental = False
+		if self.m_alreadyDoIt:
+			if ((self.m_startTime - Timer.GetInstance().GetHour()) % Timer.HOUR_IN_DAY) > 3:
+				print("reset dodol "+self.m_ID)
+				self.m_alreadyDoIt = False
 	
 	def Start(self, runTime = 0):
-		Global.Logger.LogDebug("Start base activity "+self.m_ID+"\n")
-		if runTime != 0:
-			self.m_duration = Global.g_timer.ConvertTime(0,0,runTime)
+		print("Starting activity "+self.m_ID)
+		self.m_status = Common.ACT_STATUS_RUN
 	
 	def IsDone(self):
-		return (self.m_runningTime >= self.m_duration)
+		# print("check done "+self.m_ID+" "+str(self.m_duration)+" "+str(self.m_forceStop))
+		return (self.m_duration != -1 and (self.m_runningTime >= self.m_duration)) or self.m_forceStop
+	
+	def ForceStop(self):
+		self.m_forceStop = True
+		if not self.m_isBioActivity:
+			self.m_alreadyDoIt = True
 	
 	def Stop(self):
+		self.m_status = Common.ACT_STATUS_NONE
 		self.m_runningTime = 0
+		self.m_forceStop = False
+		if not self.m_isBioActivity:
+			self.m_alreadyDoIt = True
 		# pass
 
 	def GetDescription(self):
-		return g_ActivityDB[self.m_ID]
+		return self.m_description
 	
 	def Suspend(self):
-		pass
-#------------------------------------------------------------------------------------------------------------
-#-------------------Core Activity Class----------------------------------------------------------------------
-#------------------------------------------------------------------------------------------------------------
-class CoreActivity(Activity):
-	def __init__(self, ID, chance, interruptProperty, timeProperty, planProperty, biologicalEffect, esFactor, agent):
-		Activity.__init__(self, ID)
-		self.m_chance = chance
-		self.m_interruptProperty = interruptProperty
-		self.m_timeProperty = timeProperty
-		self.m_planProperty = planProperty
-		self.m_biologicalEffect = biologicalEffect
-		self.m_esFactor = esFactor
-		self.m_agent = agent
-		self.m_score = 0
+		self.m_status = Common.ACT_STATUS_SUSPEND
 	
-	#menghitung skor aktivitas
-	def CalculateActivityScore(self):
-		self.m_score = 0
-		factorCount = 0
-		
-		if not self.CanStartBase():
-			return
-		
-		#kalkulasi rencana
-		for i in range(0,PLAN_TOTAL):
-			self.m_score += self.m_planProperty[i]
-			factorCount += (1 if self.m_planProperty[i] != 0 else 0)
-		
-		#kalkulasi faktor biologi
-		for i in range(0,BIO_TOTAL):
-			self.m_score += self.m_biologicalEffect[i] * self.m_agent.m_myBioStatus[i]
-			factorCount += abs(self.m_biologicalEffect[i])
-		self.m_score /= factorCount
-		
-		#peluang
-		self.m_score *= self.m_chance
-		
-		#kalkulasi faktor emosi-sosial
-		for i in range(0,CommonEnum.ES_PROPERTY_COUNT):
-			if self.m_esFactor[i] != 0:
-				self.m_score *= self.m_agent.m_myESStatus[i]
+	def Pause(self):
+		self.m_status = Common.ACT_STATUS_PAUSED
 	
-	def CanInterrupt(self):
-		return self.m_interruptProperty[CommonEnum.INTERRUPT_CAN_INTERRUPT]
+	def Resume(self):
+		self.m_status = Common.ACT_STATUS_RUN
 	
-	def CanBeInterrupted(self):
-		return self.m_interruptProperty[CommonEnum.INTERRUPT_CAN_BE_INTERRUPTED]
+	def CanStart(self):
+		if self.m_isIncidental:
+			print(self.m_ID + " is incidental remaining "+str(self.m_remainingIncidentalTime)+" range "+str(self.m_rangeDuration))
+		return self.m_startTime == -1 or ((not self.m_alreadyDoIt) and (not self.m_isIncidental) and ((self.m_startTime - Timer.GetInstance().GetHour()) % Timer.HOUR_IN_DAY) <= 3) or (self.m_isIncidental and self.m_remainingIncidentalTime <= 0 and self.m_rangeDuration > 0)
 	
-	def Start(self, duration = 0):
-		Global.Logger.LogDebug("Starting......\n Time property : "+str(self.m_timeProperty)+"\n")
-		if duration == 0:
-			duration = self.m_timeProperty[CommonEnum.TIME_PROPERTY_DURATION]
-		Global.Logger.LogDebug("Starting activity with duration "+str(duration)+"\n")
-		Activity.Start(self, duration)
+	def IsRunning(self):
+		return self.m_status == Common.ACT_STATUS_RUN
 	
-	def CanStartBase(self):
-		if self.m_timeProperty[CommonEnum.TIME_PROPERTY_STARTTIME_CANSTART][0] == -1:
-			#can start any time
-			return True
-		
-		startTime = Global.g_timer.ConvertTime(Global.g_timer.GetCurrentDay(), self.m_timeProperty[CommonEnum.TIME_PROPERTY_STARTTIME_CANSTART][0], self.m_timeProperty[CommonEnum.TIME_PROPERTY_STARTTIME_CANSTART][1])
-		endTime = Global.g_timer.ConvertTime(Global.g_timer.GetCurrentDay(), self.m_timeProperty[CommonEnum.TIME_PROPERTY_ENDTIME_CANSTART][0], self.m_timeProperty[CommonEnum.TIME_PROPERTY_ENDTIME_CANSTART][1])
-		return (Global.g_timer.m_time > startTime and Global.g_timer.m_time < endTime)
-
-#------------------------------------------------------------------------------------------------------------
-#-------------------Support Activity Class-------------------------------------------------------------------
-#------------------------------------------------------------------------------------------------------------
-
-#support activity type
-SA_TYPE_BEFORE	= 0
-SA_TYPE_AFTER	= SA_TYPE_BEFORE + 1
-
-class SupportActivity(Activity):
-	def __init__(self, ID, habitFactor, duration, type):
-		Activity.__init__(self, ID)
-		self.m_habitFactor = habitFactor
-		self.m_type = type
-		self.m_duration = Global.g_timer.ConvertTime(0,0,duration)
-	
-	def IsActivityExecuted(self):
-		return random.random() < self.m_habitFactor
-	
-	def GetDuration(self):
-		return type == g_SupportActivityBeforeDB[self.m_ID][DB_SUPPORT_ACTIVITY_DURATION] if SA_TYPE_BEFORE else g_SupportActivityAfterDB[self.m_ID][DB_SUPPORT_ACTIVITY_DURATION]
-
-#------------------------------------------------------------------------------------------------------------
-#------------------General Stuff_----------------------------------------------------------------------------
-#------------------------------------------------------------------------------------------------------------
-
-#main activity
-MAIN_ACTIVITY_ID	= 0
-MAIN_ACTIVITY_DESC	= MAIN_ACTIVITY_ID + 1
-
-#table support activty
-TABLE_SUPPORT_ACTIVITY_ID		= 0
-TABLE_SUPPORT_ACTIVITY_DESC		= TABLE_SUPPORT_ACTIVITY_ID + 1
-TABLE_SUPPORT_ACTIVITY_DURATION	= TABLE_SUPPORT_ACTIVITY_DESC + 1
-
-#DB support activty
-DB_SUPPORT_ACTIVITY_DESC		= 0
-DB_SUPPORT_ACTIVITY_DURATION	= TABLE_SUPPORT_ACTIVITY_DESC + 1
-
-g_ActivityDB = {}
-g_ActivityEffectRun = {}
-g_ActivityEffectPending = {}
-g_SupportActivityBeforeDB = {}
-g_SupportActivityAfterDB = {}
-
-def LoadGeneralActivityDB():
-	tableFileName = resPath+"table_activity.csv"
-	with open(tableFileName) as csvfile:
-		reader = csv.reader(csvfile)
-		for row in reader:
-			if row[MAIN_ACTIVITY_ID] == "ID":
-				continue
-			g_ActivityDB[row[MAIN_ACTIVITY_ID]] = [row[MAIN_ACTIVITY_DESC]]
-
-def LoadActivityEffect():
-	tableFileName = resPath+"table_effect_run.csv"
-	with open(tableFileName) as csvfile:
-		reader = csv.reader(csvfile)
-		for row in reader:
-			if row[CommonEnum.TABLE_EFFECT_ID] == "ID":
-				continue
-			data = []
-			for i in range(CommonEnum.TABLE_EFFECT_BIO_START, CommonEnum.TABLE_EFFECT_ES_START):
-				data.append(float(row[i]))
-			env = []
-			for i in range(0,CommonEnum.EFFECT_ENVI_COUNT):
-				obj = row[CommonEnum.TABLE_EFFECT_ENV_OBJ1 + i*2]
-				if obj != "-":
-					env.append([obj,int(row[CommonEnum.TABLE_EFFECT_ENV_VAL1 + i*2])])
-			data.append(env)
-			g_ActivityEffectRun[row[CommonEnum.TABLE_EFFECT_ID]] = data
-	tableFileName = resPath+"table_effect_pending.csv"
-	with open(tableFileName) as csvfile:
-		reader = csv.reader(csvfile)
-		for row in reader:
-			if row[CommonEnum.TABLE_EFFECT_ID] == "ID":
-				continue
-			data = []
-			for i in range(CommonEnum.TABLE_EFFECT_BIO_START, CommonEnum.TABLE_EFFECT_ES_START):
-				data.append(float(row[i]))
-			env = []
-			for i in range(0,CommonEnum.EFFECT_ENVI_COUNT):
-				obj = row[CommonEnum.TABLE_EFFECT_ENV_OBJ1 + i*2]
-				if obj != "-":
-					env.append([obj,int(row[CommonEnum.TABLE_EFFECT_ENV_VAL1 + i*2])])
-			data.append(env)
-			g_ActivityEffectPending[row[CommonEnum.TABLE_EFFECT_ID]] = data
-
-def GetActivityBioEffect(activityId, effect, run):
-	if run:
-		return g_ActivityEffectRun[activityId][effect]
-	else:
-		return g_ActivityEffectPending[activityId][effect]
-
-def GetActivityESEffect(activityId, run):
-	if run:
-		return g_ActivityEffectRun[activityId][CommonEnum.BIOLOGICAL_PROPERTY_COUNT]
-	else:
-		return g_ActivityEffectPending[activityId][CommonEnum.BIOLOGICAL_PROPERTY_COUNT]
-
-def GetActivityEnviEffect(activityId, run):
-	if run:
-		return g_ActivityEffectRun[activityId][len(g_ActivityEffectRun) - 1]
-	else:
-		return g_ActivityEffectPending[activityId][len(g_ActivityEffectPending) - 1]
-
-def LoadSupportActivityDB():
-	#support activity before
-	tableFileName = resPath+"support_activity_before.csv"
-	with open(tableFileName) as csvfile:
-		reader = csv.reader(csvfile)
-		for row in reader:
-			if row[TABLE_ID] == "ID":
-				continue
-			g_SupportActivityBeforeDB[TABLE_SUPPORT_ACTIVITY_ID] = [row[TABLE_SUPPORT_ACTIVITY_DESC],row[TABLESUPPORT_ACTIVITY_DURATION]]
-	
-	#support activity after
-	tableFileName = resPath+"support_activity_after.csv"
-	with open(tableFileName) as csvfile:
-		reader = csv.reader(csvfile)
-		for row in reader:
-			if row[TABLE_ID] == "ID":
-				continue
-			g_SupportActivityBeforeDB[TABLE_SUPPORT_ACTIVITY_ID] = [row[TABLE_SUPPORT_ACTIVITY_DESC],row[TABLE_SUPPORT_ACTIVITY_DURATION]]
+	def SetToIncidental(self):
+		self.m_isIncidental = True
+		self.m_remainingIncidentalTime = SUSPEND_TIME[self.m_priority - 1] * Timer.MINUTE_IN_HOUR
+		self.m_rangeDuration = ((3 + SUSPEND_TIME[self.m_priority - 1]) * Timer.MINUTE_IN_HOUR) - self.m_duration

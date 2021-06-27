@@ -17,6 +17,8 @@ import Term
 Term = reload(Term)
 import Global
 import EntryPoint
+import Config
+import Common
 
 from Rhino.Geometry import Point3d, Vector3f,Vector3d,Line,Polyline
 import rhinoscriptsyntax as rs
@@ -119,29 +121,190 @@ class Agent:
 		self.m_active = False
 		self.m_role = role
 		
-		self.m_activity = []
-		self.m_supportActivity = []
-		self.m_terms = []
 		
-		self.m_myBioStatus = []
-		self.m_myBioEffectRate = []
-		self.m_myESStatus = []
-		self.m_myESNormal = []
-		self.m_myESRate = []
-		self.m_environmentThreshold = []
-		
+		self.m_bioProperty = []
+		self.m_switchBioLoader = {
+			"Energy" : self.LoadEnergyProperty,
+			"Hunger" : self.LoadHungerProperty,
+			"Dirty" : self.LoadDirtyProperty,
+			"Thirst" : self.LoadThirstProperty,
+			"Exhausted" : self.LoadTiredProperty,
+			"Sleepy" : self.LoadSleepyProperty,
+			"Defecate" : self.LoadDefecateProperty,
+			"Urinate" : self.LoadUrinateProperty,
+		}
+		self.m_emotionalFactor = 0.417
+		self.m_emotionalNormal = 0.417
+		self.m_emotionalTotal = 1 + (self.m_emotionalFactor / (self.m_emotionalNormal * 100))
+		self.m_emotionalTimeEffect = self.m_emotionalNormal
+		self.m_badMoodRate = 0.002
+		self.m_goodMoodRate = 0.003
+		self.m_currentAbility = 0
+		self.m_activityList = Activity.GenerateActivity(Config.ACTIVITY_DB_FILE)
 		self.m_currentActivity = None
-		self.m_currentTerm = None
-		self.m_currentSupportActivity = None
+		self.LoadBioProperty(Config.IC_FILE_NAME)
+		self.m_bioActivityToTrigger = "" if self.m_currentActivity == None else self.m_currentActivity.m_ID
+		self.m_wasAsleep = True
+		self.m_pendingActivity = None
+		self.m_timeAdjuster = Timer.TIMEFACTOR / Timer.TIMECONVERSION
+		self.m_elapsedAdjustTimer = self.m_timeAdjuster
+		
 		self.m_targetRoom = None
 		self.m_targetType = TARGET_NONE
-		self.m_termChecklist = [0] * TERM_COUNT
-		self.m_preActivityList = []
 		
-		self.LoadActivityList()
-		self.LoadSupportActivity()
-		self.LoadTerms()
 		
+	def LoadBioProperty(self, filename):
+		sourceFilePath	= os.path.dirname(os.path.abspath(__file__))
+		inputFilePath = resPath+self.m_role+"\\"+filename+".csv"
+		# inputFilePath	= sourceFilePath[0:sourceFilePath.rfind('\\')+1]+"input_file\\"+filename
+		with open(inputFilePath) as csvfile:
+			reader = csv.reader(csvfile)
+			for row in reader:
+				if row[Common.IC_PROPERTY] == "Current Activity":
+					self.m_currentActivity = self.GetActivityById(row[Common.IC_VALUE])
+					self.m_currentActivity.Start()
+					continue
+				if row[Common.IC_PROPERTY] == "Ability":
+					self.m_currentAbility = float(row[Common.IC_VALUE])
+					continue
+				if row[Common.IC_PROPERTY] == "Property":
+					continue
+				loader = self.m_switchBioLoader.get(row[Common.IC_PROPERTY],self.UnknownLoad)
+				self.m_bioProperty.append(loader(row))
+		if self.m_currentActivity != None:
+			for property in self.m_bioProperty:
+				if (self.m_currentActivity.m_ID in property.m_relatedActivityId):
+					property.m_relatedActivity = self.m_currentActivity
+					break
+	
+	#------Converter--------------------------------------------------------------------------------------------------------------
+	def ConvertToRate(self, line):
+		match = re.match(r'(\d+\.?\d*)\|(\d+)\|(-?\d+\.?\d*):(-?\d+\.?\d*)',line)
+		divider = float(match.group(2))
+		baseRate = float(match.group(1))
+		minuteBaseRate = baseRate / ( divider * Timer.MINUTE_IN_HOUR )
+		rate = [(minuteBaseRate * float(match.group(3))), (minuteBaseRate * float(match.group(4))), baseRate, divider]
+		return rate
+	
+	def ConvertToEffect(self, line):
+		effects = []
+		effectList = line.split(";")
+		for effectStr in effectList:
+			effect = []
+			match = re.match(r'(-?\d+\.?\d*):(-?\d+\.?\d*)', effectStr)
+			
+			effect.append(float(match.group(1)))
+			effect.append(float(match.group(2)))
+			
+			effects.append(effect)
+		return effects
+	def ConvertToHabit(self, line):
+		habit = [False for i in range(24)]
+		habitList = line.split(";")
+		for habitStr in habitList:
+			match = re.match(r'(\d+)(-(\d+))?',habitStr)
+			start = int(match.group(1))
+			end = start
+			if match.group(3) != None:
+				end = int(match.group(3))
+			habit[start:end + 1] = [True] * (end - start + 1)
+		return habit
+	
+	def ConvertToListFloat(self, line):
+		customList = line.split(";")
+		
+		custom = [float(lineStr) for lineStr in customList]
+		
+		return custom
+	
+	
+	def ConvertToHabitMulti(self, line):
+		habitList = line.split("|")
+		habits = []
+		for habitStr in habitList:
+			habit = self.ConvertToHabit(habitStr)
+			habits.append(habit)
+		return habits
+		
+	def ConvertToRule(self, line):
+		rule = []
+		ruleList = line.split(";")
+		
+		for ruleStr in ruleList:
+			rule.append(float(ruleStr))
+		
+		return rule
+	#-----------------------------------------------------------------------------------------------------------------------------
+	
+	#------Bio property Loader----------------------------------------------------------------------------------------------------
+	def UnknownLoad(self, row):
+		print("Unknown type")
+		return None
+	
+	def LoadHungerProperty(self, row):
+		effect = self.ConvertToEffect(row[Common.IC_EFFECT])
+		rate = self.ConvertToRate(row[Common.IC_RATE])
+		habit = self.ConvertToHabit(row[Common.IC_HABIT])
+		
+		property = BioProperty3.Hunger(self, row[Common.IC_PROPERTY], rate, float(row[Common.IC_CURRENT]), habit, effect)
+		return property
+		
+	def LoadDirtyProperty(self, row):
+		rate = self.ConvertToRate(row[Common.IC_RATE])
+		effect = self.ConvertToEffect(row[Common.IC_EFFECT])
+		habit = self.ConvertToHabit(row[Common.IC_HABIT])
+		
+		property = BioProperty3.Dirty(self, row[Common.IC_PROPERTY], rate, float(row[Common.IC_CURRENT]), habit, effect)
+		return property
+	
+	def LoadThirstProperty(self, row):
+		rate = self.ConvertToRate(row[Common.IC_RATE])
+		effect = self.ConvertToEffect(row[Common.IC_EFFECT])
+		habit = self.ConvertToHabit(row[Common.IC_HABIT])
+		
+		property = BioProperty3.Thirst(self, row[Common.IC_PROPERTY], rate, float(row[Common.IC_CURRENT]), habit, effect)
+		return property
+	
+	def LoadDefecateProperty(self, row):
+		habit = self.ConvertToHabit(row[Common.IC_HABIT])
+		rule = self.ConvertToRule(row[Common.IC_EFFECT])
+		custom = self.ConvertToListFloat(row[Common.IC_CUSTOM])
+		
+		property = BioProperty3.Defecate(self, row[Common.IC_PROPERTY], habit, rule, custom[0], custom[1])
+		return property
+	
+	def LoadUrinateProperty(self, row):
+		rate = float(row[Common.IC_RATE])
+		effect = self.ConvertToEffect(row[Common.IC_EFFECT])
+		custom = self.ConvertToListFloat(row[Common.IC_CUSTOM])
+		property = BioProperty3.Urinate(self, row[Common.IC_PROPERTY], rate, effect, custom[0], custom[1], custom[2])
+		return property
+		
+	def LoadEnergyProperty(self, row):
+		rate = self.ConvertToRate(row[Common.IC_RATE])
+		current = float(row[Common.IC_CURRENT])
+		
+		property = BioProperty3.Energy(self, row[Common.IC_PROPERTY], rate, current)
+		return property
+	
+	def LoadTiredProperty(self, row):
+		rate = self.ConvertToRate(row[Common.IC_RATE])
+		current = float(row[Common.IC_CURRENT])
+		
+		property = BioProperty3.Exhausted(self, row[Common.IC_PROPERTY], rate, current)
+		return property
+	
+	def LoadSleepyProperty(self, row):
+		rate = self.ConvertToRate(row[Common.IC_RATE])
+		current = float(row[Common.IC_CURRENT])
+		habit = self.ConvertToHabitMulti(row[Common.IC_HABIT])
+		
+		property = BioProperty3.Sleepy(self, row[Common.IC_PROPERTY], rate, current, habit)
+		return property
+	#-----------------------------------------------------------------------------------------------------------------------------
+	
+	def GetProperty(self, propertyName):
+		return next(property for property in self.m_bioProperty if property.m_type == propertyName)
 	
 	def setTarget(self,newTarget):
 		self.m_target = newTarget
@@ -157,176 +320,68 @@ class Agent:
 		if not self.m_active:
 			return self.pos
 		
-		self.UpdateBioStatus(dt)
-		self.UpdateESStatus(dt)
-		self.UpdateActivityOrder()
-		self.UpdateAgentActivity(dt)
+		self.m_elapsedAdjustTimer += dt
+		if self.m_elapsedAdjustTimer >= self.m_timeAdjuster:
+			self.m_elapsedAdjustTimer = 0
+			self.m_wasAsleep = self.IsAsleep() 
+			for property in self.m_bioProperty:
+				if property == None:
+					continue
+				property.CalculateScore()
+			self.UpdateAbility()
+			self.UpdateActivity()
+			self.UpdateEmotionalFactor()
+		
+			for property in self.m_bioProperty:
+				if property == None:
+					continue
+				property.PostUpdateActivityCalculation()
+		
+		# self.UpdateBioStatus(dt)
+		# self.UpdateESStatus(dt)
+		# self.UpdateActivityOrder()
+		# self.UpdateAgentActivity(dt)
 		self.UpdateAgentMovement(dt)
 		
 		Global.Logger.LogDebug("\n agent pos "+str(self.pos)+"\n")
 		Global.Logger.DumpDebug()
 		return self.pos
-		
-		
 	
-	def update(self, dt):
-		if not self.initialized:
-			self.AssignToClosestTarget()
-			self.initialized = True
+	def IsLastActivityRunning(self):
+		return self.m_currentActivity != None and self.m_currentActivity.IsRunning()
+	
+	def GetActivityEffect(self, type):
+		if self.m_currentActivity == None:
+			return 0
+		return self.m_currentActivity.GetBioEffect(type) / ((60 if (self.m_currentActivity.m_duration == -1 or self.m_currentActivity.m_duration > 60) else self.m_currentActivity.m_duration) if Config.USE_MINUTE_FORMAT else 1)
 		
-		if not self.m_active:
-			return self.pos
-		
-		self.UpdateBioStatus(dt)
-		self.UpdateActivityOrder()
-		
-		if self.m_state != STATE_MOVE:
-			self.m_pathIndex = 1
-			if self.waitTime > 0:
-				self.waitTime -= (dt * Agent.s_scaleSpeed * TIMECONVERSION)
-				return self.pos
-			
-			#getting new target
-			if self.m_canGetNewTarget:
-				self.calculateNextTarget()
-			if self.m_target == None:
-				return self.pos
-			self.m_canGetNewTarget = False
-			
-			#calculating path
-			start = None
-			if self.oldEntryPoint != None:
-				start = TranslateToGridPos(self.oldEntryPoint.pos,self.m_myFloorIndex)
-			else:
-				start = TranslateToGridPos(self.pos,self.m_myFloorIndex)
-			
-			self.needStair = (self.m_target.m_floorIndex != self.m_myFloorIndex)
-			
-			if self.needStair:
-				stairIndex = "STAIRS_"+str(self.m_myFloorIndex)
-				stairTarget = next(trgt for trgt in Agent.s_possibleTarget if trgt.hasActivity(stairIndex))
-				stairEntry = next(entry for entry in Agent.s_entryPointList if entry.target == stairTarget)
-				end = TranslateToGridPos(stairEntry.pos,self.m_myFloorIndex)
-			else:
-				end = TranslateToGridPos(self.entryPoint.pos,self.m_myFloorIndex)
-			self.myPath = PathFinding.astarv3(start,end,self.m_myIndex,self.m_myFloorIndex)
-			
-			#No path found. Wait a moment
-			if self.myPath == None:
-				return self.pos
-			
-			#path found
-			if self.oldEntryPoint != None and self.myPath[0] != self.pos:
-				self.myPath.insert(0,self.pos)
-			
-			if self.needStair:
-				self.myPath.append(stairEntry.target.m_targetPoint)
-			elif self.entryPoint.pos != self.entryPoint.target.m_targetPoint:
-				self.myPath.append(self.entryPoint.target.m_targetPoint)
-			self.m_pathIndex = 1
-			self.recalculateMoveDir()
-			self.m_state = STATE_MOVE
-			return self.pos
-		else:
-			destination  = self.myPath[self.m_pathIndex]
-			distance = self.pos.DistanceTo(destination)
-			distanceCovered = float(dt) * Agent.s_scaleSpeed / 1000
-			if distance > distanceCovered:#self.m_speedFactor:
-				#there still distance within the path
-				myGrid = TranslateToGridPos(self.pos,self.m_myFloorIndex)
-				self.m_blockedBy,blocked = PathFinding.IsBlocked(myGrid,self.m_myFloorIndex)
-				
-				if blocked:
-					#path maybe blocked
-					blockPos = PathFinding.TranslateToRealPos(PathFinding.Map.liveBlock[self.m_blockedBy][0],self.m_myFloorIndex)
-					blockDir = Vector3f.Subtract(Vector3f(blockPos[0],blockPos[1],0),Vector3f(self.pos.X,self.pos.Y,0))
-					blockDir = Vector3f.Divide(blockDir,blockDir.Length)
-					dotP = (blockDir.X*self.moveDir.X) + (blockDir.Y*self.moveDir.Y)
-					angle = math.acos(dotP)
-					angle = math.degrees(angle)
-					if angle > 60 and (abs(myGrid[0]-PathFinding.Map.liveBlock[self.m_blockedBy][0][0]) > PathFinding.OVERLAP_LIMIT or abs(myGrid[1]-PathFinding.Map.liveBlock[self.m_blockedBy][0][1]) > PathFinding.OVERLAP_LIMIT):
-						blocked = False
-					if self.entryPoint.pos != self.entryPoint.target.m_targetPoint and self.m_pathIndex == (len(self.myPath) - 1):
-						blocked = False
-				
-				
-				if blocked:
-					#path is blocked
-					if self.blockCounter < 10 and self.m_myIndex > self.m_blockedBy:
-						if not self.m_hasWait:
-							self.blockCounter += 1
-							return self.pos
-						else:
-							self.m_hasWait = True
-					
-					if self.needStair:
-						stairIndex = "STAIRS_"+str(self.m_myFloorIndex)
-						stairEntry = next(trgt for trgt in Agent.s_possibleTarget if trgt.hasActivity(stairIndex))
-						myNextDestGrid = TranslateToGridPos(stairEntry.pos,self.m_myFloorIndex)
-					else:
-						myNextDestGrid = TranslateToGridPos(self.entryPoint.pos,self.m_myFloorIndex)
-					midPath = PathFinding.astarv3(myGrid,myNextDestGrid,self.m_myIndex,self.m_myFloorIndex,True)
-					
-					#No path found. Wait a moment
-					if midPath == None:
-						self.blockCounter += 1
-						if self.blockCounter > 10 and self.m_myIndex > self.m_blockedBy and self.m_pathIndex > 2:
-							self.pos = rs.PointAdd(self.pos,(Vector3d.Multiply(self.moveDir,self.m_speedFactor) * (-1)))
-						return self.pos
-					
-					if self.entryPoint.pos != self.entryPoint.target.m_targetPoint:
-						midPath.append(self.entryPoint.target.m_targetPoint)
-					del self.myPath[self.m_pathIndex-1:]
-					self.myPath.extend(midPath)
-					self.m_hasWait = False
-					self.recalculateMoveDir()
+	def GetActivityEmotionalEffect(self):
+		if self.m_currentActivity == None or (not self.m_currentActivity.IsDone()):
+			return 0
+		return self.m_currentActivity.GetEmotionalEffect()
+	
+	def UpdateEmotionalFactor(self):
+		if self.IsLastActivityRunning():
+			if self.m_emotionalFactor >= self.m_emotionalNormal:
+				if self.m_emotionalFactor - self.m_goodMoodRate < self.m_emotionalNormal:
+					self.m_emotionalTimeEffect = self.m_emotionalNormal
 				else:
-					#not blocked, continue to move
-					self.blockCounter = 0
-					self.m_blockedBy = -1
-				
-				#update agent position
-				self.pos = rs.PointAdd(self.pos,Vector3d.Multiply(self.moveDir,distanceCovered))
+					self.m_emotionalTimeEffect = -self.m_goodMoodRate
 			else:
-				#already close with destination
-				remainingDistance = distanceCovered - distance
-				while (remainingDistance > 0):
-					self.pos = destination
-					self.m_pathIndex+=1
-					if self.m_pathIndex < len(self.myPath):
-						self.recalculateMoveDir()
-						destination  = self.myPath[self.m_pathIndex]
-						distance = self.pos.DistanceTo(destination)
-						if remainingDistance < distance:
-							self.pos = rs.PointAdd(self.pos,Vector3d.Multiply(self.moveDir,remainingDistance))
-						remainingDistance = remainingDistance - distance
-					elif self.needStair:
-						nextStairIndex = "STAIRS_"+str(self.m_target.m_floorIndex)
-						nextStairTarget = next(trgt for trgt in Agent.s_possibleTarget if trgt.hasActivity(nextStairIndex))
-						nextStairEntry = next(entry for entry in Agent.s_entryPointList if entry.target == nextStairTarget)
-						self.m_myFloorIndex = self.m_target.m_floorIndex
-						start = TranslateToGridPos(nextStairEntry.pos,self.m_myFloorIndex)
-						end = TranslateToGridPos(self.entryPoint.pos,self.m_myFloorIndex)
-						
-						self.myPath = PathFinding.astarv3(start,end,self.m_myIndex,self.m_myFloorIndex)
-						self.pos = nextStairTarget.m_targetPoint
-						self.myPath.insert(0,self.pos)
-						if self.entryPoint.pos != self.entryPoint.target.m_targetPoint:
-							self.myPath.append(self.entryPoint.target.m_targetPoint)
-						self.m_pathIndex = 1
-						self.recalculateMoveDir()
-						self.needStair = False
-						distance = self.pos.DistanceTo(destination)
-						if remainingDistance < distance:
-							self.pos = rs.PointAdd(self.pos,Vector3d.Multiply(self.moveDir,remainingDistance))
-						remainingDistance = remainingDistance - distance
+				if self.m_emotionalFactor <= self.m_emotionalNormal:
+					if self.m_emotionalFactor + self.m_badMoodRate < self.m_emotionalNormal:
+						self.m_emotionalTimeEffect = self.m_badMoodRate
 					else:
-						self.m_canGetNewTarget = True
-						self.m_state = STATE_WAIT
-						self.waitTime = (Schedule.SCHEDULE[self.m_myIndex][self.targetIndex][1] * TIMEFACTOR)
-						remainingDistance = 0
-			self.m_hasWait = False
-			return self.pos
+						self.m_emotionalTimeEffect = self.m_emotionalNormal
+		else:
+			if self.m_emotionalFactor > 0:
+				self.m_emotionalTimeEffect = self.m_badMoodRate
+			else:
+				self.m_emotionalTimeEffect = -self.m_badMoodRate
+		
+		moodByTime = self.m_emotionalNormal if (self.m_emotionalTimeEffect == self.m_emotionalNormal) else (self.m_emotionalFactor + self.m_emotionalTimeEffect)
+		self.m_emotionalFactor = moodByTime + self.GetActivityEmotionalEffect()
+		self.m_emotionalTotal = 1 + (self.m_emotionalFactor / (self.m_emotionalNormal * 100))
 	
 	def calculateNextTarget(self):
 		if self.targetIndex == len(Schedule.SCHEDULE[self.m_myIndex]) - 1:
@@ -450,50 +505,6 @@ class Agent:
 		print olist
 		print self.objectList
 
-	def LoadActivityList(self):
-		tableFileName = resPath+"table_"+self.m_role+".csv"
-		with open(tableFileName) as csvfile:
-			reader = csv.reader(csvfile)
-			for row in reader:
-				if row[CommonEnum.TABLE_ACTIVITY_ID] == "ID":
-					continue
-				#read per row
-				id = row[CommonEnum.TABLE_ACTIVITY_ID]
-				chance = float(row[CommonEnum.TABLE_ACTIVITY_CHANCE])
-				interruptProperty = []
-				for i in range(0,CommonEnum.INTERRUPT_PROPERTY_COUNT):
-					interruptProperty.append(int(row[CommonEnum.TABLE_ACTIVITY_CANINTERRUPT + i]))
-				
-				timeProperty = []
-				for i in range(0,CommonEnum.TIME_PROPERTY_COUNT):
-					if (i == CommonEnum.TIME_PROPERTY_COUNT - 1):
-						timeProperty.append(int(row[CommonEnum.TABLE_ACTIVITY_STARTTIMECANSTART + i]))
-					else:
-						timeStr = row[CommonEnum.TABLE_ACTIVITY_STARTTIMECANSTART + i]
-						if timeStr == "-":
-							timeProperty.append([-1,-1])
-						else:
-							timeArr = timeStr.split(':')
-							timeProperty.append([int(timeArr[0]),int(timeArr[1])])
-				
-				planProperty = []
-				for i in range(0,CommonEnum.PLAN_PROPERTY_COUNT):
-					column = CommonEnum.TABLE_ACTIVITY_PLAN + i
-					if column < CommonEnum.TABLE_ACTIVITY_AUTHORITY:
-						planProperty.append(float(row[column]))
-					else:
-						planProperty.append(float(row[column])*float(row[column + 1]))
-						break
-				
-				bioEffect = []
-				for i in range(0,CommonEnum.BIOLOGICAL_PROPERTY_COUNT):
-					bioEffect.append(int(row[CommonEnum.TABLE_ACTIVITY_EXHAUST + i]))
-				
-				esFactor = []
-				for i in range(0, CommonEnum.ES_PROPERTY_COUNT):
-					esFactor.append(float(row[CommonEnum.TABLE_ACTIVITY_EMOTION + i]))
-				
-				self.m_activity.append(Activity.CoreActivity(id, chance, interruptProperty, timeProperty, planProperty, bioEffect, esFactor, self))
 	
 	def LoadSupportActivity(self):
 		tableFileName = resPath+"table_support_activity_before_"+self.m_role+".csv"
@@ -564,38 +575,6 @@ class Agent:
 						roomPrio.append(room)
 				self.m_terms.append(Term.ActivityTerm(id, ability, enviFactor, resFactor, roomFactor, roomPrio))
 	
-	#update status biologis
-	def UpdateBioStatus(self, dt):
-		elapseTime = (dt * Agent.s_scaleSpeed * TIMECONVERSION) / TIMEFACTOR
-		
-		for i in range(0,len(self.m_myBioStatus)):
-			self.m_myBioStatus[i] += elapseTime * self.m_myBioEffectRate[i]
-		#TODO: implement activity effect on bio status
-			
-	#update status emosi sosial
-	def UpdateESStatus(self, dt):
-		elapseTime = (dt * Agent.s_scaleSpeed * TIMECONVERSION) / TIMEFACTOR
-		
-		for i in range(0,len(self.m_myESStatus)):
-			self.m_myESStatus[i] = self.m_myESNormal[i] if (abs(self.m_myESNormal[i] - self.m_myESRate[i]) < self.m_myESRate[i]) else (self.m_myESStatus[i] + (elapseTime * self.m_myESRate[i]) * (-1 if (self.m_myESNormal[i] < self.m_myESRate[i]) else 1))
-		
-		#TODO: implement activity effect on ES
-	
-	#menghitung nilai tiap aktivitas lalu diurutkan
-	def UpdateActivityOrder(self):
-		for activity in self.m_activity:
-			activity.CalculateActivityScore()
-		
-		self.m_activity.sort(key = lambda x: x.m_score, reverse = True)
-	
-	def SetupInitialBioStatusAndRate(self, initialBioStatus, bioEffectRate):
-		self.m_myBioStatus = initialBioStatus
-		self.m_myBioEffectRate = bioEffectRate
-	
-	def SetupInitialES(self, initial, normal, rate):
-		self.m_myESStatus = initial
-		self.m_myESNormal = normal
-		self.m_myESRate = rate
 	
 	def GeneratePath(self, start, end, stair = None):
 		pStart = TranslateToGridPos(start,self.m_myFloorIndex)
@@ -620,105 +599,6 @@ class Agent:
 		self.m_pathIndex = 1
 		print path
 		return path
-	
-	#update aktivitas agent
-	def UpdateAgentActivity(self, dt):
-		firstID = self.m_activity[0].m_ID
-		
-		Global.Logger.LogDebug("Updating activity : current is "+("None" if self.m_currentActivity == None else self.m_currentActivity.m_ID)+"\n")
-		# if self.m_currentActivity != None:
-			
-		if self.m_currentActivity != None and (firstID == self.m_currentActivity.m_ID or (not self.m_activity[0].CanInterrupt()) or (not self.m_currentActivity.CanBeInterrupted())):
-			if self.m_state == STATE_WAIT:
-				if self.m_currentSupportActivity != None and (not self.m_currentSupportActivity.IsDone()):
-					self.m_currentSupportActivity.UpdateTimer(dt)
-					
-					Global.Logger.LogDebug("Check support activity done "+str(self.m_currentSupportActivity.IsDone())+"\n")
-					if self.m_currentSupportActivity.IsDone():
-						#aktivitas pendukung selesai dijalankan, memeriksa apakah masih ada aktivitas pendukung lain yang perlu dijalankan
-						self.m_currentSupportActivity.Stop()
-						Global.Logger.LogDebug("Support activity done\n")
-						self.m_currentSupportActivity = None
-						self.CheckSupportPreActivity2()
-						if self.m_currentSupportActivity == None:
-							Global.Logger.LogDebug("No more support activity needed. Starting activity\n")
-							self.m_currentActivity.Start()
-				
-				else:
-					self.m_currentActivity.UpdateTimer(dt)
-					if self.m_currentActivity.IsDone():
-						#aktivitas selesai dijalankan
-						Global.Logger.LogDebug("Activity done\n")
-						self.m_currentActivity.Stop()
-						self.m_currentActivity = None
-			return
-		
-		#ada aktivitas baru	yang akan dikerjakan
-		Global.Logger.LogDebug("New activity found ID : "+firstID+"\n")
-		self.m_currentTerm = next((trm for trm in self.m_terms if trm.m_activityID == firstID),None)
-		if self.m_currentTerm != None:
-			roomName = self.m_currentTerm.m_roomPrio[0]
-			isSameRoom = (self.m_targetRoom != None) and (roomName == self.m_targetRoom.m_name)
-			print "koranum 8"+roomName+"8 "
-			Global.Logger.LogDebug("Room is "+("same\n" if isSameRoom else "different\n"))
-			if not isSameRoom:
-				print "nosmora"
-				self.m_targetRoom = next((room for room in Global.g_myHouse.m_rooms if room.m_name == roomName),None)
-				self.oldEntryPoint = self.entryPoint
-				self.entryPoint = None
-				print self.m_targetRoom
-			else:
-				# print "errant "+firstID
-				# self.FindTargetAndEntryPointForActivity(firstID)
-				self.CheckSupportPreActivity2()
-			
-			self.m_pathIndex = 1
-			
-			start = None
-			if self.oldEntryPoint != None:
-				start = self.oldEntryPoint.pos
-			else:
-				start = self.pos
-			Global.Logger.LogDebug("Path start at "+str(start))
-			self.needStair = self.m_targetRoom.m_floorIndex != self.m_myFloorIndex
-			
-			stairEntry = None
-			end = self.pos
-			if self.needStair:
-				stairIndex = "STAIRS_"+str(self.m_myFloorIndex)
-				stairTarget = next(trgt for trgt in Agent.s_possibleTarget if trgt.hasActivity(stairIndex))
-				stairEntry = next(entry for entry in Agent.s_entryPointList if entry.target == stairTarget)
-				end = stairEntry.pos
-				self.m_targetType = TARGET_ROOM
-				self.m_termChecklist = [0] * TERM_COUNT
-			elif isSameRoom:
-				if self.pos != self.entryPoint.target.m_targetPoint:
-					end = self.entryPoint.pos
-					self.m_targetType = TARGET_POINT
-			else:
-				end = self.m_targetRoom.m_targetCoord
-				self.entryPoint = EntryPoint.EntryPoint(self.m_targetRoom.m_targetCoord,self.m_targetRoom.m_floorIndex)
-				self.m_targetType = TARGET_ROOM
-				self.m_termChecklist = [0] * TERM_COUNT
-			
-			Global.Logger.LogDebug(" end at "+str(end)+"\n")
-			
-			#jika aktivitas baru akan dilakukan di tempat yang berbeda dengan posisi agent sekarang, maka mencari jalur untuk bergerak
-			if not isSameRoom or self.pos != end:
-				self.myPath = self.GeneratePath(start, end, stairEntry)
-				Global.Logger.LogDebug("Generated path : ")
-				for path in self.myPath:
-					Global.Logger.LogDebug("["+str(path.X)+","+str(path.Y)+"],")
-				Global.Logger.LogDebug("\n")
-				self.m_state = STATE_PRE_MOVE
-			
-			self.m_currentActivity = self.m_activity[0]
-			
-			if self.m_currentSupportActivity == None and isSameRoom:
-				Global.Logger.LogDebug("No support activity needed. Starting activity\n")
-				self.m_currentActivity.Start()
-			
-			Global.Logger.LogDebug("Activity set to "+self.m_currentActivity.m_ID+"\n")
 	
 	#update pergerakan dan posisi agent
 	def UpdateAgentMovement(self, dt):
@@ -861,127 +741,6 @@ class Agent:
 	#memeriksa jika agent telah tiba di ruang untuk melakukan aktivitas
 	def IsArriveInRoom(self):
 		return self.m_targetType == TARGET_ROOM and self.m_targetRoom.IsInRoom(self.pos)
-	
-	def GenerateAndCheckPreActivityList(self):
-		self.m_preActivityList = self.m_currentTerm.CheckEnvironmentTerm(self.m_environmentThreshold, self.m_targetRoom)
-		Global.Logger.LogDebug("Gen pre activity \n")
-		for pr in self.m_preActivityList:
-			Global.Logger.LogDebug(str(pr)+"\n")
-		stay, roomTerm = self.m_currentTerm.CheckRoomTerm(self.m_targetRoom)
-		Global.Logger.LogDebug("stay "+str(stay)+" lo "+str(roomTerm)+"\n")
-		if stay:
-			Global.Logger.LogDebug("uasu\n")
-			Global.Logger.DumpDebug()
-			self.m_preActivityList.extend(roomTerm)
-			Global.Logger.LogDebug("uasu2\n")
-			Global.Logger.DumpDebug()
-			if len(self.m_preActivityList) > 0:
-				self.CheckSupportPreActivity2()
-			else:
-				self.m_targetType = TARGET_POINT
-			Global.Logger.LogDebug("uasu3\n")
-			Global.Logger.DumpDebug()
-		else:
-			Global.Logger.LogDebug("uasu4\n")
-			Global.Logger.DumpDebug()
-			if len(self.m_currentTerm.m_roomPrio) > 1 and self.m_targetRoom.m_name != self.m_currentTerm.m_roomPrio[1]:
-				Global.Logger.LogDebug("uasu5\n")
-				Global.Logger.DumpDebug()
-				self.m_targetRoom = next((room for room in Global.g_myHouse.m_rooms if room.m_name == self.m_currentTerm.m_roomPrio[1]),None)
-				self.entryPoint = EntryPoint.EntryPoint(self.m_targetRoom.m_targetCoord,self.m_targetRoom.m_floorIndex)
-				self.m_targetType = TARGET_ROOM
-				self.myPath = self.GeneratePath(self.pos, self.entryPoint.pos)
-				self.setTarget(self.entryPoint.target)
-			else:
-				Global.Logger.LogDebug("uasu6\n")
-				Global.Logger.DumpDebug()
-				self.m_currentActivity.Suspend()
-		Global.Logger.LogDebug("gendon\n")
-				
-	def CheckSupportPreActivity2(self):
-		Global.Logger.LogDebug("ceka2222\n")
-		Global.Logger.DumpDebug()
-		if len(self.m_preActivityList) > 0:
-			preAct = self.m_preActivityList.pop(0)
-			Global.Logger.LogDebug("preta "+str(preAct)+"\n")
-			Global.Logger.DumpDebug()
-			self.FindTargetAndEntryPointForObject(preAct[AGENT_PREACT_OBJ])
-			Global.Logger.LogDebug("preta 1\n")
-			Global.Logger.DumpDebug()
-			self.m_currentSupportActivity = next(sActivity for sActivity in self.m_supportActivity if sActivity.m_ID == preAct[AGENT_PREACT_ID])
-			Global.Logger.LogDebug("preta 2\n")
-			Global.Logger.DumpDebug()
-			self.myPath = self.GeneratePath(self.pos, self.entryPoint.pos)
-			Global.Logger.LogDebug("preta 3\n")
-			Global.Logger.DumpDebug()
-			self.setTarget(self.entryPoint.target)
-			Global.Logger.LogDebug("preta 4\n")
-			Global.Logger.DumpDebug()
-			self.m_targetType = TARGET_POINT
-			self.m_state = STATE_PRE_MOVE
-	
-	#memeriksa aktivitas pendukung sebelum
-	def CheckSupportPreActivity(self):
-		#memeriksa faktor lingkungan dan ruang
-		Global.Logger.LogDebug("Checking pre activity\n")
-		satisfiedEnvi = self.m_termChecklist[TERM_ENVI]
-		satisfiedRoom = False
-		preActivity = None
-		objectID = None
-		if not self.m_termChecklist[TERM_ENVI]:
-			self.m_termChecklist[TERM_ENVI], preActivity, objectID = self.m_currentTerm.CheckEnvironmentSatisfied(self.m_environmentThreshold, self.m_targetRoom)
-		
-		if self.m_targetType == TARGET_ROOM:
-			self.entryPoint = None
-		
-		if self.m_termChecklist[TERM_ENVI] and not self.m_termChecklist[TERM_ROOM]:
-			print "cokiroom"
-			self.m_termChecklist[TERM_ENVI] = True
-			satisfiedRoom, preActivity, objectID = self.m_currentTerm.CheckRoomSatisfied(self.m_targetRoom)
-		Global.Logger.LogDebug("Cond satisfied envi "+str(self.m_termChecklist[TERM_ENVI])+" "+str(self.m_currentTerm.m_activityID)+" room "+str(satisfiedRoom)+" "+str(preActivity)+" "+str(objectID))
-		if (not self.m_termChecklist[TERM_ENVI]) or (satisfiedRoom and self.m_termChecklist[TERM_ENVI] and not self.m_termChecklist[TERM_ROOM]):
-			if preActivity != None:
-				#ada aktivitas pendukung yang harus dilakukan sebelum bisa memulai aktivitas
-				self.FindTargetAndEntryPointForObject(objectID)
-				self.m_currentSupportActivity = next(sActivity for sActivity in self.m_supportActivity if sActivity.m_ID == preActivity)
-				self.m_termChecklist[TERM_ROOM] = True
-				Global.Logger.LogDebug(" checking pread\n")
-			self.m_targetType = TARGET_POINT
-		elif not satisfiedRoom and not self.m_termChecklist[TERM_ROOM]:
-			Global.Logger.LogDebug(" len room prio "+str(len(self.m_currentTerm.m_roomPrio)))
-			if(len(self.m_currentTerm.m_roomPrio) > 1):
-				Global.Logger.LogDebug(" cur target name "+self.m_targetRoom.m_name+" prio 1 "+self.m_currentTerm.m_roomPrio[1])
-			#tidak memungkinkan untuk melakukan aktivitas yang dituju di ruang tersebut, memeriksa apakah bisa di ruangan lain, atau menunda aktivitas
-			if len(self.m_currentTerm.m_roomPrio) > 1 and self.m_targetRoom.m_name != self.m_currentTerm.m_roomPrio[1]:
-				self.m_targetRoom = next((room for room in Global.g_myHouse.m_rooms if room.m_name == self.m_currentTerm.m_roomPrio[1]),None)
-				self.entryPoint = EntryPoint.EntryPoint(self.m_targetRoom.m_targetCoord,self.m_targetRoom.m_floorIndex)
-				self.m_targetType = TARGET_ROOM
-				self.m_termChecklist = [0] * TERM_COUNT
-				Global.Logger.LogDebug(" should move away\n")
-			else:
-				self.m_currentActivity.Suspend()
-				Global.Logger.LogDebug(" suspend\n")
-				Global.Logger.DumpDebug()
-				return
-		else:
-			if len(self.m_currentTerm.m_roomFactor) == 0:
-				self.entryPoint = EntryPoint.EntryPoint(self.m_targetRoom.m_targetCoord,self.m_targetRoom.m_floorIndex)
-				self.entryPoint.target = Target.Target(self.m_targetRoom.m_floorIndex,CommonEnum.RF_NONE,self.m_targetRoom.m_targetCoord,"TMP_CENTER")
-				self.m_targetType = TARGET_POINT
-			else:
-				Global.Logger.LogDebug("Stay here\n")
-				Global.Logger.DumpDebug()
-				return
-			
-		Global.Logger.DumpDebug()
-		self.myPath = self.GeneratePath(self.pos, self.entryPoint.pos)
-		self.setTarget(self.entryPoint.target)
-		Global.Logger.LogDebug("Generatepath pre activity : ")
-		for path in self.myPath:
-			s = "["+str(path.X)+","+str(path.Y)+"],"
-			Global.Logger.LogDebug(s)
-		Global.Logger.LogDebug("\n")
-		Global.Logger.DumpDebug()
 #-----------------------------------------------------------------------------------------------------------------------------------------
 
 def TranslateToGridPos(pos,mazeIndex):
