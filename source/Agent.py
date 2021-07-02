@@ -3,6 +3,7 @@ import random
 import math
 import sys
 import os
+import re
 
 #import custom file
 import Target
@@ -19,6 +20,8 @@ import Global
 import EntryPoint
 import Config
 import Common
+import Timer
+import BioProperty3
 
 from Rhino.Geometry import Point3d, Vector3f,Vector3d,Line,Polyline
 import rhinoscriptsyntax as rs
@@ -140,7 +143,8 @@ class Agent:
 		self.m_badMoodRate = 0.002
 		self.m_goodMoodRate = 0.003
 		self.m_currentAbility = 0
-		self.m_activityList = Activity.GenerateActivity(Config.ACTIVITY_DB_FILE)
+		inputFilePath = resPath+self.m_role+"\\"+Config.ACTIVITY_DB_FILE
+		self.m_activityList = Activity.GenerateActivity(inputFilePath)
 		self.m_currentActivity = None
 		self.LoadBioProperty(Config.IC_FILE_NAME)
 		self.m_bioActivityToTrigger = "" if self.m_currentActivity == None else self.m_currentActivity.m_ID
@@ -155,7 +159,7 @@ class Agent:
 		
 	def LoadBioProperty(self, filename):
 		sourceFilePath	= os.path.dirname(os.path.abspath(__file__))
-		inputFilePath = resPath+self.m_role+"\\"+filename+".csv"
+		inputFilePath = resPath+self.m_role+"\\"+filename
 		# inputFilePath	= sourceFilePath[0:sourceFilePath.rfind('\\')+1]+"input_file\\"+filename
 		with open(inputFilePath) as csvfile:
 			reader = csv.reader(csvfile)
@@ -303,6 +307,25 @@ class Agent:
 		return property
 	#-----------------------------------------------------------------------------------------------------------------------------
 	
+	def GetActivityById(self, id):
+		onit = id in self.m_activityList
+		if id in self.m_activityList:
+			return self.m_activityList[id]
+		return None
+	
+	def TryTrigger(self, activityId):
+		for property in self.m_bioProperty:
+			if (self.m_currentActivity != None and self.m_currentActivity.m_ID in property.m_relatedActivityId and (not self.m_currentActivity.IsDone())):
+				return None
+		
+		self.m_bioActivityToTrigger = activityId
+		return self.GetActivityById(activityId)
+	
+	def UpdateAbility(self):
+		self.m_currentAbility += ((self.GetProperty("Energy").m_currentScore - self.GetProperty("Exhausted").m_currentScore) / (24 * Timer.MINUTE_IN_HOUR))
+	
+	def IsAsleep(self):
+		return (self.m_currentActivity != None) and (self.m_currentActivity.m_ID == "TDM" or self.m_currentActivity.m_ID == "TD")
 	def GetProperty(self, propertyName):
 		return next(property for property in self.m_bioProperty if property.m_type == propertyName)
 	

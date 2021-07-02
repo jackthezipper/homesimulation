@@ -36,4 +36,4 @@ class Logger:
 
 House = reload(House)
 g_myHouse = House.House()
-g_timer = Timer.Timer()
+g_timer = Timer.GetInstance()

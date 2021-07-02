@@ -8,11 +8,11 @@ import BioProperty3
 import Config
 
 def GenerateActivity(dbFile):
-	sourceFilePath	= os.path.dirname(os.path.abspath(__file__))
-	inputFilePath	= sourceFilePath[0:sourceFilePath.rfind('\\')+1]+"input_file\\"+dbFile
+	# sourceFilePath	= os.path.dirname(os.path.abspath(__file__))
+	# inputFilePath	= sourceFilePath[0:sourceFilePath.rfind('\\')+1]+"input_file\\"+dbFile
 	activityList = {}
 	
-	with open(inputFilePath) as csvfile:
+	with open(dbFile) as csvfile:
 		reader = csv.reader(csvfile)
 		for row in reader:
 			if row[Common.TABLE_ACTIVITY_ID] == "ID":
@@ -46,7 +46,7 @@ def GenerateActivity(dbFile):
 				bioStandard.append(0.0 if row[i] == "" else float(row[i]))
 			
 			planProperty = []
-			for i in range(Common.TABLE_ACTIVITY_PLAN_START, Common.TABLE_ACTIVITY_COUNT):
+			for i in range(Common.TABLE_ACTIVITY_PLAN_START, Common.TABLE_ACTIVITY_ROOMS):
 				planProperty.append(0.0 if row[i] == "" else float(row[i]))
 			
 			rooms = [row[Common.TABLE_ACTIVITY_ROOMS], row[Common.TABLE_ACTIVITY_ROOMS + 1]]

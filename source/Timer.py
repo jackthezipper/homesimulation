@@ -17,7 +17,7 @@ class Timer():
 	def __init__(self, format = Common.FORMAT_TIME_HOUR):
 		self.m_format = format
 		self.m_time = 0
-		self.m_elapsedAjuster = K_ADJUSTER
+		self.m_elapsedAdjuster = K_ADJUSTER
 		self.m_time = MINUTE_IN_HOUR
 	
 	def GetHour(self):
