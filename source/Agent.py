@@ -406,6 +406,127 @@ class Agent:
 		self.m_emotionalFactor = moodByTime + self.GetActivityEmotionalEffect()
 		self.m_emotionalTotal = 1 + (self.m_emotionalFactor / (self.m_emotionalNormal * 100))
 	
+	def UpdateActivity(self):
+		# print("update act "+self.m_bioActivityToTrigger+" cur "+("None" if self.m_currentActivity == None else self.m_currentActivity.m_ID))
+		print("Current Activity "+("None" if self.m_currentActivity == None else self.m_currentActivity.m_ID))
+		if self.m_bioActivityToTrigger != "" and (self.m_currentActivity == None or self.m_currentActivity.m_ID != self.m_bioActivityToTrigger) and  (self.m_currentActivity != None and (not self.m_currentActivity.m_isBioActivity or self.m_currentActivity.IsDone())):
+			# print("curat")
+			if self.m_currentActivity.IsDone():
+				self.m_currentActivity.Stop()
+				self.m_currentActivity = None
+				for property in self.m_bioProperty:
+					if property == None:
+						continue
+					if property.m_relatedActivity != None and property.m_relatedActivity.m_ID != self.m_bioActivityToTrigger:
+						property.m_relatedActivity = None
+			if self.m_currentActivity != None:
+				self.m_pendingActivity = self.m_currentActivity
+				self.m_pendingActivity.Pause()
+			
+			self.m_currentActivity = self.GetActivityById(self.m_bioActivityToTrigger)
+			# print("curat uu "+str(self.m_currentActivity))
+			self.m_currentActivity.GoTo()
+			# print("sutating here "+self.m_bioActivityToTrigger)
+		# print("doni "+str(self.m_currentActivity.IsDone()))
+		if self.m_currentActivity != None:
+			if self.m_currentActivity.IsDone():
+				self.m_currentActivity.Stop()
+				if self.m_currentActivity.m_ID == self.m_bioActivityToTrigger:
+					self.m_bioActivityToTrigger = ""
+				self.m_currentActivity = None
+				for property in self.m_bioProperty:
+					if property == None:
+						continue
+					property.m_relatedActivity = None
+				
+				if self.m_pendingActivity != None:
+					self.m_currentActivity = self.m_pendingActivity
+					self.m_pendingActivity = None
+					self.m_currentActivity.Resume()
+		
+		if self.m_bioActivityToTrigger == "" and (self.m_currentActivity == None or self.m_currentActivity.IsDone()):
+			actList = []
+			for act in self.m_activityList:
+				if self.m_activityList[act].CanStart() and not self.m_activityList[act].m_isBioActivity:
+					actList.append(self.m_activityList[act])
+			
+			print("Activity Calculation:")
+			actToRemove = []
+			for act in actList:
+				act.m_score = 0
+				bioDelta = ""
+				for i in range(0,Common.BIOLOGICAL_PROPERTY_COUNT):
+					delta = act.m_bioStandard[i] - self.m_bioProperty[i].GetScore()
+					if delta > 0:
+						act.m_score += delta
+					
+					bioDelta += (PROPERTY_CODE[i]+":"+Fmt(delta) +"-"+("YA    " if delta > 0 else "TD   "))
+				
+				act.m_emotionalScore = 0
+				actDebugStr = "Activity:"+act.m_ID +" BioDelta:"+bioDelta+" BioScore:"+Fmt(act.m_score)+" EmoFactor:"+Fmt(self.m_emotionalTotal)+" EmoStd:"+Fmt(act.m_emotionalStandard)
+				if self.m_emotionalTotal > act.m_emotionalStandard:
+					act.m_emotionalScore = self.m_emotionalTotal - act.m_emotionalStandard
+					actDebugStr += " TotalEmoEffect:"+Fmt(act.m_emotionalScore)
+				else:
+					actToRemove.append(act)
+					actDebugStr += " REMOVED"
+					print(actDebugStr)
+					continue
+				
+				act.m_planScore = act.m_planProperty[Common.PLAN_PROPERTY_ADVANTAGE] + (act.m_planProperty[Common.PLAN_PROPERTY_AUTHORITY] * act.m_planProperty[Common.PLAN_PROPERTY_OBEDIENCE]) + act.m_planProperty[Common.PLAN_PROPERTY_HABIT] + act.m_planProperty[Common.PLAN_PROPERTY_URGENCY]
+				actDebugStr += " PlanScore:"+Fmt(act.m_planScore)
+				print(actDebugStr)
+			
+			for act in actToRemove:
+				actList.remove(act)
+			
+			actList.sort(key = lambda x: x.m_emotionalScore, reverse = True)
+			
+			print("Activity Emotional Multiplication:")
+			lastEmoScore = 0
+			curMultiplier = 1.9
+			for act in actList:
+				act.m_score += (act.m_emotionalScore + act.m_planScore)
+				if lastEmoScore != 0:
+					if act.m_emotionalScore < lastEmoScore:
+						curMultiplier -= 0.1
+						curMultiplier = max(curMultiplier,1)
+				actDebugStr = "Activity:"+act.m_ID+" Score:"+Fmt(act.m_score)+" EmoScore:"+Fmt(act.m_emotionalScore)+" Multiplier:"+Fmt(curMultiplier)
+				act.m_score *= curMultiplier
+				actDebugStr += " TotalScore:"+Fmt(act.m_score)
+				lastEmoScore = act.m_emotionalScore
+				print(actDebugStr)
+			
+			actList.sort(key = lambda x: x.m_score,reverse = True)
+			
+			print("Activity sorted by score:")
+			for act in actList:
+				print(act.m_ID+" score "+str(act.m_score))
+			
+			incidentalAct = []
+			while(len(actList) > 0):
+				debugStr = "Check ability:"+actList[0].m_ID+" Standard:"+Fmt(actList[0].m_physicalStandard)+" Current:"+Fmt(self.m_currentAbility)
+				if self.m_currentAbility < actList[0].m_physicalStandard:
+					actList[0].SetToIncidental()
+					debugStr += " Move to incidental"
+					print(debugStr)
+					incidentalAct.append(actList.pop(0))
+				else:
+					print(debugStr+" OK")
+					break
+			
+			if len(actList) > 0:
+				self.m_currentActivity = actList[0]
+			
+		if self.m_currentActivity != None and (not self.m_currentActivity.IsRunning()):
+			self.m_currentActivity.Start()
+			for act in incidentalAct:
+				if act.m_priority == 1:
+					act.m_remainingIncidentalTime = self.m_currentActivity.m_duration
+		
+		for activity in self.m_activityList:
+			self.m_activityList[activity].Update()
+	
 	def calculateNextTarget(self):
 		if self.targetIndex == len(Schedule.SCHEDULE[self.m_myIndex]) - 1:
 			self.setTarget(None)

@@ -86,6 +86,7 @@ class Activity:
 		self.m_rangeDuration = 0
 		self.m_alreadyDoIt = False
 		self.m_rooms = rooms
+		self.m_targetRoom = 0
 	
 	def GetBioEffect(self, property):
 		return self.m_bioEffect[EFFECT_RUN if self.m_status == Common.ACT_STATUS_RUN else EFFECT_SUSPEND][BioProperty3.BIOPROPERTY[property]] if self.m_status != Common.ACT_STATUS_NONE else 0
@@ -133,6 +134,9 @@ class Activity:
 	def GetDescription(self):
 		return self.m_description
 	
+	def GoTo(self):
+		self.m_status = Common.ACT_STATUS_GOTO
+	
 	def Suspend(self):
 		self.m_status = Common.ACT_STATUS_SUSPEND
 	
@@ -154,3 +158,14 @@ class Activity:
 		self.m_isIncidental = True
 		self.m_remainingIncidentalTime = SUSPEND_TIME[self.m_priority - 1] * Timer.MINUTE_IN_HOUR
 		self.m_rangeDuration = ((3 + SUSPEND_TIME[self.m_priority - 1]) * Timer.MINUTE_IN_HOUR) - self.m_duration
+	
+	def GetTargetRoom(self):
+		if self.m_targetRoom = -1:
+			return "None"
+		return self.m_rooms[self.m_targetRoom]
+	
+	def NextTargetRoom(self):
+		if self.m_targetRoom == 0:
+			self.m_targetRoom = 1
+		else:
+			self.m_targetRoom = -1
