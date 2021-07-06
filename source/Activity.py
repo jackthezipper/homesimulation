@@ -160,7 +160,7 @@ class Activity:
 		self.m_rangeDuration = ((3 + SUSPEND_TIME[self.m_priority - 1]) * Timer.MINUTE_IN_HOUR) - self.m_duration
 	
 	def GetTargetRoom(self):
-		if self.m_targetRoom = -1:
+		if self.m_targetRoom == -1:
 			return "None"
 		return self.m_rooms[self.m_targetRoom]
 	

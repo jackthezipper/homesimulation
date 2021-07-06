@@ -519,7 +519,7 @@ class Agent:
 				self.m_currentActivity = actList[0]
 			
 		if self.m_currentActivity != None and (not self.m_currentActivity.IsRunning()):
-			self.m_currentActivity.Start()
+			self.m_currentActivity.GoTo()
 			for act in incidentalAct:
 				if act.m_priority == 1:
 					act.m_remainingIncidentalTime = self.m_currentActivity.m_duration
@@ -743,6 +743,15 @@ class Agent:
 		self.m_pathIndex = 1
 		print path
 		return path
+	
+	def CheckStartMovement(self):
+		if self.m_currentActivity.m_status == Common.ACT_STATUS_GOTO:
+			self.m_targetRoom = self.m_currentActivity.GetTargetRoom()
+			self.m_currentActivity.NextTargetRoom()
+			self.m_targetType = TARGET_ROOM
+			if self.m_targetRoom.IsInRoom(self.pos):
+				self.m_targetType = TARGET_NONE
+			self.myPath = self.GeneratePath(self.pos,self.m_targetRoom.m_targetCoord)
 	
 	#update pergerakan dan posisi agent
 	def UpdateAgentMovement(self, dt):
