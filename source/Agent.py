@@ -376,12 +376,16 @@ class Agent:
 	def GetActivityEffect(self, type):
 		if self.m_currentActivity == None:
 			return 0
+		Global.Logger.LogDebug("empereto "+self.m_currentActivity.m_ID+" "+str(self.m_currentActivity.m_duration));
 		return self.m_currentActivity.GetBioEffect(type) / ((60 if (self.m_currentActivity.m_duration == -1 or self.m_currentActivity.m_duration > 60) else self.m_currentActivity.m_duration) if Config.USE_MINUTE_FORMAT else 1)
 		
 	def GetActivityEmotionalEffect(self):
 		if self.m_currentActivity == None or (not self.m_currentActivity.IsDone()):
 			return 0
 		return self.m_currentActivity.GetEmotionalEffect()
+	
+	def GetEmotionalFactor(self):
+		return self.m_emotionalTotal
 	
 	def UpdateEmotionalFactor(self):
 		if self.IsLastActivityRunning():
@@ -751,10 +755,12 @@ class Agent:
 			self.m_targetType = TARGET_ROOM
 			if self.m_targetRoom.IsInRoom(self.pos):
 				self.m_targetType = TARGET_NONE
-			self.myPath = self.GeneratePath(self.pos,self.m_targetRoom.m_targetCoord)
+				self.myPath = self.GeneratePath(self.pos,self.m_targetRoom.m_targetCoord)
+				self.m_state = STATE_PRE_MOVE
 	
 	#update pergerakan dan posisi agent
 	def UpdateAgentMovement(self, dt):
+		self.CheckStartMovement()
 		Global.Logger.LogDebug("Update movement dt = "+str(dt)+" state "+str(self.m_state)+"\n")
 		if self.m_state != STATE_MOVE:
 			if self.m_state == STATE_PRE_MOVE:
@@ -867,19 +873,26 @@ class Agent:
 					
 					#tiba di tempat, mulai menjalankan aktivitas (pendukung ataupun utama)
 					remainingDistance = 0
+					self.m_targetType == TARGET_NONE
 					Global.Logger.LogDebug("Try starting activity...\n")
-					if self.m_currentSupportActivity != None:
-						self.m_currentSupportActivity.Start()
-					else:
-						self.m_currentActivity.Start()
+					
+					## no support activity yet
+					
+					# if self.m_currentSupportActivity != None:
+						# self.m_currentSupportActivity.Start()
+					# else:
+						# self.m_currentActivity.Start()
+						
+					self.m_currentActivity.Start()
+					
 					Global.Logger.LogDebug("Try starting activity DONE\n")
 		Global.Logger.LogDebug("Target type "+str(self.m_targetType))
 		if(self.m_targetType == TARGET_ROOM):
 			Global.Logger.LogDebug(" target room "+self.m_targetRoom.m_name)
 		Global.Logger.LogDebug("\n")
-		if self.m_targetType == TARGET_ROOM and self.IsArriveInRoom():
-			Global.Logger.LogDebug("arrivia\n")
-			self.GenerateAndCheckPreActivityList()
+		# if self.m_targetType == TARGET_ROOM and self.IsArriveInRoom():
+			# Global.Logger.LogDebug("arrivia\n")
+			# self.GenerateAndCheckPreActivityList()
 		
 	def FindTargetAndEntryPointForObject(self, ID):
 		self.oldEntryPoint = self.entryPoint

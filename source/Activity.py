@@ -6,6 +6,7 @@ import Common
 import Timer
 import BioProperty3
 import Config
+import Global
 
 def GenerateActivity(dbFile):
 	# sourceFilePath	= os.path.dirname(os.path.abspath(__file__))
@@ -18,13 +19,16 @@ def GenerateActivity(dbFile):
 			if row[Common.TABLE_ACTIVITY_ID] == "ID":
 				continue
 			activityID = row[Common.TABLE_ACTIVITY_ID]
+			Global.Logger.LogDebug("loading activity "+activityID+"\n");
 			activityData = []
 			activityData.append(row[Common.TABLE_ACTIVITY_DESC])
 			bioEffectRun = []
 			for i in range(Common.TABLE_ACTIVITY_BIO_EFFECT_RUN_START, Common.TABLE_ACTIVITY_EMO_EFFECT_RUN):
 				bioEffectRun.append(1.0 if row[i] == "" else float(row[i]))
 			activityData.append(bioEffectRun)
+			Global.Logger.LogDebug("loading activity bio eff "+str(bioEffectRun)+"\n");
 			activityData.append(float(row[Common.TABLE_ACTIVITY_EMO_EFFECT_RUN]))
+			Global.Logger.LogDebug("loading activity emo eff "+row[Common.TABLE_ACTIVITY_EMO_EFFECT_RUN]+"\n");
 			
 			bioEffectSuspend = []
 			for i in range(Common.TABLE_ACTIVITY_BIO_EFFECT_SUSPEND_START, Common.TABLE_ACTIVITY_EMO_EFFECT_SUSPEND):
@@ -35,6 +39,7 @@ def GenerateActivity(dbFile):
 			duration = -1
 			if(row[Common.TABLE_ACTIVITY_DURATION]) != "-":
 				duration = int(row[Common.TABLE_ACTIVITY_DURATION])
+			Global.Logger.LogDebug("loading activity dur "+row[Common.TABLE_ACTIVITY_DURATION]+"\n");
 			
 			startTime = -1
 			match = re.match(r'(\d+):00', row[Common.TABLE_ACTIVITY_START])
@@ -44,12 +49,14 @@ def GenerateActivity(dbFile):
 			bioStandard = []
 			for i in range(Common.TABLE_ACTIVITY_BIO_STD_START, Common.TABLE_ACTIVITY_EMO_STD):
 				bioStandard.append(0.0 if row[i] == "" else float(row[i]))
+			Global.Logger.LogDebug("loading activity biostd "+str(bioStandard)+"\n");
 			
 			planProperty = []
 			for i in range(Common.TABLE_ACTIVITY_PLAN_START, Common.TABLE_ACTIVITY_ROOMS):
 				planProperty.append(0.0 if row[i] == "" else float(row[i]))
 			
 			rooms = [row[Common.TABLE_ACTIVITY_ROOMS], row[Common.TABLE_ACTIVITY_ROOMS + 1]]
+			Global.Logger.LogDebug("loading activity room "+str(rooms)+"\n");
 			
 			activity = Activity(row[Common.TABLE_ACTIVITY_ID], row[Common.TABLE_ACTIVITY_DESC], duration, (row[Common.TABLE_ACTIVITY_BIOACTIVITY] == "1"), [bioEffectRun, bioEffectSuspend], [float(row[Common.TABLE_ACTIVITY_EMO_EFFECT_RUN]), float(row[Common.TABLE_ACTIVITY_EMO_EFFECT_SUSPEND])], startTime, int(row[Common.TABLE_ACTIVITY_PRIORITY]), bioStandard, float(row[Common.TABLE_ACTIVITY_EMO_STD]), float(row[Common.TABLE_ACTIVITY_PHY_STD]), planProperty, rooms)
 			activityList[activityID] = activity
