@@ -48,3 +48,6 @@ def GetInstance():
 	if Timer.s_timerInstance == None:
 		CreateInstance()
 	return Timer.s_timerInstance
+
+def ResetTimer():
+	Timer.s_timerInstance = None

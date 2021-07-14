@@ -750,7 +750,9 @@ class Agent:
 	
 	def CheckStartMovement(self):
 		if self.m_currentActivity.m_status == Common.ACT_STATUS_GOTO:
-			self.m_targetRoom = self.m_currentActivity.GetTargetRoom()
+			roomName = self.m_currentActivity.GetTargetRoom()
+			print "rumina "+roomName
+			self.m_targetRoom = next((room for room in Global.g_myHouse.m_rooms if room.m_name == roomName),None)
 			self.m_currentActivity.NextTargetRoom()
 			self.m_targetType = TARGET_ROOM
 			if self.m_targetRoom.IsInRoom(self.pos):
