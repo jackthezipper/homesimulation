@@ -412,7 +412,7 @@ class Agent:
 	
 	def UpdateActivity(self):
 		# print("update act "+self.m_bioActivityToTrigger+" cur "+("None" if self.m_currentActivity == None else self.m_currentActivity.m_ID))
-		print("Current Activity "+("None" if self.m_currentActivity == None else self.m_currentActivity.m_ID))
+		print("Current Activity "+("None" if self.m_currentActivity == None else self.m_currentActivity.m_ID)+" lon "+str(len(self.m_activityList)))
 		if self.m_bioActivityToTrigger != "" and (self.m_currentActivity == None or self.m_currentActivity.m_ID != self.m_bioActivityToTrigger) and  (self.m_currentActivity != None and (not self.m_currentActivity.m_isBioActivity or self.m_currentActivity.IsDone())):
 			# print("curat")
 			if self.m_currentActivity.IsDone():
@@ -448,6 +448,7 @@ class Agent:
 					self.m_pendingActivity = None
 					self.m_currentActivity.Resume()
 		
+		incidentalAct = []
 		if self.m_bioActivityToTrigger == "" and (self.m_currentActivity == None or self.m_currentActivity.IsDone()):
 			actList = []
 			for act in self.m_activityList:
@@ -507,7 +508,6 @@ class Agent:
 			for act in actList:
 				print(act.m_ID+" score "+str(act.m_score))
 			
-			incidentalAct = []
 			while(len(actList) > 0):
 				debugStr = "Check ability:"+actList[0].m_ID+" Standard:"+Fmt(actList[0].m_physicalStandard)+" Current:"+Fmt(self.m_currentAbility)
 				if self.m_currentAbility < actList[0].m_physicalStandard:
@@ -734,6 +734,8 @@ class Agent:
 		#No path found. Wait a moment
 		if path == None:
 			print "nopopak"
+			Global.Logger.LogDebug("no Path"+"\n")
+			Global.Logger.DumpDebug()
 			return
 		
 		#path found
@@ -746,19 +748,25 @@ class Agent:
 			path.append(self.entryPoint.target.m_targetPoint)
 		self.m_pathIndex = 1
 		print path
+		Global.Logger.LogDebug("Path "+str(path)+"\n")
+		Global.Logger.DumpDebug()
 		return path
 	
 	def CheckStartMovement(self):
-		if self.m_currentActivity.m_status == Common.ACT_STATUS_GOTO:
+		if self.m_currentActivity.m_status == Common.ACT_STATUS_GOTO and self.m_state != STATE_MOVE:
 			roomName = self.m_currentActivity.GetTargetRoom()
+			Global.Logger.LogDebug("Rukiane = "+str(roomName)+str(self.m_currentActivity.m_rooms)+" "+"\n")
+			Global.Logger.DumpDebug()
 			print "rumina "+roomName
 			self.m_targetRoom = next((room for room in Global.g_myHouse.m_rooms if room.m_name == roomName),None)
 			self.m_currentActivity.NextTargetRoom()
 			self.m_targetType = TARGET_ROOM
-			if self.m_targetRoom.IsInRoom(self.pos):
+			if not self.m_targetRoom.IsInRoom(self.pos):
 				self.m_targetType = TARGET_NONE
 				self.myPath = self.GeneratePath(self.pos,self.m_targetRoom.m_targetCoord)
 				self.m_state = STATE_PRE_MOVE
+			else:
+				self.m_currentActivity.Start()
 	
 	#update pergerakan dan posisi agent
 	def UpdateAgentMovement(self, dt):

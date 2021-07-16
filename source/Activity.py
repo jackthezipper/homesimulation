@@ -94,6 +94,7 @@ class Activity:
 		self.m_alreadyDoIt = False
 		self.m_rooms = rooms
 		self.m_targetRoom = 0
+		Global.Logger.LogDebug("generetor "+ID)
 	
 	def GetBioEffect(self, property):
 		return self.m_bioEffect[EFFECT_RUN if self.m_status == Common.ACT_STATUS_RUN else EFFECT_SUSPEND][BioProperty3.BIOPROPERTY[property]] if self.m_status != Common.ACT_STATUS_NONE else 0
@@ -129,6 +130,7 @@ class Activity:
 		self.m_forceStop = True
 		if not self.m_isBioActivity:
 			self.m_alreadyDoIt = True
+		self.m_targetRoom = 0
 	
 	def Stop(self):
 		self.m_status = Common.ACT_STATUS_NONE
@@ -136,6 +138,7 @@ class Activity:
 		self.m_forceStop = False
 		if not self.m_isBioActivity:
 			self.m_alreadyDoIt = True
+		self.m_targetRoom = 0
 		# pass
 
 	def GetDescription(self):
