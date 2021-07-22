@@ -94,7 +94,7 @@ class Activity:
 		self.m_alreadyDoIt = False
 		self.m_rooms = rooms
 		self.m_targetRoom = 0
-		Global.Logger.LogDebug("generetor "+ID)
+		Global.Logger.LogDebug("generetor "+ID+"\n")
 	
 	def GetBioEffect(self, property):
 		return self.m_bioEffect[EFFECT_RUN if self.m_status == Common.ACT_STATUS_RUN else EFFECT_SUSPEND][BioProperty3.BIOPROPERTY[property]] if self.m_status != Common.ACT_STATUS_NONE else 0
@@ -159,6 +159,7 @@ class Activity:
 	def CanStart(self):
 		if self.m_isIncidental:
 			print(self.m_ID + " is incidental remaining "+str(self.m_remainingIncidentalTime)+" range "+str(self.m_rangeDuration))
+		Global.Logger.LogDebug("sti "+str(self.m_startTime)+" do "+str(self.m_alreadyDoIt)+" ins "+str(((self.m_startTime - Timer.GetInstance().GetHour()) % Timer.HOUR_IN_DAY))+"\n")
 		return self.m_startTime == -1 or ((not self.m_alreadyDoIt) and (not self.m_isIncidental) and ((self.m_startTime - Timer.GetInstance().GetHour()) % Timer.HOUR_IN_DAY) <= 3) or (self.m_isIncidental and self.m_remainingIncidentalTime <= 0 and self.m_rangeDuration > 0)
 	
 	def IsRunning(self):

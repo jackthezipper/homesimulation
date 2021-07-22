@@ -351,6 +351,7 @@ class Agent:
 				if property == None:
 					continue
 				property.CalculateScore()
+			Global.Logger.DumpDebug()
 			self.UpdateAbility()
 			self.UpdateActivity()
 			self.UpdateEmotionalFactor()
@@ -376,7 +377,7 @@ class Agent:
 	def GetActivityEffect(self, type):
 		if self.m_currentActivity == None:
 			return 0
-		Global.Logger.LogDebug("empereto "+self.m_currentActivity.m_ID+" "+str(self.m_currentActivity.m_duration));
+		# Global.Logger.LogDebug("empereto "+self.m_currentActivity.m_ID+" "+str(self.m_currentActivity.m_duration)+"\n");
 		return self.m_currentActivity.GetBioEffect(type) / ((60 if (self.m_currentActivity.m_duration == -1 or self.m_currentActivity.m_duration > 60) else self.m_currentActivity.m_duration) if Config.USE_MINUTE_FORMAT else 1)
 		
 	def GetActivityEmotionalEffect(self):
@@ -452,12 +453,14 @@ class Agent:
 		if self.m_bioActivityToTrigger == "" and (self.m_currentActivity == None or self.m_currentActivity.IsDone()):
 			actList = []
 			for act in self.m_activityList:
+				Global.Logger.LogDebug("Check start "+act+" "+str(self.m_activityList[act].CanStart())+"\n")
 				if self.m_activityList[act].CanStart() and not self.m_activityList[act].m_isBioActivity:
 					actList.append(self.m_activityList[act])
 			
-			print("Activity Calculation:")
+			Global.Logger.LogDebug("Activity Calculation: counta "+len(actList)+"\n")
 			actToRemove = []
 			for act in actList:
+				Global.Logger.LogDebug("Calculate: "+act.m_ID)
 				act.m_score = 0
 				bioDelta = ""
 				for i in range(0,Common.BIOLOGICAL_PROPERTY_COUNT):
@@ -475,12 +478,12 @@ class Agent:
 				else:
 					actToRemove.append(act)
 					actDebugStr += " REMOVED"
-					print(actDebugStr)
+					Global.Logger.LogDebug(actDebugStr+"\n")
 					continue
 				
 				act.m_planScore = act.m_planProperty[Common.PLAN_PROPERTY_ADVANTAGE] + (act.m_planProperty[Common.PLAN_PROPERTY_AUTHORITY] * act.m_planProperty[Common.PLAN_PROPERTY_OBEDIENCE]) + act.m_planProperty[Common.PLAN_PROPERTY_HABIT] + act.m_planProperty[Common.PLAN_PROPERTY_URGENCY]
 				actDebugStr += " PlanScore:"+Fmt(act.m_planScore)
-				print(actDebugStr)
+				Global.Logger.LogDebug(actDebugStr+"\n")
 			
 			for act in actToRemove:
 				actList.remove(act)
@@ -594,6 +597,7 @@ class Agent:
 		self.setTarget(Agent.s_possibleTarget[targetIndex])
 		self.entryPoint = epList[0]
 		self.m_myFloorIndex = self.m_target.m_floorIndex
+		self.oldEntryPoint = self.entryPoint
 		
 	def setBoundArea(self,area):
 		if area != self.boundArea:
@@ -763,7 +767,10 @@ class Agent:
 			self.m_targetType = TARGET_ROOM
 			if not self.m_targetRoom.IsInRoom(self.pos):
 				self.m_targetType = TARGET_NONE
-				self.myPath = self.GeneratePath(self.pos,self.m_targetRoom.m_targetCoord)
+				start = self.pos
+				if self.oldEntryPoint != None:
+					start = self.oldEntryPoint.pos
+				self.myPath = self.GeneratePath(start,self.m_targetRoom.m_targetCoord)
 				self.m_state = STATE_PRE_MOVE
 			else:
 				self.m_currentActivity.Start()
