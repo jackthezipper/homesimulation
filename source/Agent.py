@@ -62,6 +62,11 @@ sourceFilePath	= os.path.dirname(os.path.abspath(__file__))
 sourceDirPath	= sourceFilePath[0:sourceFilePath.rfind('\\')+1]
 resPath			= sourceDirPath+"res\\"+sc.sticky["MapName"]+"\\"
 
+def Fmt(val):
+	return "{:.3f}".format(val)
+
+PROPERTY_CODE = ["Hu","Di","Th","De","Ur","En","Ex","Sl"]
+
 #---------------------------------------------------------------------------------------
 class Agent:
 	s_possibleTarget = []
@@ -452,12 +457,16 @@ class Agent:
 		incidentalAct = []
 		if self.m_bioActivityToTrigger == "" and (self.m_currentActivity == None or self.m_currentActivity.IsDone()):
 			actList = []
+			i = 0
+			Global.Logger.LogDebug("liska "+str(len(self.m_activityList))+"\n")
 			for act in self.m_activityList:
+				Global.Logger.LogDebug("luhika "+str(i)+"\n")
+				i+=1
 				Global.Logger.LogDebug("Check start "+act+" "+str(self.m_activityList[act].CanStart())+"\n")
 				if self.m_activityList[act].CanStart() and not self.m_activityList[act].m_isBioActivity:
 					actList.append(self.m_activityList[act])
 			
-			Global.Logger.LogDebug("Activity Calculation: counta "+len(actList)+"\n")
+			Global.Logger.LogDebug("Activity Calculation: counta "+str(len(actList))+"\n")
 			actToRemove = []
 			for act in actList:
 				Global.Logger.LogDebug("Calculate: "+act.m_ID)
@@ -490,7 +499,7 @@ class Agent:
 			
 			actList.sort(key = lambda x: x.m_emotionalScore, reverse = True)
 			
-			print("Activity Emotional Multiplication:")
+			Global.Logger.LogDebug("Activity Emotional Multiplication: \n")
 			lastEmoScore = 0
 			curMultiplier = 1.9
 			for act in actList:
@@ -767,10 +776,12 @@ class Agent:
 			self.m_targetType = TARGET_ROOM
 			if not self.m_targetRoom.IsInRoom(self.pos):
 				self.m_targetType = TARGET_NONE
+				self.FindTargetAndEntryPointForObject(CommonEnum.CP_ROOM)
 				start = self.pos
 				if self.oldEntryPoint != None:
 					start = self.oldEntryPoint.pos
 				self.myPath = self.GeneratePath(start,self.m_targetRoom.m_targetCoord)
+				self.recalculateMoveDir()
 				self.m_state = STATE_PRE_MOVE
 			else:
 				self.m_currentActivity.Start()
