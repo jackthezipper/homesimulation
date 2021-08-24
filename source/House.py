@@ -55,7 +55,7 @@ class Energy:
 #--------------------------------------------------------------------------------------------------------------
 
 class Room:
-	def __init__(self,name,temperature,light, curve, floorIndex = 0):
+	def __init__(self,name,temperature,light, curve, lamps, floorIndex = 0):
 		self.m_name = name
 		self.m_temperature = temperature
 		self.m_light = light
@@ -63,6 +63,16 @@ class Room:
 		self.m_curve = curve
 		self.m_floorIndex = floorIndex
 		self.m_items = []
+		self.m_lamps = self.InitLamps(lamps)
+		
+	def InitLamps(self, lamps):
+		if lamps != None:
+			lampList = lamps.split(";")
+			lampStat = []
+			for lamp in lampList:
+				lampStat.append([lamp,False])
+			return lampStat
+		return None
 	
 	def SetTargetCoord(self, coord):
 		Global.Logger.LogDebug("Add coord "+self.m_name+" "+str(coord)+"\n")
@@ -96,6 +106,21 @@ class Room:
 				return True,item.m_id
 		Global.Logger.DumpDebug()
 		return False, None
+	
+	def GetLampToTurn(self, turnOn = True):
+		if self.m_lamps != None:
+			lampToTurn = []
+			for lamp in self.m_lamps:
+				if lamp[1] != turnOn:
+					lampToTurn.append(lamp[0])
+			return lampToTurn
+		return None
+		
+	def SetLampTurn(self, lampId, turnOn):
+		for lamp in self.m_lamps:
+			if lamp[0] == lampId:
+				lamp[1] = turnOn
+				break
 
 #--------------------------------------------------------------------------------------------------------------
 #-------------House Class--------------------------------------------------------------------------------------

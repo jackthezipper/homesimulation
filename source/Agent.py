@@ -418,8 +418,8 @@ class Agent:
 	
 	def UpdateActivity(self):
 		# print("update act "+self.m_bioActivityToTrigger+" cur "+("None" if self.m_currentActivity == None else self.m_currentActivity.m_ID))
-		print("Current Activity "+("None" if self.m_currentActivity == None else self.m_currentActivity.m_ID)+" lon "+str(len(self.m_activityList)))
-		if self.m_bioActivityToTrigger != "" and (self.m_currentActivity == None or self.m_currentActivity.m_ID != self.m_bioActivityToTrigger) and  (self.m_currentActivity != None and (not self.m_currentActivity.m_isBioActivity or self.m_currentActivity.IsDone())):
+		Global.Logger.LogDebug("Current Activity "+("None" if self.m_currentActivity == None else self.m_currentActivity.m_ID)+" lon "+str(len(self.m_activityList))+" viona "+self.m_bioActivityToTrigger+"\n")
+		if self.m_bioActivityToTrigger != "" and (self.m_currentActivity == None or (not self.m_currentActivity.m_isBioActivity) or (self.m_currentActivity.IsDone() and self.m_currentActivity.m_ID != self.m_bioActivityToTrigger)):
 			# print("curat")
 			if self.m_currentActivity.IsDone():
 				self.m_currentActivity.Stop()
@@ -458,15 +458,15 @@ class Agent:
 		if self.m_bioActivityToTrigger == "" and (self.m_currentActivity == None or self.m_currentActivity.IsDone()):
 			actList = []
 			i = 0
-			Global.Logger.LogDebug("liska "+str(len(self.m_activityList))+"\n")
+			# Global.Logger.LogDebug("liska "+str(len(self.m_activityList))+"\n")
 			for act in self.m_activityList:
-				Global.Logger.LogDebug("luhika "+str(i)+"\n")
+				# Global.Logger.LogDebug("luhika "+str(i)+"\n")
 				i+=1
-				Global.Logger.LogDebug("Check start "+act+" "+str(self.m_activityList[act].CanStart())+"\n")
+				# Global.Logger.LogDebug("Check start "+act+" "+str(self.m_activityList[act].CanStart())+"\n")
 				if self.m_activityList[act].CanStart() and not self.m_activityList[act].m_isBioActivity:
 					actList.append(self.m_activityList[act])
 			
-			Global.Logger.LogDebug("Activity Calculation: counta "+str(len(actList))+"\n")
+			# Global.Logger.LogDebug("Activity Calculation: counta "+str(len(actList))+"\n")
 			actToRemove = []
 			for act in actList:
 				Global.Logger.LogDebug("Calculate: "+act.m_ID)
@@ -775,7 +775,6 @@ class Agent:
 			self.m_currentActivity.NextTargetRoom()
 			self.m_targetType = TARGET_ROOM
 			if not self.m_targetRoom.IsInRoom(self.pos):
-				self.m_targetType = TARGET_NONE
 				self.FindTargetAndEntryPointForObject(CommonEnum.CP_ROOM)
 				start = self.pos
 				if self.oldEntryPoint != None:
@@ -784,6 +783,7 @@ class Agent:
 				self.recalculateMoveDir()
 				self.m_state = STATE_PRE_MOVE
 			else:
+				self.m_targetType = TARGET_NONE
 				self.m_currentActivity.Start()
 	
 	#update pergerakan dan posisi agent
@@ -841,7 +841,7 @@ class Agent:
 					myNextDest = self.entryPoint.pos
 				else:
 					myNextDest = self.m_targetRoom.m_targetCoord
-				midPath = GeneratePath(self.pos,myNextDest)
+				midPath = self.GeneratePath(self.pos,myNextDest)
 				
 				#No path found. Wait a moment
 				if midPath == None:
@@ -918,6 +918,25 @@ class Agent:
 		if(self.m_targetType == TARGET_ROOM):
 			Global.Logger.LogDebug(" target room "+self.m_targetRoom.m_name)
 		Global.Logger.LogDebug("\n")
+		
+		if self.IsArriveInRoom():
+			lampList = self.m_targetRoom.GetLampToTurn(True)
+			Global.Logger.LogDebug("lampia "+str(lampList)+"\n")
+			if lampList != None and len(lampList) > 0:
+				start = self.pos
+				newPath = []
+				for lamp in lampList:
+					for ep in Agent.s_entryPointList:
+						if ep.target.m_id == lamp:
+							self.m_targetRoom.SetLampTurn(lamp, True)
+							path = self.GeneratePath(start,ep.pos)
+							newPath.extend(path)
+							start = ep.pos
+							break
+				path = self.GeneratePath(start,self.m_targetRoom.m_targetCoord)
+				self.myPath = path
+				self.recalculateMoveDir()
+				self.m_pathIndex = 1
 		# if self.m_targetType == TARGET_ROOM and self.IsArriveInRoom():
 			# Global.Logger.LogDebug("arrivia\n")
 			# self.GenerateAndCheckPreActivityList()

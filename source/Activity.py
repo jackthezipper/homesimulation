@@ -114,7 +114,7 @@ class Activity:
 			else:
 				self.m_isIncidental = False
 		if self.m_alreadyDoIt:
-			if ((self.m_startTime - Timer.GetInstance().GetHour()) % Timer.HOUR_IN_DAY) > 3:
+			if ((self.m_startTime - Global.g_timer.GetHour()) % Timer.HOUR_IN_DAY) > 3:
 				print("reset dodol "+self.m_ID)
 				self.m_alreadyDoIt = False
 	
@@ -159,8 +159,8 @@ class Activity:
 	def CanStart(self):
 		if self.m_isIncidental:
 			print(self.m_ID + " is incidental remaining "+str(self.m_remainingIncidentalTime)+" range "+str(self.m_rangeDuration))
-		Global.Logger.LogDebug("sti "+str(self.m_startTime)+" do "+str(self.m_alreadyDoIt)+" ins "+str(((self.m_startTime - Timer.GetInstance().GetHour()) % Timer.HOUR_IN_DAY))+"\n")
-		return self.m_startTime == -1 or ((not self.m_alreadyDoIt) and (not self.m_isIncidental) and ((self.m_startTime - Timer.GetInstance().GetHour()) % Timer.HOUR_IN_DAY) <= 3) or (self.m_isIncidental and self.m_remainingIncidentalTime <= 0 and self.m_rangeDuration > 0)
+		Global.Logger.LogDebug("time "+str(Global.g_timer.GetHour())+" sti "+str(self.m_startTime)+" do "+str(self.m_alreadyDoIt)+" ins "+str(((Global.g_timer.GetHour() - self.m_startTime) % Timer.HOUR_IN_DAY))+"\n")
+		return self.m_startTime == -1 or ((not self.m_alreadyDoIt) and (not self.m_isIncidental) and ((Global.g_timer.GetHour() - self.m_startTime) % Timer.HOUR_IN_DAY) <= 3) or (self.m_isIncidental and self.m_remainingIncidentalTime <= 0 and self.m_rangeDuration > 0)
 	
 	def IsRunning(self):
 		return self.m_status == Common.ACT_STATUS_RUN

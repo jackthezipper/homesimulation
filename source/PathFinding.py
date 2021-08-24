@@ -65,14 +65,15 @@ class Map():
 		else:
 			self.liveBlock[agentIndex] = (pos,mazeIndex)
 	
+	@staticmethod
 	def InitNode():
 		if len(Map.allNode) <= len(Map.maze):
-			for mazeIndex in len(Map.maze):
+			for mazeIndex in range(len(Map.maze)):
 				Map.allNode.append([[None for i in range(len(Map.maze[mazeIndex][0]))] for j in range(len(Map.maze[mazeIndex]))])
-			for i in range(len(Map.maze[mazeIndex])):
-				for j in range(len(Map.maze[mazeIndex][0])):
-					Map.allNode[mazeIndex][i][j] = Node(None, (i,j))
-					Map.allNode[mazeIndex][i][j].reset()
+				for i in range(len(Map.maze[mazeIndex])):
+					for j in range(len(Map.maze[mazeIndex][0])):
+						Map.allNode[mazeIndex][i][j] = Node(None, (i,j))
+						Map.allNode[mazeIndex][i][j].reset()
 
 def euclidian(posA,posB):
 	diffX = posA[0] - posB[0]
