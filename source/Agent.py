@@ -65,7 +65,7 @@ resPath			= sourceDirPath+"res\\"+sc.sticky["MapName"]+"\\"
 def Fmt(val):
 	return "{:.3f}".format(val)
 
-PROPERTY_CODE = ["Hu","Di","Th","De","Ur","En","Ex","Sl"]
+PROPERTY_CODE = ["Hu","Di","Th","En","Ex","Sl","De","Ur"]
 
 #---------------------------------------------------------------------------------------
 class Agent:
@@ -148,13 +148,15 @@ class Agent:
 		self.m_badMoodRate = 0.002
 		self.m_goodMoodRate = 0.003
 		self.m_currentAbility = 0
-		inputFilePath = resPath+self.m_role+"\\"+Config.ACTIVITY_DB_FILE
-		self.m_activityList = Activity.GenerateActivity(inputFilePath)
+		dbFile = resPath+self.m_role+"\\"+Config.ACTIVITY_DB_FILE
+		matrixFile = resPath+self.m_role+"\\"+Config.ACTIVITY_MATRIX_FILE
+		self.m_activityList = Activity.GenerateActivity(dbFile, matrixFile	)
 		self.m_currentActivity = None
 		self.LoadBioProperty(Config.IC_FILE_NAME)
 		self.m_bioActivityToTrigger = "" if self.m_currentActivity == None else self.m_currentActivity.m_ID
 		self.m_wasAsleep = True
 		self.m_pendingActivity = None
+		self.m_lastActivity = None
 		self.m_timeAdjuster = Timer.TIMEFACTOR / Timer.TIMECONVERSION
 		self.m_elapsedAdjustTimer = self.m_timeAdjuster
 		
@@ -176,6 +178,9 @@ class Agent:
 				if row[Common.IC_PROPERTY] == "Ability":
 					self.m_currentAbility = float(row[Common.IC_VALUE])
 					continue
+				if row[Common.IC_PROPERTY] == "Weight":
+					self.m_weight = float(row[Common.IC_VALUE])
+					continue
 				if row[Common.IC_PROPERTY] == "Property":
 					continue
 				loader = self.m_switchBioLoader.get(row[Common.IC_PROPERTY],self.UnknownLoad)
@@ -188,11 +193,15 @@ class Agent:
 	
 	#------Converter--------------------------------------------------------------------------------------------------------------
 	def ConvertToRate(self, line):
-		match = re.match(r'(\d+\.?\d*)\|(\d+)\|(-?\d+\.?\d*):(-?\d+\.?\d*)',line)
+		match = re.match(r'(\d+\.?\d*)\|(\d+)\|(-?\d+\.?\d*):(-?\d+\.?\d*)(:(-?\d+\.?\d*))?',line)
 		divider = float(match.group(2))
 		baseRate = float(match.group(1))
 		minuteBaseRate = baseRate / ( divider * Timer.MINUTE_IN_HOUR )
-		rate = [(minuteBaseRate * float(match.group(3))), (minuteBaseRate * float(match.group(4))), baseRate, divider]
+		rate = []
+		if len(match.groups()) >= 6 and match.group(6) != None:
+			rate = [(minuteBaseRate * float(match.group(3))), (minuteBaseRate * float(match.group(4))), (minuteBaseRate * float(match.group(6))), baseRate, divider]
+		else:
+			rate = [(minuteBaseRate * float(match.group(3))), (minuteBaseRate * float(match.group(4))), 0, baseRate, divider]
 		return rate
 	
 	def ConvertToEffect(self, line):
@@ -206,7 +215,42 @@ class Agent:
 			effect.append(float(match.group(2)))
 			
 			effects.append(effect)
+		
 		return effects
+	
+	def ConvertToEffectSingle(self, line):
+		effect = []
+		match = re.match(r'(-?\d+\.?\d*):(-?\d+\.?\d*)', line)
+		
+		effect.append(float(match.group(1)))
+		effect.append(float(match.group(2)))
+		return effect
+	
+	def ConvertToEffectTimeBased(self, line):
+		effects = []
+		effectList = line.split(";")
+		for effectStr in effectList:
+			effect = []
+			match = re.match(r'(\d+)(-(\d+))?:(\d+)(-(\d+))?:(.*)', effectStr)
+			
+			effect.append(int(match.group(1)))
+			if match.group(3) != None:
+				effect.append(int(match.group(3)))
+			else:
+				effect.append(int(match.group(1)))
+			
+			effect.append(float(match.group(4)))
+			if match.group(6) != None:
+				effect.append(int(match.group(6)))
+			else:
+				effect.append(int(match.group(4)))
+			
+			effect.append(float(match.group(7)))
+			
+			effects.append(effect)
+		
+		return effects
+	
 	def ConvertToHabit(self, line):
 		habit = [False for i in range(24)]
 		habitList = line.split(";")
@@ -218,14 +262,6 @@ class Agent:
 				end = int(match.group(3))
 			habit[start:end + 1] = [True] * (end - start + 1)
 		return habit
-	
-	def ConvertToListFloat(self, line):
-		customList = line.split(";")
-		
-		custom = [float(lineStr) for lineStr in customList]
-		
-		return custom
-	
 	
 	def ConvertToHabitMulti(self, line):
 		habitList = line.split("|")
@@ -243,6 +279,13 @@ class Agent:
 			rule.append(float(ruleStr))
 		
 		return rule
+	
+	def ConvertToListFloat(self, line):
+		customList = line.split(";")
+		
+		custom = [float(lineStr) for lineStr in customList]
+		
+		return custom
 	#-----------------------------------------------------------------------------------------------------------------------------
 	
 	#------Bio property Loader----------------------------------------------------------------------------------------------------
@@ -254,13 +297,14 @@ class Agent:
 		effect = self.ConvertToEffect(row[Common.IC_EFFECT])
 		rate = self.ConvertToRate(row[Common.IC_RATE])
 		habit = self.ConvertToHabit(row[Common.IC_HABIT])
+		threshold = self.ConvertToListFloat(row[Common.IC_CUSTOM])
 		
-		property = BioProperty3.Hunger(self, row[Common.IC_PROPERTY], rate, float(row[Common.IC_CURRENT]), habit, effect)
+		property = BioProperty3.Hunger(self, row[Common.IC_PROPERTY], rate, float(row[Common.IC_CURRENT]), habit, effect, threshold)
 		return property
 		
 	def LoadDirtyProperty(self, row):
 		rate = self.ConvertToRate(row[Common.IC_RATE])
-		effect = self.ConvertToEffect(row[Common.IC_EFFECT])
+		effect = float(row[Common.IC_EFFECT])
 		habit = self.ConvertToHabit(row[Common.IC_HABIT])
 		
 		property = BioProperty3.Dirty(self, row[Common.IC_PROPERTY], rate, float(row[Common.IC_CURRENT]), habit, effect)
@@ -279,7 +323,7 @@ class Agent:
 		rule = self.ConvertToRule(row[Common.IC_EFFECT])
 		custom = self.ConvertToListFloat(row[Common.IC_CUSTOM])
 		
-		property = BioProperty3.Defecate(self, row[Common.IC_PROPERTY], habit, rule, custom[0], custom[1])
+		property = BioProperty3.Defecate(self, row[Common.IC_PROPERTY], habit, rule, custom[0], custom[1], custom[2], custom[3])
 		return property
 	
 	def LoadUrinateProperty(self, row):
@@ -327,10 +371,15 @@ class Agent:
 		return self.GetActivityById(activityId)
 	
 	def UpdateAbility(self):
-		self.m_currentAbility += ((self.GetProperty("Energy").m_currentScore - self.GetProperty("Exhausted").m_currentScore) / (24 * Timer.MINUTE_IN_HOUR))
+		energyEffect = self.GetProperty("Energy").GetScore() / ((6 if self.IsAsleep() else 24) * Timer.MINUTE_IN_HOUR)
+		exhaustEffect = self.GetProperty("Exhausted").GetScore() / ((12 if self.IsAsleep() else 6) * Timer.MINUTE_IN_HOUR)
+		# print("abi "+Fmt(self.m_currentAbility)+" "+Fmt(energyEffect)+" "+Fmt(exhaustEffect))
+		self.m_currentAbility += (energyEffect - exhaustEffect) #/ (24 * Timer.MINUTE_IN_HOUR))
+		self.m_currentAbility = min(self.m_currentAbility,8.875)
 	
 	def IsAsleep(self):
-		return (self.m_currentActivity != None) and (self.m_currentActivity.m_ID == "TDM" or self.m_currentActivity.m_ID == "TD")
+		return (self.m_currentActivity != None) and (self.m_currentActivity.m_ID == "B04" or self.m_currentActivity.m_ID == "TD")
+	
 	def GetProperty(self, propertyName):
 		return next(property for property in self.m_bioProperty if property.m_type == propertyName)
 	
@@ -364,7 +413,8 @@ class Agent:
 			for property in self.m_bioProperty:
 				if property == None:
 					continue
-				property.PostUpdateActivityCalculation()
+				if self.m_currentActivity != None and not self.m_currentActivity.m_outdoor:
+					property.PostUpdateActivityCalculation()
 		
 		# self.UpdateBioStatus(dt)
 		# self.UpdateESStatus(dt)
@@ -382,8 +432,7 @@ class Agent:
 	def GetActivityEffect(self, type):
 		if self.m_currentActivity == None:
 			return 0
-		# Global.Logger.LogDebug("empereto "+self.m_currentActivity.m_ID+" "+str(self.m_currentActivity.m_duration)+"\n");
-		return self.m_currentActivity.GetBioEffect(type) / ((60 if (self.m_currentActivity.m_duration == -1 or self.m_currentActivity.m_duration > 60) else self.m_currentActivity.m_duration) if Config.USE_MINUTE_FORMAT else 1)
+		return self.m_currentActivity.GetBioEffect(type) / 60#((60 if (self.m_currentActivity.m_duration == -1 or type == "Hunger" or type == "Energy") else self.m_currentActivity.m_duration) if Config.USE_MINUTE_FORMAT else 1)
 		
 	def GetActivityEmotionalEffect(self):
 		if self.m_currentActivity == None or (not self.m_currentActivity.IsDone()):
@@ -414,15 +463,16 @@ class Agent:
 		
 		moodByTime = self.m_emotionalNormal if (self.m_emotionalTimeEffect == self.m_emotionalNormal) else (self.m_emotionalFactor + self.m_emotionalTimeEffect)
 		self.m_emotionalFactor = moodByTime + self.GetActivityEmotionalEffect()
+		print("Emotion ActivityJalan:"+str(self.IsLastActivityRunning())+" Normal:"+Fmt(self.m_emotionalNormal)+" TimeEffect:"+Fmt(self.m_emotionalTimeEffect)+" Mood:"+Fmt(moodByTime)+" ActivityEffect:"+Fmt(self.GetActivityEmotionalEffect())+" Total:"+Fmt(self.m_emotionalFactor)+" CCE:"+Fmt(self.m_emotionalTotal) )
 		self.m_emotionalTotal = 1 + (self.m_emotionalFactor / (self.m_emotionalNormal * 100))
 	
 	def UpdateActivity(self):
 		# print("update act "+self.m_bioActivityToTrigger+" cur "+("None" if self.m_currentActivity == None else self.m_currentActivity.m_ID))
 		Global.Logger.LogDebug("Current Activity "+("None" if self.m_currentActivity == None else self.m_currentActivity.m_ID)+" lon "+str(len(self.m_activityList))+" viona "+self.m_bioActivityToTrigger+"\n")
 		if self.m_bioActivityToTrigger != "" and (self.m_currentActivity == None or (not self.m_currentActivity.m_isBioActivity) or (self.m_currentActivity.IsDone() and self.m_currentActivity.m_ID != self.m_bioActivityToTrigger)):
-			# print("curat")
-			if self.m_currentActivity.IsDone():
+			if self.m_currentActivity != None and self.m_currentActivity.IsDone():
 				self.m_currentActivity.Stop()
+				self.m_lastActivity = self.m_currentActivity.m_ID
 				self.m_currentActivity = None
 				for property in self.m_bioProperty:
 					if property == None:
@@ -434,15 +484,13 @@ class Agent:
 				self.m_pendingActivity.Pause()
 			
 			self.m_currentActivity = self.GetActivityById(self.m_bioActivityToTrigger)
-			# print("curat uu "+str(self.m_currentActivity))
-			self.m_currentActivity.GoTo()
-			# print("sutating here "+self.m_bioActivityToTrigger)
-		# print("doni "+str(self.m_currentActivity.IsDone()))
+			self.m_currentActivity.Start()
 		if self.m_currentActivity != None:
 			if self.m_currentActivity.IsDone():
 				self.m_currentActivity.Stop()
 				if self.m_currentActivity.m_ID == self.m_bioActivityToTrigger:
 					self.m_bioActivityToTrigger = ""
+				self.m_lastActivity = self.m_currentActivity.m_ID
 				self.m_currentActivity = None
 				for property in self.m_bioProperty:
 					if property == None:
@@ -450,67 +498,91 @@ class Agent:
 					property.m_relatedActivity = None
 				
 				if self.m_pendingActivity != None:
-					self.m_currentActivity = self.m_pendingActivity
+					if self.m_pendingActivity.m_status == Common.ACT_STATUS_PAUSED:
+						self.m_currentActivity = self.m_pendingActivity
+						self.m_currentActivity.Resume()
 					self.m_pendingActivity = None
-					self.m_currentActivity.Resume()
 		
-		incidentalAct = []
 		if self.m_bioActivityToTrigger == "" and (self.m_currentActivity == None or self.m_currentActivity.IsDone()):
 			actList = []
-			i = 0
-			# Global.Logger.LogDebug("liska "+str(len(self.m_activityList))+"\n")
 			for act in self.m_activityList:
-				# Global.Logger.LogDebug("luhika "+str(i)+"\n")
-				i+=1
-				# Global.Logger.LogDebug("Check start "+act+" "+str(self.m_activityList[act].CanStart())+"\n")
-				if self.m_activityList[act].CanStart() and not self.m_activityList[act].m_isBioActivity:
+				if self.m_activityList[act].CanStart(self) and not self.m_activityList[act].m_isBioActivity:
 					actList.append(self.m_activityList[act])
 			
-			# Global.Logger.LogDebug("Activity Calculation: counta "+str(len(actList))+"\n")
+			print("Activity Calculation:")
 			actToRemove = []
+			todayTime = Timer.GetInstance().GetTodayTime()
 			for act in actList:
-				Global.Logger.LogDebug("Calculate: "+act.m_ID)
+				act.m_timeScore = 5
+				timeDiff = -1
+				if act.m_startTime != -1:
+					timeDiff = abs(todayTime - act.m_startTime)
+					act.m_timeScore = 10 - (timeDiff/60)
+				actDebugStr = "Activity:"+act.m_ID
+				actDebugStr += (" Time Diff: "+Fmt(timeDiff)+" Urgency: "+Fmt(act.m_timeScore))
+				
 				act.m_score = 0
 				bioDelta = ""
 				for i in range(0,Common.BIOLOGICAL_PROPERTY_COUNT):
 					delta = act.m_bioStandard[i] - self.m_bioProperty[i].GetScore()
-					if delta > 0:
-						act.m_score += delta
+					# print("calcio "+Fmt(act.m_bioStandard[i])+" "+Fmt(self.m_bioProperty[i].GetScore())+" "+Fmt(delta))
+					act.m_score += delta
 					
-					bioDelta += (PROPERTY_CODE[i]+":"+Fmt(delta) +"-"+("YA    " if delta > 0 else "TD   "))
+					bioDelta += (PROPERTY_CODE[i]+":"+Fmt(delta) +" - ")
+				
+				act.m_score /= 8
 				
 				act.m_emotionalScore = 0
-				actDebugStr = "Activity:"+act.m_ID +" BioDelta:"+bioDelta+" BioScore:"+Fmt(act.m_score)+" EmoFactor:"+Fmt(self.m_emotionalTotal)+" EmoStd:"+Fmt(act.m_emotionalStandard)
-				if self.m_emotionalTotal > act.m_emotionalStandard:
-					act.m_emotionalScore = self.m_emotionalTotal - act.m_emotionalStandard
-					actDebugStr += " TotalEmoEffect:"+Fmt(act.m_emotionalScore)
-				else:
-					actToRemove.append(act)
-					actDebugStr += " REMOVED"
-					Global.Logger.LogDebug(actDebugStr+"\n")
-					continue
+				actDebugStr += (" BioDelta:"+bioDelta+" BioScore:"+Fmt(act.m_score))#+" EmoFactor:"+Fmt(self.m_emotionalTotal)+" EmoStd:"+Fmt(act.m_emotionalStandard)
+				act.m_emotionalScore = max(0,self.m_emotionalTotal - act.m_emotionalStandard)
+				# if self.m_emotionalTotal > act.m_emotionalStandard:
+					# act.m_emotionalScore = self.m_emotionalTotal - act.m_emotionalStandard
+					# actDebugStr += " TotalEmoEffect:"+Fmt(act.m_emotionalScore)
+				# else:
+					# actToRemove.append(act)
+					# actDebugStr += " REMOVED"
+					# print(actDebugStr)
+					# continue
 				
-				act.m_planScore = act.m_planProperty[Common.PLAN_PROPERTY_ADVANTAGE] + (act.m_planProperty[Common.PLAN_PROPERTY_AUTHORITY] * act.m_planProperty[Common.PLAN_PROPERTY_OBEDIENCE]) + act.m_planProperty[Common.PLAN_PROPERTY_HABIT] + act.m_planProperty[Common.PLAN_PROPERTY_URGENCY]
-				actDebugStr += " PlanScore:"+Fmt(act.m_planScore)
-				Global.Logger.LogDebug(actDebugStr+"\n")
+				# act.m_planScore = act.m_planProperty[Common.PLAN_PROPERTY_ADVANTAGE] + (act.m_planProperty[Common.PLAN_PROPERTY_AUTHORITY] * act.m_planProperty[Common.PLAN_PROPERTY_OBEDIENCE]) + act.m_planProperty[Common.PLAN_PROPERTY_HABIT] + act.m_planProperty[Common.PLAN_PROPERTY_URGENCY]
+				# actDebugStr += " PlanScore:"+Fmt(act.m_planScore)
+				print(actDebugStr)
 			
 			for act in actToRemove:
 				actList.remove(act)
 			
 			actList.sort(key = lambda x: x.m_emotionalScore, reverse = True)
 			
-			Global.Logger.LogDebug("Activity Emotional Multiplication: \n")
+			print("Activity Emotional Multiplication:")
 			lastEmoScore = 0
-			curMultiplier = 1.9
+			curMultiplier = 1
 			for act in actList:
-				act.m_score += (act.m_emotionalScore + act.m_planScore)
+				# act.m_score += (act.m_emotionalScore + act.m_planScore)
 				if lastEmoScore != 0:
 					if act.m_emotionalScore < lastEmoScore:
 						curMultiplier -= 0.1
-						curMultiplier = max(curMultiplier,1)
-				actDebugStr = "Activity:"+act.m_ID+" Score:"+Fmt(act.m_score)+" EmoScore:"+Fmt(act.m_emotionalScore)+" Multiplier:"+Fmt(curMultiplier)
-				act.m_score *= curMultiplier
+						curMultiplier = max(curMultiplier,0)
+				wish = act.m_planProperty[Common.PLAN_PROPERTY_WISH] * curMultiplier
+				act.m_planScore = act.m_planProperty[Common.PLAN_PROPERTY_WISH] * curMultiplier
+				# print("lasto "+self.m_lastActivity)
+				# print(self.GetActivityById(self.m_lastActivity).m_matrix)
+				actDebugStr = "Activity: "+act.m_ID
+				actDebugStr += " EmoScore:"+Fmt(act.m_emotionalScore)+" Multiplier:"+Fmt(curMultiplier)
+				advantage = act.m_planProperty[Common.PLAN_PROPERTY_ADVANTAGE] + (0 if self.m_lastActivity == None else self.GetActivityById(self.m_lastActivity).m_matrix[act.m_ID])
+				act.m_planScore += act.m_planProperty[Common.PLAN_PROPERTY_ADVANTAGE] + (0 if self.m_lastActivity == None else self.GetActivityById(self.m_lastActivity).m_matrix[act.m_ID])
+				rule = (act.m_planProperty[Common.PLAN_PROPERTY_AUTHORITY] * act.m_planProperty[Common.PLAN_PROPERTY_OBEDIENCE] * 0) #dummy value 0; fill it with agent existance at home
+				act.m_planScore += (act.m_planProperty[Common.PLAN_PROPERTY_AUTHORITY] * act.m_planProperty[Common.PLAN_PROPERTY_OBEDIENCE] * 0) #dummy value 0; fill it with agent existance at home
+				need = act.m_planProperty[Common.PLAN_PROPERTY_URGENCY]
+				act.m_planScore += act.m_planProperty[Common.PLAN_PROPERTY_URGENCY]
+				act.m_planScore /= 4
+				
+				actDebugStr += " Wish: "+Fmt(wish)+" Advantage: "+Fmt(advantage)+" Rule: "+Fmt(rule)+" Need: "+Fmt(need)+" PlanScore: "+Fmt(act.m_planScore)
+				
+				act.m_score += act.m_timeScore + act.m_planScore
+				
 				actDebugStr += " TotalScore:"+Fmt(act.m_score)
+				# act.m_score *= curMultiplier
+				# actDebugStr += " TotalScore:"+Fmt(act.m_score)
 				lastEmoScore = act.m_emotionalScore
 				print(actDebugStr)
 			
@@ -520,6 +592,7 @@ class Agent:
 			for act in actList:
 				print(act.m_ID+" score "+str(act.m_score))
 			
+			incidentalAct = []
 			while(len(actList) > 0):
 				debugStr = "Check ability:"+actList[0].m_ID+" Standard:"+Fmt(actList[0].m_physicalStandard)+" Current:"+Fmt(self.m_currentAbility)
 				if self.m_currentAbility < actList[0].m_physicalStandard:
@@ -535,7 +608,7 @@ class Agent:
 				self.m_currentActivity = actList[0]
 			
 		if self.m_currentActivity != None and (not self.m_currentActivity.IsRunning()):
-			self.m_currentActivity.GoTo()
+			self.m_currentActivity.Start()
 			for act in incidentalAct:
 				if act.m_priority == 1:
 					act.m_remainingIncidentalTime = self.m_currentActivity.m_duration

@@ -38,6 +38,8 @@ class Timer():
 			self.m_time += 1
 			self.m_elapsedAdjuster -= K_ADJUSTER
 	
+	def GetTodayTime(self):
+		return int(self.m_time % (HOUR_IN_DAY * MINUTE_IN_HOUR))
 	def GetFormattedHour(self):
 		return "{:02d}:{:02d}".format(self.GetHour(), self.GetMinute())
 
