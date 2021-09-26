@@ -670,8 +670,8 @@ class Agent:
 			if curDistance < distanceMin:
 				distanceMin = curDistance
 				targetIndex = i
-		print Agent.s_possibleTarget[targetIndex]
-		print Agent.s_possibleTarget[targetIndex].m_targetPoint
+#		print Agent.s_possibleTarget[targetIndex]
+#		print Agent.s_possibleTarget[targetIndex].m_targetPoint
 		epList = []
 		for (i,ep) in enumerate(Agent.s_entryPointList):
 			if ep.target == Agent.s_possibleTarget[targetIndex]:
@@ -691,8 +691,8 @@ class Agent:
 		return self.curveBoundArea,self.diagonalBound
 		
 	def updateView(self):
-		print "vrtijo"
-		print self.boundArea
+		#print "vrtijo"
+		#print self.boundArea
 		curveBound = rs.coercecurve(self.boundArea)
 		rc,pl = curveBound.TryGetPolyline()
 		
@@ -736,8 +736,8 @@ class Agent:
 		
 		view = sc.doc.Views.ActiveView.ActiveViewport      
 		self.objectList = Rhino.RhinoDoc.ActiveDoc.Objects.FindByCrossingWindowRegion(view,pointList,True,Rhino.DocObjects.InstanceObject)
-		print olist
-		print self.objectList
+		#print olist
+		#print self.objectList
 
 	
 	def LoadSupportActivity(self):
@@ -813,13 +813,13 @@ class Agent:
 	def GeneratePath(self, start, end, stair = None):
 		pStart = TranslateToGridPos(start,self.m_myFloorIndex)
 		pEnd = TranslateToGridPos(end,self.m_myFloorIndex)
-		print "start "+str(pStart)+" "+str(start)
-		print "end "+str(pEnd)+" "+str(end)
+		#print "start "+str(pStart)+" "+str(start)
+		#print "end "+str(pEnd)+" "+str(end)
 		path = PathFinding.astarv3(pStart,pEnd,self.m_myIndex,self.m_myFloorIndex)
 		
 		#No path found. Wait a moment
 		if path == None:
-			print "nopopak"
+			#print "nopopak"
 			Global.Logger.LogDebug("no Path"+"\n")
 			Global.Logger.DumpDebug()
 			return
@@ -833,7 +833,7 @@ class Agent:
 		elif (self.m_targetRoom == None or self.m_targetRoom.IsInRoom(self.pos)) and self.entryPoint.pos != self.entryPoint.target.m_targetPoint:
 			path.append(self.entryPoint.target.m_targetPoint)
 		self.m_pathIndex = 1
-		print path
+		#print path
 		Global.Logger.LogDebug("Path "+str(path)+"\n")
 		Global.Logger.DumpDebug()
 		return path
@@ -843,7 +843,7 @@ class Agent:
 			roomName = self.m_currentActivity.GetTargetRoom()
 			Global.Logger.LogDebug("Rukiane = "+str(roomName)+str(self.m_currentActivity.m_rooms)+" "+"\n")
 			Global.Logger.DumpDebug()
-			print "rumina "+roomName
+			#print "rumina "+roomName
 			self.m_targetRoom = next((room for room in Global.g_myHouse.m_rooms if room.m_name == roomName),None)
 			self.m_currentActivity.NextTargetRoom()
 			self.m_targetType = TARGET_ROOM
@@ -993,15 +993,18 @@ class Agent:
 		Global.Logger.LogDebug("\n")
 		
 		if self.IsArriveInRoom():
-			lampList = self.m_targetRoom.GetLampToTurn(True)
-			Global.Logger.LogDebug("lampia "+str(lampList)+"\n")
-			if lampList != None and len(lampList) > 0:
+			cancel, stopPlaces = self.m_currentActivity.CheckTerms(self)
+			if cancel:
+				self.m_currentActivity.Suspend()
+			
+			if len(stopPlaces) > 0:
 				start = self.pos
 				newPath = []
-				for lamp in lampList:
+				for stops in stopPlaces:
 					for ep in Agent.s_entryPointList:
-						if ep.target.m_id == lamp:
-							self.m_targetRoom.SetLampTurn(lamp, True)
+						if ep.target.m_id == stops:
+							if ep.target.m_type == "Lamp":
+								self.m_targetRoom.SetLampTurn(stops, True)
 							path = self.GeneratePath(start,ep.pos)
 							newPath.extend(path)
 							start = ep.pos
@@ -1010,6 +1013,7 @@ class Agent:
 				self.myPath = path
 				self.recalculateMoveDir()
 				self.m_pathIndex = 1
+			
 		# if self.m_targetType == TARGET_ROOM and self.IsArriveInRoom():
 			# Global.Logger.LogDebug("arrivia\n")
 			# self.GenerateAndCheckPreActivityList()
@@ -1035,8 +1039,8 @@ def TranslateToGridPos(pos,mazeIndex):
 		gridY = int(math.floor((PathFinding.Map.topPos[mazeIndex].Y - pos.Y)/0.08))
 		posGrid = (gridX,gridY)
 	except Exception as e:
-		print e
-		print pos
+#		print e
+		#print pos
 		Agent.hasErr = True
 		posGrid = (0,0)
 	return posGrid

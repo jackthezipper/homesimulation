@@ -20,21 +20,18 @@ def GenerateActivity(dbFile, matrixFile):
 				continue
 			activityID = row[Common.TABLE_ACTIVITY_ID]
 			Global.Logger.LogDebug("loading activity "+activityID+"\n");
-			activityData = []
-			activityData.append(row[Common.TABLE_ACTIVITY_DESC])
 			bioEffectRun = []
-			for i in range(Common.TABLE_ACTIVITY_BIO_EFFECT_RUN_START, Common.TABLE_ACTIVITY_EMO_EFFECT_RUN):
-				bioEffectRun.append(1.0 if row[i] == "" else float(row[i]))
-			activityData.append(bioEffectRun)
-			Global.Logger.LogDebug("loading activity bio eff "+str(bioEffectRun)+"\n");
-			activityData.append(float(row[Common.TABLE_ACTIVITY_EMO_EFFECT_RUN]))
-			Global.Logger.LogDebug("loading activity emo eff "+row[Common.TABLE_ACTIVITY_EMO_EFFECT_RUN]+"\n");
-			
 			bioEffectSuspend = []
-			for i in range(Common.TABLE_ACTIVITY_BIO_EFFECT_SUSPEND_START, Common.TABLE_ACTIVITY_EMO_EFFECT_SUSPEND):
-				bioEffectSuspend.append(1.0 if row[i] == "" else float(row[i]))
-			activityData.append(bioEffectSuspend)
-			activityData.append(float(row[Common.TABLE_ACTIVITY_EMO_EFFECT_SUSPEND]))
+			bioStandard = []
+			for i in range(Common.TABLE_ACTIVITY_BIO_EFFECT_START, Common.TABLE_ACTIVITY_EMO_EFFECT):
+				effStr = row[i].split(";")
+				bioEffectRun.append(float(effStr[Common.ACT_EFFECT_RUN]))
+				bioEffectSuspend.append(float(effStr[Common.ACT_EFFECT_SUSPEND]))
+				bioStandard.append(float(effStr[Common.ACT_EFFECT_STD]))
+			
+			emoEffect = row[Common.TABLE_ACTIVITY_EMO_EFFECT_RUN].split(";")
+			Global.Logger.LogDebug("loading activity bio eff "+str(bioEffectRun)+"\n");
+			Global.Logger.LogDebug("loading activity emo eff "+emoEffect[Common.ACT_EFFECT_RUN]+"\n");
 			
 			duration = -1
 			if(row[Common.TABLE_ACTIVITY_DURATION]) != "-":
@@ -47,10 +44,9 @@ def GenerateActivity(dbFile, matrixFile):
 			if match != None:
 				startTime = int(match.group(1))*Timer.MINUTE_IN_HOUR + int(match.group(2))
 			
-			bioStandard = []
-			for i in range(Common.TABLE_ACTIVITY_BIO_STD_START, Common.TABLE_ACTIVITY_EMO_STD):
-				bioStandard.append(0.0 if row[i] == "" else float(row[i]))
 			Global.Logger.LogDebug("loading activity biostd "+str(bioStandard)+"\n");
+			
+			rooms = [row[Common.TABLE_ACTIVITY_ROOMS], row[Common.TABLE_ACTIVITY_ROOMS + 1]]
 			
 			planProperty = []
 			for i in range(Common.TABLE_ACTIVITY_PLAN_START, Common.TABLE_ACTIVITY_ROUTINE):
@@ -72,8 +68,10 @@ def GenerateActivity(dbFile, matrixFile):
 			if row[Common.TABLE_ACTIVITY_PREQUISITE] != "-":
 				prequisite = row[Common.TABLE_ACTIVITY_PREQUISITE].split(";")
 			
+			terms = [float(row[Common.TABLE_ACTIVITY_LIGHTTHRESHOLD]), float(row[Common.TABLE_ACTIVITY_STATUS]), float(row[Common.TABLE_ACTIVITY_TEMPERATURE])]
+			
 			# print(row[Common.TABLE_ACTIVITY_AUTO] +"-"+row[Common.TABLE_ACTIVITY_REPEAT]+"-"+row[Common.TABLE_ACTIVITY_PRIORITY])
-			activity = Activity(row[Common.TABLE_ACTIVITY_ID], row[Common.TABLE_ACTIVITY_DESC], int(row[Common.TABLE_ACTIVITY_AUTO]), duration, int(row[Common.TABLE_ACTIVITY_REPEAT]), (row[Common.TABLE_ACTIVITY_BIOACTIVITY] == "1"), [bioEffectRun, bioEffectSuspend], [float(row[Common.TABLE_ACTIVITY_EMO_EFFECT_RUN]), float(row[Common.TABLE_ACTIVITY_EMO_EFFECT_SUSPEND])], startTime, int(row[Common.TABLE_ACTIVITY_PRIORITY]), bioStandard, float(row[Common.TABLE_ACTIVITY_EMO_STD]), float(row[Common.TABLE_ACTIVITY_PHY_STD]), planProperty, routine, prequisite, (int(row[Common.TABLE_ACTIVITY_OUTDOOR]) == 1))
+			activity = Activity(row[Common.TABLE_ACTIVITY_ID], row[Common.TABLE_ACTIVITY_DESC], int(row[Common.TABLE_ACTIVITY_AUTO]), duration, int(row[Common.TABLE_ACTIVITY_REPEAT]), (row[Common.TABLE_ACTIVITY_BIOACTIVITY] == "1"), [bioEffectRun, bioEffectSuspend], [float(emoEffect[Common.ACT_EFFECT_RUN]), float(emoEffect[Common.ACT_EFFECT_SUSPEND])], startTime, int(row[Common.TABLE_ACTIVITY_PRIORITY]), bioStandard, float(emoEffect[Common.ACT_EFFECT_STD]), float(row[Common.TABLE_ACTIVITY_PHY_STD]), planProperty, routine, prequisite, (int(row[Common.TABLE_ACTIVITY_OUTDOOR]) == 1), terms, row[Common.TABLE_ACTIVITY_DEVICE])
 			activityList[activityID] = activity
 	
 	with open(matrixFile) as csvfile:
@@ -103,7 +101,7 @@ EFFECT_SUSPEND	= EFFECT_RUN + 1
 
 SUSPEND_TIME = [0, 6, 12, 24, 168]
 class Activity:
-	def __init__(self, ID, description, auto, duration, maxRepeat, isBioActivity, bioEffect, emotionalEffect, startTime, priority, bioStandard, emotionalStandard, phyStandard, planProperty, routine, prequisite, outdoor):
+	def __init__(self, ID, description, auto, duration, maxRepeat, isBioActivity, bioEffect, emotionalEffect, startTime, priority, bioStandard, emotionalStandard, phyStandard, planProperty, routine, prequisite, outdoor, terms, device):
 		self.m_ID = ID
 		self.m_duration = 5 if auto else duration
 		self.m_runningTime = 0
@@ -136,6 +134,10 @@ class Activity:
 		self.m_matrix = {}
 		self.m_timeScore = 5
 		self.m_outdoor = outdoor
+		self.m_terms = terms
+		self.m_device = device
+		self.m_will = 0.1
+		self.m_stopPlaces = []
 	
 	def GetBioEffect(self, property):
 		return self.m_bioEffect[EFFECT_RUN if self.m_status == Common.ACT_STATUS_RUN else EFFECT_SUSPEND][BioProperty3.BIOPROPERTY[property]] if self.m_status != Common.ACT_STATUS_NONE else 0
@@ -265,3 +267,23 @@ class Activity:
 			self.m_targetRoom = 1
 		else:
 			self.m_targetRoom = -1
+	
+	def CheckTerms(self, agent):
+		stopPlaces = []
+		cancel = False
+		
+		for i in range(0, Common.TERM_COUNT):
+			if self.m_terms[i] != -1:
+				if i == Common.TERM_LIGHT:
+					if agent.m_targetRoom.m_light < self.m_terms[i]:
+						stopPlaces.extend(agent.m_targetRoom.GetLampToTurn())
+				elif i == Common.TERM_STATUS:
+					cancel |= (self.m_will > self.m_terms[i])
+				elif i == Common.TERM_TEMPERATURE:
+					if agent.m_targetRoom.m_temperature > self.m_terms[i]:
+						hasFan, fanObj = agent.m_targetRoom.HasAndAvailable("Kipas")
+						if hasFan:
+							stopPlaces.append(fanObj)
+						cancel |= hasFan
+		
+		return cancel, stopPlaces
