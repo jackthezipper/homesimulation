@@ -29,15 +29,15 @@ def GenerateActivity(dbFile, matrixFile):
 				bioEffectSuspend.append(float(effStr[Common.ACT_EFFECT_SUSPEND]))
 				bioStandard.append(float(effStr[Common.ACT_EFFECT_STD]))
 			
-			emoEffect = row[Common.TABLE_ACTIVITY_EMO_EFFECT_RUN].split(";")
-			Global.Logger.LogDebug("loading activity bio eff "+str(bioEffectRun)+"\n");
-			Global.Logger.LogDebug("loading activity emo eff "+emoEffect[Common.ACT_EFFECT_RUN]+"\n");
+			emoEffect = row[Common.TABLE_ACTIVITY_EMO_EFFECT].split(";")
+			Global.Logger.LogDebug("loading activity bio eff "+str(bioEffectRun)+"\n")
+			Global.Logger.LogDebug("loading activity emo eff "+emoEffect[Common.ACT_EFFECT_RUN]+"\n")
 			
 			duration = -1
 			if(row[Common.TABLE_ACTIVITY_DURATION]) != "-":
 				match = re.match(r'(\d+):(\d+)',row[Common.TABLE_ACTIVITY_DURATION])
 				duration = int(match.group(1))*Timer.MINUTE_IN_HOUR + int(match.group(2))
-			Global.Logger.LogDebug("loading activity dur "+row[Common.TABLE_ACTIVITY_DURATION]+"\n");
+			Global.Logger.LogDebug("loading activity dur "+row[Common.TABLE_ACTIVITY_DURATION]+"\n")
 			
 			startTime = -1
 			match = re.match(r'(\d+):(\d+)', row[Common.TABLE_ACTIVITY_START])
@@ -46,7 +46,7 @@ def GenerateActivity(dbFile, matrixFile):
 			
 			Global.Logger.LogDebug("loading activity biostd "+str(bioStandard)+"\n");
 			
-			rooms = [row[Common.TABLE_ACTIVITY_ROOMS], row[Common.TABLE_ACTIVITY_ROOMS + 1]]
+			rooms = [row[Common.TABLE_ACTIVITY_ROOM], row[Common.TABLE_ACTIVITY_ROOM + 1]]
 			
 			planProperty = []
 			for i in range(Common.TABLE_ACTIVITY_PLAN_START, Common.TABLE_ACTIVITY_ROUTINE):
@@ -60,8 +60,8 @@ def GenerateActivity(dbFile, matrixFile):
 				# print(match.group(1))
 				rTimeStr = match.group(2).split(";")
 				rTime = []
-				for str in rTimeStr:
-					rTime.append(int(str))
+				for tstr in rTimeStr:
+					rTime.append(int(tstr))
 				routine.append(rTime)
 			
 			prequisite = []
