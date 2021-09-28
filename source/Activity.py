@@ -71,7 +71,7 @@ def GenerateActivity(dbFile, matrixFile):
 			terms = [float(row[Common.TABLE_ACTIVITY_LIGHTTHRESHOLD]), float(row[Common.TABLE_ACTIVITY_STATUS]), float(row[Common.TABLE_ACTIVITY_TEMPERATURE])]
 			
 			# print(row[Common.TABLE_ACTIVITY_AUTO] +"-"+row[Common.TABLE_ACTIVITY_REPEAT]+"-"+row[Common.TABLE_ACTIVITY_PRIORITY])
-			activity = Activity(row[Common.TABLE_ACTIVITY_ID], row[Common.TABLE_ACTIVITY_DESC], int(row[Common.TABLE_ACTIVITY_AUTO]), duration, int(row[Common.TABLE_ACTIVITY_REPEAT]), (row[Common.TABLE_ACTIVITY_BIOACTIVITY] == "1"), [bioEffectRun, bioEffectSuspend], [float(emoEffect[Common.ACT_EFFECT_RUN]), float(emoEffect[Common.ACT_EFFECT_SUSPEND])], startTime, int(row[Common.TABLE_ACTIVITY_PRIORITY]), bioStandard, float(emoEffect[Common.ACT_EFFECT_STD]), float(row[Common.TABLE_ACTIVITY_PHY_STD]), planProperty, routine, prequisite, (int(row[Common.TABLE_ACTIVITY_OUTDOOR]) == 1), terms, row[Common.TABLE_ACTIVITY_DEVICE])
+			activity = Activity(row[Common.TABLE_ACTIVITY_ID], row[Common.TABLE_ACTIVITY_DESC], int(row[Common.TABLE_ACTIVITY_AUTO]), duration, int(row[Common.TABLE_ACTIVITY_REPEAT]), (row[Common.TABLE_ACTIVITY_BIOACTIVITY] == "1"), [bioEffectRun, bioEffectSuspend], [float(emoEffect[Common.ACT_EFFECT_RUN]), float(emoEffect[Common.ACT_EFFECT_SUSPEND])], startTime, int(row[Common.TABLE_ACTIVITY_PRIORITY]), bioStandard, float(emoEffect[Common.ACT_EFFECT_STD]), float(row[Common.TABLE_ACTIVITY_PHY_STD]), planProperty, rooms, routine, prequisite, (int(row[Common.TABLE_ACTIVITY_OUTDOOR]) == 1), terms, row[Common.TABLE_ACTIVITY_DEVICE])
 			activityList[activityID] = activity
 	
 	with open(matrixFile) as csvfile:
@@ -101,7 +101,7 @@ EFFECT_SUSPEND	= EFFECT_RUN + 1
 
 SUSPEND_TIME = [0, 6, 12, 24, 168]
 class Activity:
-	def __init__(self, ID, description, auto, duration, maxRepeat, isBioActivity, bioEffect, emotionalEffect, startTime, priority, bioStandard, emotionalStandard, phyStandard, planProperty, routine, prequisite, outdoor, terms, device):
+	def __init__(self, ID, description, auto, duration, maxRepeat, isBioActivity, bioEffect, emotionalEffect, startTime, priority, bioStandard, emotionalStandard, phyStandard, planProperty, rooms, routine, prequisite, outdoor, terms, device):
 		self.m_ID = ID
 		self.m_duration = 5 if auto else duration
 		self.m_runningTime = 0
@@ -138,6 +138,8 @@ class Activity:
 		self.m_device = device
 		self.m_will = 0.1
 		self.m_stopPlaces = []
+		self.m_rooms = rooms
+		self.m_targetRoom = 0
 	
 	def GetBioEffect(self, property):
 		return self.m_bioEffect[EFFECT_RUN if self.m_status == Common.ACT_STATUS_RUN else EFFECT_SUSPEND][BioProperty3.BIOPROPERTY[property]] if self.m_status != Common.ACT_STATUS_NONE else 0
@@ -182,6 +184,7 @@ class Activity:
 		if not self.m_isBioActivity:
 			self.m_repeatCount +=1
 		self.m_alreadyDoIt = True
+		self.m_targetRoom = 0
 	
 	def Stop(self):
 		self.m_status = Common.ACT_STATUS_NONE
@@ -190,6 +193,7 @@ class Activity:
 		if not self.m_isBioActivity:
 			self.m_repeatCount +=1
 		self.m_alreadyDoIt = True
+		self.m_targetRoom = 0
 		# pass
 
 	def GetDescription(self):
