@@ -162,7 +162,8 @@ class Agent:
 		
 		self.m_targetRoom = None
 		self.m_targetType = TARGET_NONE
-		
+		self.m_currentRoom = None
+		self.m_eliminatedActivity = []
 		
 	def LoadBioProperty(self, filename):
 		sourceFilePath	= os.path.dirname(os.path.abspath(__file__))
@@ -401,6 +402,8 @@ class Agent:
 		if self.m_elapsedAdjustTimer >= self.m_timeAdjuster:
 			self.m_elapsedAdjustTimer = 0
 			self.m_wasAsleep = self.IsAsleep() 
+			if Global.g_timer.GetHour() == 0 and Global.g_timer.GetMinute() == 0:
+				self.m_eliminatedActivity.clear()
 			for property in self.m_bioProperty:
 				if property == None:
 					continue
@@ -472,6 +475,8 @@ class Agent:
 		if self.m_bioActivityToTrigger != "" and (self.m_currentActivity == None or (not self.m_currentActivity.m_isBioActivity) or (self.m_currentActivity.IsDone() and self.m_currentActivity.m_ID != self.m_bioActivityToTrigger)):
 			if self.m_currentActivity != None and self.m_currentActivity.IsDone():
 				self.m_currentActivity.Stop()
+				if not self.m_activity.m_next.equals("-"):
+					self.m_currentActivity = self.GetActivityById(self.m_activity.m_next)
 				self.m_lastActivity = self.m_currentActivity.m_ID
 				self.m_currentActivity = None
 				for property in self.m_bioProperty:
@@ -492,17 +497,19 @@ class Agent:
 				if self.m_currentActivity.m_ID == self.m_bioActivityToTrigger:
 					self.m_bioActivityToTrigger = ""
 				self.m_lastActivity = self.m_currentActivity.m_ID
-				self.m_currentActivity = None
+				if not self.m_activity.m_next.equals("-"):
+					self.m_currentActivity = self.GetActivityById(self.m_activity.m_next)
+				else:
+					self.m_currentActivity = None
+					if self.m_pendingActivity != None:
+						if self.m_pendingActivity.m_status == Common.ACT_STATUS_PAUSED:
+							self.m_currentActivity = self.m_pendingActivity
+							self.m_currentActivity.Resume()
+						self.m_pendingActivity = None
 				for property in self.m_bioProperty:
 					if property == None:
 						continue
 					property.m_relatedActivity = None
-				
-				if self.m_pendingActivity != None:
-					if self.m_pendingActivity.m_status == Common.ACT_STATUS_PAUSED:
-						self.m_currentActivity = self.m_pendingActivity
-						self.m_currentActivity.Resume()
-					self.m_pendingActivity = None
 		
 		if self.m_bioActivityToTrigger == "" and (self.m_currentActivity == None or self.m_currentActivity.IsDone()):
 			actList = []
@@ -605,7 +612,21 @@ class Agent:
 					break
 			
 			if len(actList) > 0:
-				self.m_currentActivity = actList[0]
+				if actList[0].m_activitySet.equals("-"):
+					self.m_currentActivity = actList[0]
+				else:
+					traceAct = actList[0]
+					parentAct = self.GetActivityById(traceAct.m_prequisite[0])
+					actSet = actList[0].m_activitySet[:3]
+					while (parentAct != None):
+						traceAct = parentAct
+						parentAct = None
+						for pAct in traceAct.m_prequisite:
+							testAct = self.GetActivityById(pAct)
+							if testAct.m_activitySet.startswith(actSet):
+								parentAct = testAct
+								break
+					self.m_currentActivity = traceAct
 			
 		if self.m_currentActivity != None and (not self.m_currentActivity.IsRunning()):
 			self.m_currentActivity.GoTo()
@@ -843,11 +864,15 @@ class Agent:
 		Global.Logger.LogDebug("StartCheckMove\n")
 		if self.m_currentActivity.m_status == Common.ACT_STATUS_GOTO and self.m_state != STATE_MOVE:
 			roomName = self.m_currentActivity.GetTargetRoom()
-			Global.Logger.LogDebug("Rukiane = "+self.m_currentActivity.m_ID+" "+str(roomName)+str(self.m_currentActivity.m_rooms)+" "+"\n")
-			Global.Logger.DumpDebug()
-			#print "rumina "+roomName
-			self.m_targetRoom = next((room for room in Global.g_myHouse.m_rooms if room.m_name == roomName),None)
-			self.m_currentActivity.NextTargetRoom()
+			if roomName.equals("Agent"):
+				interactAgent = next(filter(lambda agent:agent.m_role.equals(self.m_currentActivity.m_interactAgent), Agent.agentList), None)
+				if interactAgent != None:
+					self.m_targetRoom = interactAgent.m_currentRoom
+			else:
+				Global.Logger.LogDebug("Rukiane = "+self.m_currentActivity.m_ID+" "+str(roomName)+str(self.m_currentActivity.m_rooms)+" "+"\n")
+				Global.Logger.DumpDebug()
+				#print "rumina "+roomName
+				self.m_targetRoom = next((room for room in Global.g_myHouse.m_rooms if room.m_name == roomName),None)
 			self.m_targetType = TARGET_ROOM
 			if not self.m_targetRoom.IsInRoom(self.pos):
 				self.FindTargetAndEntryPointForObject(CommonEnum.CP_ROOM)
@@ -865,6 +890,10 @@ class Agent:
 	
 	#update pergerakan dan posisi agent
 	def UpdateAgentMovement(self, dt):
+		for room in Global.g_myHouse.m_rooms:
+			if room.IsInRoom(self.pos):
+				self.m_currentRoom = room
+				break
 		self.CheckStartMovement()
 		Global.Logger.LogDebug("Update movement dt = "+str(dt)+" state "+str(self.m_state)+"\n")
 		Global.Logger.DumpDebug()
@@ -1002,7 +1031,13 @@ class Agent:
 			recalculatePath = False
 			cancel, stopPlaces = self.m_currentActivity.CheckTerms(self)
 			if cancel:
-				self.m_currentActivity.Suspend()
+				self.m_currentActivity.NextTargetRoom()
+				if self.m_currentActivity.GetTargetRoom().equals("None"):
+					self.m_currentActivity.Suspend()
+				else:
+					self.m_currentActivity.GoTo()
+					self.m_state = STATE_WAIT
+				return
 			
 			start = self.pos
 			newPath = []
@@ -1020,7 +1055,7 @@ class Agent:
 				
 			
 			Global.Logger.LogDebug("madepic "+self.m_currentActivity.m_device+"\n")
-			hasDevice, device = self.m_targetRoom.HasAndAvailable(self.m_currentActivity.m_device)
+			hasDevice, device = self.m_targetRoom.HasAndAvailable(self.m_currentActivity.m_device[self.m_currentActivity.m_targetRoom])
 			Global.Logger.LogDebug("denpicek "+str(hasDevice)+" "+str(device)+"\n")
 			Global.Logger.DumpDebug()
 			if hasDevice:
@@ -1032,10 +1067,27 @@ class Agent:
 						start = ep.pos
 						recalculatePath = True
 						break
+			elif not self.m_currentActivity.m_device[self.m_currentActivity.m_targetRoom].equals("-"):
+				self.m_currentActivity.NextTargetRoom()
+				if self.m_currentActivity.GetTargetRoom().equals("None"):
+					self.m_currentActivity.Suspend()
+				else:
+					self.m_currentActivity.GoTo()
+					self.m_state = STATE_WAIT
+				return
 				# path = self.GeneratePath(start,self.m_targetRoom.m_targetCoord)
 			# else:
 				# newPath = self.GeneratePath(start,self.m_targetRoom.m_targetCoord)
 			Global.Logger.LogDebug("numpeto "+str(newPath)+" reek "+str(recalculatePath)+"\n")
+			
+			if not self.m_targetRoom.CheckResource(self.m_activity.m_requiredResoure[0],int(self.m_activity.m_requiredResoure[1])):
+				self.m_currentActivity.NextTargetRoom()
+				if self.m_currentActivity.GetTargetRoom().equals("None"):
+					self.m_currentActivity.Suspend()
+				else:
+					self.m_currentActivity.GoTo()
+					self.m_state = STATE_WAIT
+				return
 			
 			if recalculatePath:
 				self.myPath = newPath
@@ -1060,6 +1112,12 @@ class Agent:
 	#memeriksa jika agent telah tiba di ruang untuk melakukan aktivitas
 	def IsArriveInRoom(self):
 		return self.m_targetType == TARGET_ROOM and self.m_targetRoom.IsInRoom(self.pos)
+	
+	def EliminateActivity(self):
+		for act in self.m_currentActivity.m_eliminate:
+			alreadyEliminated = next(elmAct for elmAct in self.m_eliminatedActivity if elmAct.equals(act),None)
+			if alreadyEliminated == None:
+				self.m_eliminatedActivity.append(act)
 #-----------------------------------------------------------------------------------------------------------------------------------------
 
 def TranslateToGridPos(pos,mazeIndex):

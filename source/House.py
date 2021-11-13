@@ -55,7 +55,7 @@ class Energy:
 #--------------------------------------------------------------------------------------------------------------
 
 class Room:
-	def __init__(self,name,temperature,light, curve, lamps, floorIndex = 0):
+	def __init__(self,name,temperature,light, curve, lamps, resource, floorIndex = 0):
 		self.m_name = name
 		self.m_temperature = temperature
 		self.m_light = light
@@ -64,6 +64,8 @@ class Room:
 		self.m_floorIndex = floorIndex
 		self.m_items = []
 		self.m_lamps = self.InitLamps(lamps)
+		self.m_object = []
+		self.m_resource = resource
 		
 	def InitLamps(self, lamps):
 		if lamps != None:
@@ -98,12 +100,18 @@ class Room:
 		return False
 	
 	def HasAndAvailable(self, itemType):
+		items = itemType.split(";")
 		Global.Logger.LogDebug("Checking item "+str(itemType)+" in room "+self.m_name+" itemlength +"+str(len(self.m_items))+"\n")
-		for item in self.m_items:
-			Global.Logger.LogDebug("\titem "+str(item.m_type)+" "+str(item.m_available)+"\n")
-			if item.m_type == itemType and item.m_available:
-				Global.Logger.DumpDebug()
-				return True,item.m_id
+		for item in items:
+			foundItem = next((roomItem for roomItem in self.m_item if roomItem.m_type.equals(item) and roomItem.m_available), None)
+			if foundItem:
+				return True, foundItem.m_id
+		
+		# for item in self.m_items:
+			# Global.Logger.LogDebug("\titem "+str(item.m_type)+" "+str(item.m_available)+"\n")
+			# if item.m_type == itemType and item.m_available:
+				# Global.Logger.DumpDebug()
+				# return True,item.m_id
 		Global.Logger.DumpDebug()
 		return False, None
 	
@@ -121,6 +129,9 @@ class Room:
 			if lamp[0] == lampId:
 				lamp[1] = turnOn
 				break
+	
+	def CheckResource(self, resource, amount):
+		return (resource in self.m_resource.keys()) and (amount >= self.m_resource[resource])
 
 #--------------------------------------------------------------------------------------------------------------
 #-------------House Class--------------------------------------------------------------------------------------
@@ -135,6 +146,7 @@ class House:
 		self.m_resources = [0 for i in range(0,CommonEnum.RES_TOTAL)]
 		self.loadHouseEnergy()
 		self.m_rooms = []
+		self.m_envObj = {}
 	
 	def loadHouseEnergy(self):
 		#cFPath = ghenv.Component.OnPingDocument().FilePath
@@ -145,3 +157,17 @@ class House:
 			reader = csv.reader(csvfile)
 			for row in reader:
 				self.m_energies.append(Energy(row[TMPL_ENERGY_TYPE],row[TMPL_ENERGY_SUPPLY],row[TMPL_ENERGY_PRICE]))
+	
+	def GetResourceAmount(self, resourceType):
+		amount = 0
+		for room in self.m_rooms:
+			if room.CheckResource(resourceType,0):
+				amount += room.m_resource[resourceType]
+		return amount
+	
+	def GetResourceM(self, resourceType):
+		amount = 0
+		for room in self.m_rooms:
+			if room.CheckResource(resourceType,0):
+				amount += room.m_resource[resourceType]
+		return amount

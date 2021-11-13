@@ -46,7 +46,10 @@ def GenerateActivity(dbFile, matrixFile):
 			
 			Global.Logger.LogDebug("loading activity biostd "+str(bioStandard)+"\n");
 			
-			rooms = [row[Common.TABLE_ACTIVITY_ROOM], row[Common.TABLE_ACTIVITY_ROOM + 1]]
+			if row[Common.TABLE_ACTIVITY_ROOM].equals("-"):
+				rooms = []
+			else:
+				rooms = row[Common.TABLE_ACTIVITY_ROOM].split("|")
 			
 			planProperty = []
 			for i in range(Common.TABLE_ACTIVITY_PLAN_START, Common.TABLE_ACTIVITY_ROUTINE):
@@ -68,10 +71,18 @@ def GenerateActivity(dbFile, matrixFile):
 			if row[Common.TABLE_ACTIVITY_PREQUISITE] != "-":
 				prequisite = row[Common.TABLE_ACTIVITY_PREQUISITE].split(";")
 			
-			terms = [float(row[Common.TABLE_ACTIVITY_LIGHTTHRESHOLD]), float(row[Common.TABLE_ACTIVITY_STATUS]), float(row[Common.TABLE_ACTIVITY_TEMPERATURE])]
+			if row[TABLE_ACTIVITY_ELIMINATE_ACTIVITY].equals("-"):
+				eliminate = []
+			else:
+				eliminate = row[TABLE_ACTIVITY_ELIMINATE_ACTIVITY].split(";")
+			
+			status = row[Common.TABLE_ACTIVITY_STATUS].split("|")
+			light = row[Common.TABLE_ACTIVITY_LIGHTTHRESHOLD].split("|")
+			
+			terms = [light, status, float(row[Common.TABLE_ACTIVITY_TEMPERATURE])]
 			
 			# print(row[Common.TABLE_ACTIVITY_AUTO] +"-"+row[Common.TABLE_ACTIVITY_REPEAT]+"-"+row[Common.TABLE_ACTIVITY_PRIORITY])
-			activity = Activity(row[Common.TABLE_ACTIVITY_ID], row[Common.TABLE_ACTIVITY_DESC], int(row[Common.TABLE_ACTIVITY_AUTO]), duration, int(row[Common.TABLE_ACTIVITY_REPEAT]), (row[Common.TABLE_ACTIVITY_BIOACTIVITY] == "1"), [bioEffectRun, bioEffectSuspend], [float(emoEffect[Common.ACT_EFFECT_RUN]), float(emoEffect[Common.ACT_EFFECT_SUSPEND])], startTime, int(row[Common.TABLE_ACTIVITY_PRIORITY]), bioStandard, float(emoEffect[Common.ACT_EFFECT_STD]), float(row[Common.TABLE_ACTIVITY_PHY_STD]), planProperty, rooms, routine, prequisite, (int(row[Common.TABLE_ACTIVITY_OUTDOOR]) == 1), terms, row[Common.TABLE_ACTIVITY_DEVICE])
+			activity = Activity(row[Common.TABLE_ACTIVITY_ID], row[Common.TABLE_ACTIVITY_DESC], int(row[Common.TABLE_ACTIVITY_AUTO]), duration, int(row[Common.TABLE_ACTIVITY_REPEAT]), (row[Common.TABLE_ACTIVITY_BIOACTIVITY] == "1"), [bioEffectRun, bioEffectSuspend], [float(emoEffect[Common.ACT_EFFECT_RUN]), float(emoEffect[Common.ACT_EFFECT_SUSPEND])], startTime, int(row[Common.TABLE_ACTIVITY_PRIORITY]), bioStandard, float(emoEffect[Common.ACT_EFFECT_STD]), float(row[Common.TABLE_ACTIVITY_PHY_STD]), planProperty, rooms, routine, prequisite, row[Common.TABLE_ACTIVITY_INTERACT_AGENT], (int(row[Common.TABLE_ACTIVITY_OUTDOOR]) == 1), terms, row[Common.TABLE_ACTIVITY_DEVICE], row[Common.TABLE_ACTIVITY_NEXT_ACTIVITY], eliminate, row[Common.TABLE_ACTIVITY_SET], row[Common.TABLE_ACTIVITY_RESOURCE].split(";"))
 			activityList[activityID] = activity
 	
 	with open(matrixFile) as csvfile:
@@ -101,7 +112,7 @@ EFFECT_SUSPEND	= EFFECT_RUN + 1
 
 SUSPEND_TIME = [0, 6, 12, 24, 168]
 class Activity:
-	def __init__(self, ID, description, auto, duration, maxRepeat, isBioActivity, bioEffect, emotionalEffect, startTime, priority, bioStandard, emotionalStandard, phyStandard, planProperty, rooms, routine, prequisite, outdoor, terms, device):
+	def __init__(self, ID, description, auto, duration, maxRepeat, isBioActivity, bioEffect, emotionalEffect, startTime, priority, bioStandard, emotionalStandard, phyStandard, planProperty, rooms, routine, prequisite, interactAgent, outdoor, terms, device, next, eliminate, activitySet, resource):
 		self.m_ID = ID
 		self.m_duration = 5 if auto else duration
 		self.m_runningTime = 0
@@ -140,6 +151,11 @@ class Activity:
 		self.m_stopPlaces = []
 		self.m_rooms = rooms
 		self.m_targetRoom = 0
+		self.m_interactAgent = interactAgent
+		self.m_next = next
+		self.m_eliminate = eliminate
+		self.m_activitySet = activitySet
+		self.m_requiredResource = resource
 	
 	def GetBioEffect(self, property):
 		return self.m_bioEffect[EFFECT_RUN if self.m_status == Common.ACT_STATUS_RUN else EFFECT_SUSPEND][BioProperty3.BIOPROPERTY[property]] if self.m_status != Common.ACT_STATUS_NONE else 0
@@ -218,6 +234,16 @@ class Activity:
 		if self.m_alreadyDoIt and not self.m_isBioActivity:
 			return False
 		
+		if self.m_ID in self.m_agent.m_eliminatedActivity:
+			return False
+		
+		if ((not self.m_activitySet.equeals("-")) and self.m_activitySet.endswith("C")):
+			return False
+		
+		interactAgent = next(filter(lambda agent:agent.m_role.equals(self.m_interactAgent), Agent.Agent.agentList), None)
+		if interactAgent == None:
+			return False
+		
 		prequisiteDone = len(self.m_prequisite) == 0
 		for prequisite in self.m_prequisite:
 			# print("prekoka "+prequisite)
@@ -262,7 +288,9 @@ class Activity:
 		self.m_rangeDuration = ((3 + SUSPEND_TIME[self.m_priority - 1]) * Timer.MINUTE_IN_HOUR) - self.m_duration
 	
 	def GetTargetRoom(self):
-		if self.m_targetRoom == -1:
+		if len(self.m_rooms) == 0:
+			return "Agent"
+		if self.m_targetRoom == -1 or self.m_rooms[self.m_targetRoom].equals("NONE"):
 			return "None"
 		return self.m_rooms[self.m_targetRoom]
 	
@@ -277,17 +305,61 @@ class Activity:
 		cancel = False
 		
 		for i in range(0, Common.TERM_COUNT):
-			if self.m_terms[i] != -1:
+			if not self.m_terms[i][self.m_targetRoom].equals("-"):
 				if i == Common.TERM_LIGHT:
-					if agent.m_targetRoom.m_light < self.m_terms[i]:
-						stopPlaces.extend(agent.m_targetRoom.GetLampToTurn())
+					lightTerm = self.m_terms[i][self.m_targetRoom].split(";")
+					if agent.m_targetRoom.m_light < int(lightTerm[0]):
+						if lightTerm[1].equals("CC"):
+							cancel |= True
+							break;
+						else:
+							stopPlaces.extend(agent.m_targetRoom.GetLampToTurn())
 				elif i == Common.TERM_STATUS:
-					cancel |= (self.m_will > self.m_terms[i])
+					cancel |= ((not self.m_terms[i][self.m_targetRoom].equals("-")) and (self.m_will > float(self.m_terms[i][self.m_targetRoom])))
 				elif i == Common.TERM_TEMPERATURE:
-					if agent.m_targetRoom.m_temperature > self.m_terms[i]:
+					if agent.m_targetRoom.m_temperature > float(self.m_terms[i][self.m_targetRoom]):
 						hasFan, fanObj = agent.m_targetRoom.HasAndAvailable("Kipas")
 						if hasFan:
 							stopPlaces.append(fanObj)
 						cancel |= hasFan
 		
 		return cancel, stopPlaces
+	
+	def CalculateEnvUrgency(self):
+		if self.m_urgency == 0:
+			# simple number
+			return int(self.m_urgencyValue)
+		elif self.m_urgency == 1:
+			# agent own property
+			return (10.0 - ((self.m_agent.GetProperty(self.m_urgencyValue)/10.0) * 10.0))
+		elif self.m_urgency == 2:
+			# negative resource amount
+			return (10.0 - (Global.g_myHouse.GetResourceAmount(self.m_urgencyValue))
+		elif self.m_urgency == 3:
+			# other agent property
+			toCheck = self.m_urgencyValue.split(";")
+			amount = 0
+			for agent in Agent.Agent.agentList:
+				if not agent.m_role.equals(self.m_agent.m_role):
+					amount += agent.GetProperty(toCheck[0]).GetScore()
+			return float(toCheck[1]) * amount
+		elif self.m_urgency == 4:
+			# property interact agent
+			toCheck = self.m_urgencyValue.split(";")
+			interactAgent = next(filter(lambda agent:agent.m_role.equals(self.m_interactAgent), Agent.Agent.agentList), None)
+			return float(toCheck[1]) * interactAgent.GetProperty(toCheck[0])
+		elif self.m_urgency == 5:
+			# resource amount
+			return Global.g_myHouse.GetResourceAmount(self.m_urgencyValue)
+		elif self.m_urgency == 6:
+			# emotional interact agent
+			interactAgent = next(filter(lambda agent:agent.m_role.equals(self.m_interactAgent), Agent.Agent.agentList), None)
+			return 10 - interactAgent.GetEmotionalFactor()/interactAgent.m_emotionalNormal
+		elif self.m_urgency == 7:
+			# let there be light
+			room = next(filter(lambda rom:rom.m_name.equals(self.GetTargetRoom()), Global.g_myHouse.m_rooms), None)
+			return 10 - room.m_light/10
+		elif self.m_urgency == 8:
+			# resource amount 2
+			return (100 - Global.g_myHouse.GetResourceAmount(self.m_urgencyValue))/10
+		
