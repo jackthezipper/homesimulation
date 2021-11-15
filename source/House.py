@@ -65,7 +65,16 @@ class Room:
 		self.m_items = []
 		self.m_lamps = self.InitLamps(lamps)
 		self.m_object = []
-		self.m_resource = resource
+		self.m_resource = self.InitResource(resource)
+	
+	def InitResource(self, resStr):
+		resource = {}
+		if resStr != None:
+			resList = resStr.split("|")
+			for res in resList:
+				resComp = res.split(";")
+				resource[resComp[0]] = int(resComp[1])
+		return resource
 		
 	def InitLamps(self, lamps):
 		if lamps != None:

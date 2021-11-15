@@ -3,6 +3,7 @@ import os
 import re
 
 import Common
+Common = reload(Common)
 import Timer
 import BioProperty3
 import Config
@@ -46,7 +47,7 @@ def GenerateActivity(dbFile, matrixFile):
 			
 			Global.Logger.LogDebug("loading activity biostd "+str(bioStandard)+"\n");
 			
-			if row[Common.TABLE_ACTIVITY_ROOM].equals("-"):
+			if (row[Common.TABLE_ACTIVITY_ROOM] == "-"):
 				rooms = []
 			else:
 				rooms = row[Common.TABLE_ACTIVITY_ROOM].split("|")
@@ -71,24 +72,32 @@ def GenerateActivity(dbFile, matrixFile):
 			if row[Common.TABLE_ACTIVITY_PREQUISITE] != "-":
 				prequisite = row[Common.TABLE_ACTIVITY_PREQUISITE].split(";")
 			
-			if row[TABLE_ACTIVITY_ELIMINATE_ACTIVITY].equals("-"):
+			if (row[Common.TABLE_ACTIVITY_ELIMINATE_ACTIVITY] == "-"):
 				eliminate = []
 			else:
-				eliminate = row[TABLE_ACTIVITY_ELIMINATE_ACTIVITY].split(";")
+				eliminate = row[Common.TABLE_ACTIVITY_ELIMINATE_ACTIVITY].split(";")
 			
 			status = row[Common.TABLE_ACTIVITY_STATUS].split("|")
 			light = row[Common.TABLE_ACTIVITY_LIGHTTHRESHOLD].split("|")
+			temperature = row[Common.TABLE_ACTIVITY_TEMPERATURE].split("|")
 			
-			terms = [light, status, float(row[Common.TABLE_ACTIVITY_TEMPERATURE])]
+			terms = [light, status, temperature]
+			
+			tRes = row[Common.TABLE_ACTIVITY_RESOURCE].split("|")
+			
+			resource = []
+			for res in tRes:
+				resource.append(res.split(";"))
 			
 			# print(row[Common.TABLE_ACTIVITY_AUTO] +"-"+row[Common.TABLE_ACTIVITY_REPEAT]+"-"+row[Common.TABLE_ACTIVITY_PRIORITY])
-			activity = Activity(row[Common.TABLE_ACTIVITY_ID], row[Common.TABLE_ACTIVITY_DESC], int(row[Common.TABLE_ACTIVITY_AUTO]), duration, int(row[Common.TABLE_ACTIVITY_REPEAT]), (row[Common.TABLE_ACTIVITY_BIOACTIVITY] == "1"), [bioEffectRun, bioEffectSuspend], [float(emoEffect[Common.ACT_EFFECT_RUN]), float(emoEffect[Common.ACT_EFFECT_SUSPEND])], startTime, int(row[Common.TABLE_ACTIVITY_PRIORITY]), bioStandard, float(emoEffect[Common.ACT_EFFECT_STD]), float(row[Common.TABLE_ACTIVITY_PHY_STD]), planProperty, rooms, routine, prequisite, row[Common.TABLE_ACTIVITY_INTERACT_AGENT], (int(row[Common.TABLE_ACTIVITY_OUTDOOR]) == 1), terms, row[Common.TABLE_ACTIVITY_DEVICE], row[Common.TABLE_ACTIVITY_NEXT_ACTIVITY], eliminate, row[Common.TABLE_ACTIVITY_SET], row[Common.TABLE_ACTIVITY_RESOURCE].split(";"))
+			activity = Activity(row[Common.TABLE_ACTIVITY_ID], row[Common.TABLE_ACTIVITY_DESC], int(row[Common.TABLE_ACTIVITY_AUTO]), duration, int(row[Common.TABLE_ACTIVITY_REPEAT]), (row[Common.TABLE_ACTIVITY_BIOACTIVITY] == "1"), [bioEffectRun, bioEffectSuspend], [float(emoEffect[Common.ACT_EFFECT_RUN]), float(emoEffect[Common.ACT_EFFECT_SUSPEND])], startTime, int(row[Common.TABLE_ACTIVITY_PRIORITY]), bioStandard, float(emoEffect[Common.ACT_EFFECT_STD]), float(row[Common.TABLE_ACTIVITY_PHY_STD]), planProperty, rooms, routine, prequisite, row[Common.TABLE_ACTIVITY_INTERACT_AGENT], (int(row[Common.TABLE_ACTIVITY_OUTDOOR]) == 1), terms, row[Common.TABLE_ACTIVITY_DEVICE], row[Common.TABLE_ACTIVITY_NEXT_ACTIVITY], eliminate, row[Common.TABLE_ACTIVITY_SET], resource)
 			activityList[activityID] = activity
 	
 	with open(matrixFile) as csvfile:
 		reader = csv.reader(csvfile)
 		idList = None
 		for row in reader:
+			print(row[0])
 			if row[0] == "":
 				# print(row)
 				row.pop(0)
@@ -240,7 +249,7 @@ class Activity:
 		if ((not self.m_activitySet.equeals("-")) and self.m_activitySet.endswith("C")):
 			return False
 		
-		interactAgent = next(filter(lambda agent:agent.m_role.equals(self.m_interactAgent), Agent.Agent.agentList), None)
+		interactAgent = next(filter(lambda agent:(agent.m_role == self.m_interactAgent), Agent.Agent.agentList), None)
 		if interactAgent == None:
 			return False
 		
@@ -290,7 +299,7 @@ class Activity:
 	def GetTargetRoom(self):
 		if len(self.m_rooms) == 0:
 			return "Agent"
-		if self.m_targetRoom == -1 or self.m_rooms[self.m_targetRoom].equals("NONE"):
+		if (self.m_targetRoom == -1) or (self.m_rooms[self.m_targetRoom] == "NONE"):
 			return "None"
 		return self.m_rooms[self.m_targetRoom]
 	
@@ -305,17 +314,17 @@ class Activity:
 		cancel = False
 		
 		for i in range(0, Common.TERM_COUNT):
-			if not self.m_terms[i][self.m_targetRoom].equals("-"):
+			if (self.m_terms[i][self.m_targetRoom] != "-"):
 				if i == Common.TERM_LIGHT:
 					lightTerm = self.m_terms[i][self.m_targetRoom].split(";")
 					if agent.m_targetRoom.m_light < int(lightTerm[0]):
-						if lightTerm[1].equals("CC"):
+						if (lightTerm[1] == "CC"):
 							cancel |= True
 							break;
 						else:
 							stopPlaces.extend(agent.m_targetRoom.GetLampToTurn())
 				elif i == Common.TERM_STATUS:
-					cancel |= ((not self.m_terms[i][self.m_targetRoom].equals("-")) and (self.m_will > float(self.m_terms[i][self.m_targetRoom])))
+					cancel |= ((self.m_terms[i][self.m_targetRoom] != "-") and (self.m_will > float(self.m_terms[i][self.m_targetRoom])))
 				elif i == Common.TERM_TEMPERATURE:
 					if agent.m_targetRoom.m_temperature > float(self.m_terms[i][self.m_targetRoom]):
 						hasFan, fanObj = agent.m_targetRoom.HasAndAvailable("Kipas")
@@ -334,30 +343,30 @@ class Activity:
 			return (10.0 - ((self.m_agent.GetProperty(self.m_urgencyValue)/10.0) * 10.0))
 		elif self.m_urgency == 2:
 			# negative resource amount
-			return (10.0 - (Global.g_myHouse.GetResourceAmount(self.m_urgencyValue))
+			return (10.0 - (Global.g_myHouse.GetResourceAmount(self.m_urgencyValue)))
 		elif self.m_urgency == 3:
 			# other agent property
 			toCheck = self.m_urgencyValue.split(";")
 			amount = 0
 			for agent in Agent.Agent.agentList:
-				if not agent.m_role.equals(self.m_agent.m_role):
+				if (agent.m_role != self.m_agent.m_role):
 					amount += agent.GetProperty(toCheck[0]).GetScore()
 			return float(toCheck[1]) * amount
 		elif self.m_urgency == 4:
 			# property interact agent
 			toCheck = self.m_urgencyValue.split(";")
-			interactAgent = next(filter(lambda agent:agent.m_role.equals(self.m_interactAgent), Agent.Agent.agentList), None)
+			interactAgent = next(filter(lambda agent:(agent.m_role == self.m_interactAgent), Agent.Agent.agentList), None)
 			return float(toCheck[1]) * interactAgent.GetProperty(toCheck[0])
 		elif self.m_urgency == 5:
 			# resource amount
 			return Global.g_myHouse.GetResourceAmount(self.m_urgencyValue)
 		elif self.m_urgency == 6:
 			# emotional interact agent
-			interactAgent = next(filter(lambda agent:agent.m_role.equals(self.m_interactAgent), Agent.Agent.agentList), None)
+			interactAgent = next(filter(lambda agent:(agent.m_role == self.m_interactAgent), Agent.Agent.agentList), None)
 			return 10 - interactAgent.GetEmotionalFactor()/interactAgent.m_emotionalNormal
 		elif self.m_urgency == 7:
 			# let there be light
-			room = next(filter(lambda rom:rom.m_name.equals(self.GetTargetRoom()), Global.g_myHouse.m_rooms), None)
+			room = next(filter(lambda rom:(rom.m_name == self.GetTargetRoom()), Global.g_myHouse.m_rooms), None)
 			return 10 - room.m_light/10
 		elif self.m_urgency == 8:
 			# resource amount 2

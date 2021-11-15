@@ -475,7 +475,7 @@ class Agent:
 		if self.m_bioActivityToTrigger != "" and (self.m_currentActivity == None or (not self.m_currentActivity.m_isBioActivity) or (self.m_currentActivity.IsDone() and self.m_currentActivity.m_ID != self.m_bioActivityToTrigger)):
 			if self.m_currentActivity != None and self.m_currentActivity.IsDone():
 				self.m_currentActivity.Stop()
-				if not self.m_activity.m_next.equals("-"):
+				if (self.m_activity.m_next != "-"):
 					self.m_currentActivity = self.GetActivityById(self.m_activity.m_next)
 				self.m_lastActivity = self.m_currentActivity.m_ID
 				self.m_currentActivity = None
@@ -497,7 +497,7 @@ class Agent:
 				if self.m_currentActivity.m_ID == self.m_bioActivityToTrigger:
 					self.m_bioActivityToTrigger = ""
 				self.m_lastActivity = self.m_currentActivity.m_ID
-				if not self.m_activity.m_next.equals("-"):
+				if (self.m_activity.m_next != "-"):
 					self.m_currentActivity = self.GetActivityById(self.m_activity.m_next)
 				else:
 					self.m_currentActivity = None
@@ -612,7 +612,7 @@ class Agent:
 					break
 			
 			if len(actList) > 0:
-				if actList[0].m_activitySet.equals("-"):
+				if (actList[0].m_activitySet == "-"):
 					self.m_currentActivity = actList[0]
 				else:
 					traceAct = actList[0]
@@ -864,8 +864,8 @@ class Agent:
 		Global.Logger.LogDebug("StartCheckMove\n")
 		if self.m_currentActivity.m_status == Common.ACT_STATUS_GOTO and self.m_state != STATE_MOVE:
 			roomName = self.m_currentActivity.GetTargetRoom()
-			if roomName.equals("Agent"):
-				interactAgent = next(filter(lambda agent:agent.m_role.equals(self.m_currentActivity.m_interactAgent), Agent.agentList), None)
+			if (roomName == "Agent"):
+				interactAgent = next(filter(lambda agent:(agent.m_role == self.m_currentActivity.m_interactAgent), Agent.agentList), None)
 				if interactAgent != None:
 					self.m_targetRoom = interactAgent.m_currentRoom
 			else:
@@ -1032,7 +1032,7 @@ class Agent:
 			cancel, stopPlaces = self.m_currentActivity.CheckTerms(self)
 			if cancel:
 				self.m_currentActivity.NextTargetRoom()
-				if self.m_currentActivity.GetTargetRoom().equals("None"):
+				if (self.m_currentActivity.GetTargetRoom() == "None"):
 					self.m_currentActivity.Suspend()
 				else:
 					self.m_currentActivity.GoTo()
@@ -1067,9 +1067,9 @@ class Agent:
 						start = ep.pos
 						recalculatePath = True
 						break
-			elif not self.m_currentActivity.m_device[self.m_currentActivity.m_targetRoom].equals("-"):
+			elif (self.m_currentActivity.m_device[self.m_currentActivity.m_targetRoom] != "-"):
 				self.m_currentActivity.NextTargetRoom()
-				if self.m_currentActivity.GetTargetRoom().equals("None"):
+				if (self.m_currentActivity.GetTargetRoom() == "None"):
 					self.m_currentActivity.Suspend()
 				else:
 					self.m_currentActivity.GoTo()
@@ -1080,9 +1080,10 @@ class Agent:
 				# newPath = self.GeneratePath(start,self.m_targetRoom.m_targetCoord)
 			Global.Logger.LogDebug("numpeto "+str(newPath)+" reek "+str(recalculatePath)+"\n")
 			
-			if not self.m_targetRoom.CheckResource(self.m_activity.m_requiredResoure[0],int(self.m_activity.m_requiredResoure[1])):
+			targetRoomIdx = self.m_currentActivity.m_targetRoom
+			if not self.m_targetRoom.CheckResource(self.m_activity.m_requiredResoure[targetRoomIdx][0],int(self.m_activity.m_requiredResoure[targetRoomIdx][1])):
 				self.m_currentActivity.NextTargetRoom()
-				if self.m_currentActivity.GetTargetRoom().equals("None"):
+				if (self.m_currentActivity.GetTargetRoom() == "None"):
 					self.m_currentActivity.Suspend()
 				else:
 					self.m_currentActivity.GoTo()
@@ -1115,7 +1116,7 @@ class Agent:
 	
 	def EliminateActivity(self):
 		for act in self.m_currentActivity.m_eliminate:
-			alreadyEliminated = next(elmAct for elmAct in self.m_eliminatedActivity if elmAct.equals(act),None)
+			alreadyEliminated = next((elmAct for elmAct in self.m_eliminatedActivity if elmAct.equals(act)),None)
 			if alreadyEliminated == None:
 				self.m_eliminatedActivity.append(act)
 #-----------------------------------------------------------------------------------------------------------------------------------------
