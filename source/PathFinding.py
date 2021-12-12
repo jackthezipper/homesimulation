@@ -126,14 +126,6 @@ def astarv3(start, end,ignoreIndex,mazeIndex,liveBlocker = False):
 	# start_node = allHailNode[start[0]][start[1]]
 	Global.Logger.LogDebug("start "+str(start)+" end "+str(end)+"\n")
 	
-	feli = len(Map.maze[mazeIndex])
-	maura = len(Map.maze[mazeIndex][0])
-	Global.Logger.LogDebug("feli "+str(feli)+" maura "+str(maura)+"\n")
-	for i in range(0,maura):
-		for j in range(0,feli):
-			Global.Logger.LogDebug(str(Map.maze[mazeIndex][j][i]) +" ")
-		Global.Logger.LogDebug("\n")
-	Global.Logger.DumpDebug()
 	start_node = Map.allNode[mazeIndex][start[0]][start[1]]
 	start_node.makeSelfReference()
 	start_node.g = start_node.h = start_node.f = 0

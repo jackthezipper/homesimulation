@@ -31,17 +31,20 @@ class BioProperty():
 		self.m_type = type
 		self.m_rate = rate
 		self.m_relatedActivity = None
-		self.m_relatedActivityId = []
+		self.m_relatedActivityId = ""
 		self.m_currentScore = current
 	
 	def TryTriggerRelatedActivity(self):
 		activityToTrigger = ""
-		for actId in self.m_relatedActivityId:
-			activity = self.m_agent.GetActivityById(actId)
-			if activity != None and activity.CanStart(self.m_agent):
-				activityToTrigger = actId
-				break
-		Global.Logger.LogDebug("try trigger "+activityToTrigger)
+		activity = self.m_agent.GetActivityById(self.m_relatedActivityId)
+		
+		# if len(activity.m_prequisite) > 0:
+			# activity = self.m_agent.GetActivityById(activity.m_prequisite[0])
+		
+		if activity != None and activity.CanStart(self.m_agent):
+			activityToTrigger = self.m_relatedActivityId
+		
+		Global.Logger.LogDebug("try trigger "+self.m_relatedActivityId+"|"+activityToTrigger+"\n")
 		
 		if activityToTrigger != "":
 			self.m_relatedActivity = self.m_agent.TryTrigger(activityToTrigger)
@@ -53,10 +56,9 @@ class BioProperty():
 		return []
 
 class Hunger(BioProperty):
-	def __init__(self, agent, type, rate, current, habit, effect, threshold):
+	def __init__(self, agent, type, rate, current, habit, threshold):
 		BioProperty.__init__(self, agent, type, rate, current)
 		self.m_habit = habit
-		self.m_effect = effect
 		self.m_totalScore = current
 		self.m_threshold = threshold
 		self.m_constraintEffectScore = 0
@@ -67,8 +69,8 @@ class Hunger(BioProperty):
 		self.m_currentRate = 0
 		self.m_activityEffect = 0;
 		# self.m_constraint = 0
-		self.m_relatedActivityId = ["B02"]
-		self.m_energyStorage = self.m_threshold[Common.HUNGER_LIMIT_DOWN] * 0.05  / 60#self.m_agent.GetActivityById(self.m_relatedActivityId[0]).m_duration
+		self.m_relatedActivityId = "A123"
+		self.m_energyStorage = self.m_threshold[Common.HUNGER_LIMIT_DOWN] * 0.05  / 60#self.m_agent.GetActivityById(self.m_relatedActivityId).m_duration
 		self.K_COLUMN_NAME = ["MAKAN", "Energy Storage","Tingkat Lapar Terkini", "Laju Lapar", "Efek Aktivitas", "Pengaruh Emosi", "Total Lapar 1 jam berikutnya", "Kebiasaan", "Constraint Efek Makan", "Konversi Kalori ke Poin", "Konversi Poin ke mL(URINASI)"]
 	
 	def CalculateScore(self):
@@ -117,7 +119,7 @@ class Thirst(BioProperty):
 		self.m_totalScore = current
 		self.m_currentEffectScore = 0
 		self.m_mlUrinate = 0
-		self.m_relatedActivityId = ["B03"]
+		self.m_relatedActivityId = "B03"
 		self.K_COLUMN_NAME = ["MINUM", "Tingkat Haus Terkini", "Laju Haus", "Efek Aktivitas", "Pengaruh Emosi", "Total Haus 1 jam berikutnya", "Kebiasaan", "Efek Minum", "Konversi poin ke mL (URINASI)"]
 		
 	def CalculateScore(self):
@@ -125,7 +127,7 @@ class Thirst(BioProperty):
 	
 	def CalculateEffect(self):
 		if self.m_agent.GetProperty("Hunger").m_relatedActivity != None:
-			return (self.m_effect[Common.EFFECT_HABIT_NONHABIT][Common.EFFECT_NEW_VALUE] if self.m_totalScore > self.m_effect[Common.EFFECT_EAT][Common.EFFECT_NEW_LIMIT] else self.m_effect[Common.EFFECT_EAT][Common.EFFECT_NEW_VALUE]) / self.m_agent.GetProperty("Hunger").m_relatedActivity.m_duration * self.m_agent.GetActivityById(self.m_relatedActivityId[0]).m_duration
+			return (self.m_effect[Common.EFFECT_HABIT_NONHABIT][Common.EFFECT_NEW_VALUE] if self.m_totalScore > self.m_effect[Common.EFFECT_EAT][Common.EFFECT_NEW_LIMIT] else self.m_effect[Common.EFFECT_EAT][Common.EFFECT_NEW_VALUE]) / self.m_agent.GetProperty("Hunger").m_relatedActivity.m_duration * self.m_agent.GetActivityById(self.m_relatedActivityId).m_duration
 		
 		index = Common.EFFECT_HABIT_HABIT if self.IsHabit(Global.g_timer.GetHour()) else Common.EFFECT_HABIT_NONHABIT
 		#print("rolade "+str(self.m_relatedActivity)+" "+Fmt(self.m_totalScore)+" "+Fmt(self.m_effect[index][Common.EFFECT_NEW_LIMIT]))
@@ -163,7 +165,7 @@ class Dirty(BioProperty):
 		self.m_totalScore = current
 		self.m_constraint = current
 		self.m_currentEffectScore = 0
-		self.m_relatedActivityId = ["B07"]
+		self.m_relatedActivityId = "B07"
 		self.m_lastBathHour = -1
 		self.K_COLUMN_NAME = ["KOTOR","Tingkat Kotor Terkini", "Laju Kotor", "Kebiasaan Mandi", "Efek Aktivitas", "Pengaruh Emosi", "Total Kotor", "Constraint","Efek Mandi", "Total kotor 1 jam berikutnya"]
 	
@@ -266,7 +268,7 @@ class Sleepy(BioProperty):
 		self.m_scoreActAndEmo = 0
 		self.m_specialEffect = 0
 		self.m_totalScore = current
-		self.m_relatedActivityId = ["B04"]
+		self.m_relatedActivityId = "B04"
 		self.m_curRate = 0
 		self.m_constraint = current
 		self.K_COLUMN_NAME = ["KANTUK", "Tingkat Kantuk Terkini", "Laju Kantuk ", "Efek Aktivitas", "Pengaruh Emosi", "Kalkulasi krn Efek Akt. dan Emosi", "Kalkulasi efek khusus", "Total Kantuk 1 jam berikutnya", "Kebiasaan Tidur/Bangun", "Constraint", "Tidur/Bangun"]
@@ -295,7 +297,9 @@ class Sleepy(BioProperty):
 		return self.m_habit[index][time]
 		
 	def PostUpdateActivityCalculation(self):
+		Global.Logger.LogDebug("Post update "+Global.g_timer.GetFormattedHour()+" "+str(self.m_relatedActivity != None)+" "+str(self.m_constraint)+" "+str(self.IsHabit(Common.AGENT_AWAKE,Global.g_timer.GetHour()))+"\n")
 		if self.m_relatedActivity != None and ((self.m_constraint <= 0) or (self.IsHabit(Common.AGENT_AWAKE,Global.g_timer.GetHour()) and self.m_constraint <= 2)):
+			Global.Logger.LogDebug("Forcestop\n")
 			self.m_relatedActivity.ForceStop()
 		pass
 	
@@ -331,7 +335,7 @@ class Defecate(BioProperty):
 		self.m_scorePoint = 0
 		self.m_threshold = threshold
 		self.m_constant = constant
-		self.m_relatedActivityId = ["B06"]
+		self.m_relatedActivityId = "B06"
 	
 	def CalculateScore(self):
 		self.m_eatEffect = self.m_agent.GetProperty("Hunger").m_constraintEffectScore
@@ -401,9 +405,9 @@ class Urinate(BioProperty):
 		self.m_remainingInBladder = remainingInBladder
 		self.m_eatEffect = 0
 		self.m_drinkEffect = 0
-		self.m_relatedActivityId = ["B05"]
-		self.m_effect[Common.EFFECT_URINATE_NORMAL][Common.EFFECT_NEW_VALUE] /= self.m_agent.GetActivityById(self.m_relatedActivityId[0]).m_duration
-		self.m_effect[Common.EFFECT_URINATE_DEFECATE][Common.EFFECT_NEW_VALUE] /= self.m_agent.GetActivityById(self.m_agent.GetProperty("Defecate").m_relatedActivityId[0]).m_duration
+		self.m_relatedActivityId = "B05"
+		self.m_effect[Common.EFFECT_URINATE_NORMAL][Common.EFFECT_NEW_VALUE] /= self.m_agent.GetActivityById(self.m_relatedActivityId).m_duration
+		#self.m_effect[Common.EFFECT_URINATE_DEFECATE][Common.EFFECT_NEW_VALUE] /= self.m_agent.GetActivityById(self.m_agent.GetProperty("Defecate").m_relatedActivityId).m_duration
 		self.m_point = self.m_inBladder / self.m_effect[Common.EFFECT_URINATE_NORMAL][Common.EFFECT_NEW_LIMIT] * 10
 		self.m_urinateVol = 0
 		self.K_COLUMN_NAME = ["URINASI", "Efek Minum 20% sampai di kemih (mL)", "Efek Makan 5% sampai di kemih (mL)", "Total Body Water", "Laju Kemih ", "Efek Aktivitas", "Pengaruh Emosi", "Ada di Kemih", "Volume Urine sekali BAK", "Sisa di Kemih", "Konversi mL ke Poin"]

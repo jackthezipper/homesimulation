@@ -17,17 +17,21 @@ import CommonEnum
 import Term
 Term = reload(Term)
 import Global
+Global = reload(Global)
 import EntryPoint
 import Config
 import Common
 import Timer
 import BioProperty3
+BioProperty3 = reload(BioProperty3)
 
 from Rhino.Geometry import Point3d, Vector3f,Vector3d,Line,Polyline
 import rhinoscriptsyntax as rs
 
 import scriptcontext as sc
 import Rhino.Geometry
+
+import time
 
 PathFinding = reload(PathFinding)
 
@@ -73,7 +77,7 @@ class Agent:
 	s_entryPointList = []
 	hasErr = False
 	agentList = []
-	s_scaleSpeed = 2.0
+	s_scaleSpeed = 8.0
 	# s_debugStr = ""
 	# s_debugActive = True
 	
@@ -188,7 +192,7 @@ class Agent:
 				self.m_bioProperty.append(loader(row))
 		if self.m_currentActivity != None:
 			for property in self.m_bioProperty:
-				if (self.m_currentActivity.m_ID in property.m_relatedActivityId):
+				if (self.m_currentActivity.m_ID == property.m_relatedActivityId):
 					property.m_relatedActivity = self.m_currentActivity
 					break
 	
@@ -295,12 +299,11 @@ class Agent:
 		return None
 	
 	def LoadHungerProperty(self, row):
-		effect = self.ConvertToEffect(row[Common.IC_EFFECT])
 		rate = self.ConvertToRate(row[Common.IC_RATE])
 		habit = self.ConvertToHabit(row[Common.IC_HABIT])
-		threshold = self.ConvertToListFloat(row[Common.IC_CUSTOM])
+		threshold = self.ConvertToListFloat(row[Common.IC_EFFECT])
 		
-		property = BioProperty3.Hunger(self, row[Common.IC_PROPERTY], rate, float(row[Common.IC_CURRENT]), habit, effect, threshold)
+		property = BioProperty3.Hunger(self, row[Common.IC_PROPERTY], rate, float(row[Common.IC_CURRENT]), habit, threshold)
 		return property
 		
 	def LoadDirtyProperty(self, row):
@@ -365,7 +368,7 @@ class Agent:
 	
 	def TryTrigger(self, activityId):
 		for property in self.m_bioProperty:
-			if (self.m_currentActivity != None and self.m_currentActivity.m_ID in property.m_relatedActivityId and (not self.m_currentActivity.IsDone())):
+			if (self.m_currentActivity != None and self.m_currentActivity.m_ID == property.m_relatedActivityId and (not (self.m_currentActivity.IsDone() or self.m_currentActivity.m_status == Common.ACT_STATUS_SUSPEND))):
 				return None
 		
 		self.m_bioActivityToTrigger = activityId
@@ -398,12 +401,14 @@ class Agent:
 		if not self.m_active:
 			return self.pos
 		
+		timeA = int(time.time()*1000)
+		
 		self.m_elapsedAdjustTimer += dt
 		if self.m_elapsedAdjustTimer >= self.m_timeAdjuster:
 			self.m_elapsedAdjustTimer = 0
 			self.m_wasAsleep = self.IsAsleep() 
 			if Global.g_timer.GetHour() == 0 and Global.g_timer.GetMinute() == 0:
-				self.m_eliminatedActivity.clear()
+				del self.m_eliminatedActivity[:]
 			for property in self.m_bioProperty:
 				if property == None:
 					continue
@@ -419,11 +424,15 @@ class Agent:
 				if self.m_currentActivity != None and not self.m_currentActivity.m_outdoor:
 					property.PostUpdateActivityCalculation()
 		
+		timeB = int(time.time()*1000)
 		# self.UpdateBioStatus(dt)
 		# self.UpdateESStatus(dt)
 		# self.UpdateActivityOrder()
 		# self.UpdateAgentActivity(dt)
 		self.UpdateAgentMovement(dt)
+		timeC = int(time.time()*1000)
+		
+		Global.Logger.LogDebug("Time act "+(str(timeB-timeA))+" move "+str(timeC-timeB)+"\n")
 		
 		Global.Logger.LogDebug("\n agent pos "+str(self.pos)+"\n")
 		Global.Logger.DumpDebug()
@@ -472,33 +481,45 @@ class Agent:
 	def UpdateActivity(self):
 		# print("update act "+self.m_bioActivityToTrigger+" cur "+("None" if self.m_currentActivity == None else self.m_currentActivity.m_ID))
 		Global.Logger.LogDebug("Current Activity "+("None" if self.m_currentActivity == None else self.m_currentActivity.m_ID)+" lon "+str(len(self.m_activityList))+" viona "+self.m_bioActivityToTrigger+"\n")
+		Global.Logger.LogDebug("Condition "+str(self.m_currentActivity == None)+" "+str(not self.m_currentActivity.m_isBioActivity)+" "+str((self.m_currentActivity.IsDone() and self.m_currentActivity.m_ID != self.m_bioActivityToTrigger))+"\n")
 		if self.m_bioActivityToTrigger != "" and (self.m_currentActivity == None or (not self.m_currentActivity.m_isBioActivity) or (self.m_currentActivity.IsDone() and self.m_currentActivity.m_ID != self.m_bioActivityToTrigger)):
 			if self.m_currentActivity != None and self.m_currentActivity.IsDone():
+				Global.Logger.LogDebug("stop6\n")
 				self.m_currentActivity.Stop()
-				if (self.m_activity.m_next != "-"):
-					self.m_currentActivity = self.GetActivityById(self.m_activity.m_next)
+				# self.m_currentActivity.CalculateEffects(self)
+				self.ClearSuspendForNextActivity()
+				if (self.m_currentActivity.m_next != "-"):
+					self.m_currentActivity = self.GetActivityById(self.m_currentActivity.m_next)
 				self.m_lastActivity = self.m_currentActivity.m_ID
 				self.m_currentActivity = None
 				for property in self.m_bioProperty:
 					if property == None:
 						continue
+					Global.Logger.LogDebug("property "+property.m_type+" "+str(property.m_relatedActivity != None)+"\n")
+					if property.m_relatedActivity != None:
+						Global.Logger.LogDebug("relateID "+property.m_relatedActivity.m_ID+"\n")
 					if property.m_relatedActivity != None and property.m_relatedActivity.m_ID != self.m_bioActivityToTrigger:
+						Global.Logger.LogDebug("Emptying "+property.m_type+"\n")
 						property.m_relatedActivity = None
 			if self.m_currentActivity != None:
 				self.m_pendingActivity = self.m_currentActivity
 				self.m_pendingActivity.Pause()
 			
 			self.m_currentActivity = self.GetActivityById(self.m_bioActivityToTrigger)
+			Global.Logger.LogDebug("goto 5\n")
 			self.m_currentActivity.GoTo()
 		incidentalAct = []
 		if self.m_currentActivity != None:
-			if self.m_currentActivity.IsDone():
+			if self.m_currentActivity.IsDone() or self.m_currentActivity.m_status == Common.ACT_STATUS_SUSPEND:
+				Global.Logger.LogDebug("stop2\n")
 				self.m_currentActivity.Stop()
+				# self.m_currentActivity.CalculateEffects(self)
+				self.ClearSuspendForNextActivity()
 				if self.m_currentActivity.m_ID == self.m_bioActivityToTrigger:
 					self.m_bioActivityToTrigger = ""
 				self.m_lastActivity = self.m_currentActivity.m_ID
-				if (self.m_activity.m_next != "-"):
-					self.m_currentActivity = self.GetActivityById(self.m_activity.m_next)
+				if (self.m_currentActivity.m_next != "-"):
+					self.m_currentActivity = self.GetActivityById(self.m_currentActivity.m_next)
 				else:
 					self.m_currentActivity = None
 					if self.m_pendingActivity != None:
@@ -511,7 +532,7 @@ class Agent:
 						continue
 					property.m_relatedActivity = None
 		
-		if self.m_bioActivityToTrigger == "" and (self.m_currentActivity == None or self.m_currentActivity.IsDone()):
+		if self.m_bioActivityToTrigger == "" and (self.m_currentActivity == None or self.m_currentActivity.IsDone() or self.m_currentActivity.m_status == Common.ACT_STATUS_SUSPEND):
 			actList = []
 			for act in self.m_activityList:
 				if self.m_activityList[act].CanStart(self) and not self.m_activityList[act].m_isBioActivity:
@@ -616,19 +637,21 @@ class Agent:
 					self.m_currentActivity = actList[0]
 				else:
 					traceAct = actList[0]
-					parentAct = self.GetActivityById(traceAct.m_prequisite[0])
-					actSet = actList[0].m_activitySet[:3]
-					while (parentAct != None):
-						traceAct = parentAct
-						parentAct = None
-						for pAct in traceAct.m_prequisite:
-							testAct = self.GetActivityById(pAct)
-							if testAct.m_activitySet.startswith(actSet):
-								parentAct = testAct
-								break
+					if len(traceAct.m_prequisite) > 0:
+						parentAct = self.GetActivityById(traceAct.m_prequisite[0])
+						actSet = actList[0].m_activitySet[:3]
+						while (parentAct != None):
+							traceAct = parentAct
+							parentAct = None
+							for pAct in traceAct.m_prequisite:
+								testAct = self.GetActivityById(pAct)
+								if testAct.m_activitySet.startswith(actSet):
+									parentAct = testAct
+									break
 					self.m_currentActivity = traceAct
-			
-		if self.m_currentActivity != None and (not self.m_currentActivity.IsRunning()):
+		Global.Logger.LogDebug("act statt "+self.m_currentActivity.m_ID+" "+str(self.m_currentActivity.m_status)+" "+str(self.m_currentActivity.IsDone())+"\n")
+		if self.m_currentActivity != None  and (not self.m_currentActivity.IsDone()) and (not self.m_currentActivity.IsRunning()):
+			Global.Logger.LogDebug("goto 4 "+self.m_currentActivity.m_ID+" "+str(self.m_currentActivity.m_status)+"\n")
 			self.m_currentActivity.GoTo()
 			for act in incidentalAct:
 				if act.m_priority == 1:
@@ -833,10 +856,16 @@ class Agent:
 	
 	
 	def GeneratePath(self, start, end, stair = None):
+		if stair != None:
+			end = stair.pos
+			Global.Logger.LogDebug("have stair "+str(stair.pos)+"\n")
+		else:
+			Global.Logger.LogDebug("no stair\n")
 		pStart = TranslateToGridPos(start,self.m_myFloorIndex)
 		pEnd = TranslateToGridPos(end,self.m_myFloorIndex)
-		#print "start "+str(pStart)+" "+str(start)
-		#print "end "+str(pEnd)+" "+str(end)
+		Global.Logger.LogDebug("pos start "+str(pStart)+" "+str(start))
+		Global.Logger.LogDebug("pos end "+str(pEnd)+" "+str(end))
+		Global.Logger.DumpDebug()
 		path = PathFinding.astarv3(pStart,pEnd,self.m_myIndex,self.m_myFloorIndex)
 		
 		#No path found. Wait a moment
@@ -865,11 +894,11 @@ class Agent:
 		if self.m_currentActivity.m_status == Common.ACT_STATUS_GOTO and self.m_state != STATE_MOVE:
 			roomName = self.m_currentActivity.GetTargetRoom()
 			if (roomName == "Agent"):
-				interactAgent = next(filter(lambda agent:(agent.m_role == self.m_currentActivity.m_interactAgent), Agent.agentList), None)
+				interactAgent = next((agent for agent in Agent.agentList if (agent.m_role == self.m_currentActivity.m_interactAgent)), None)
 				if interactAgent != None:
 					self.m_targetRoom = interactAgent.m_currentRoom
 			else:
-				Global.Logger.LogDebug("Rukiane = "+self.m_currentActivity.m_ID+" "+str(roomName)+str(self.m_currentActivity.m_rooms)+" "+"\n")
+				Global.Logger.LogDebug("Rukiane = "+self.m_currentActivity.m_ID+"|"+str(roomName)+"|"+str(self.m_currentActivity.m_rooms)+" "+"\n")
 				Global.Logger.DumpDebug()
 				#print "rumina "+roomName
 				self.m_targetRoom = next((room for room in Global.g_myHouse.m_rooms if room.m_name == roomName),None)
@@ -879,7 +908,18 @@ class Agent:
 				start = self.pos
 				if self.oldEntryPoint != None:
 					start = self.oldEntryPoint.pos
-				self.myPath = self.GeneratePath(start,self.m_targetRoom.m_targetCoord)
+				
+				self.needStair = (self.m_targetRoom.m_floorIndex != self.m_myFloorIndex)
+				Global.Logger.LogDebug("RoomName "+self.m_targetRoom.m_name+" Coord "+str(self.m_targetRoom.m_targetCoord)+"\n")
+				Global.Logger.LogDebug("Floor "+str(self.m_targetRoom.m_floorIndex)+" "+str(self.m_myFloorIndex)+"\n")
+				Global.Logger.LogDebug("NeedStair "+str(self.needStair)+"\n")
+				if self.needStair:
+					stairIndex = "STAIR_"+str(self.m_myFloorIndex)
+					stairEntry = next(entry for entry in Agent.s_entryPointList if entry.target.m_id == stairIndex)
+					self.myPath = self.GeneratePath(start,self.m_targetRoom.m_targetCoord, stairEntry)
+				else:
+					self.myPath = self.GeneratePath(start,self.m_targetRoom.m_targetCoord)
+				
 				self.m_pathIndex = 1
 				self.recalculateMoveDir()
 				self.m_state = STATE_PRE_MOVE
@@ -890,6 +930,7 @@ class Agent:
 	
 	#update pergerakan dan posisi agent
 	def UpdateAgentMovement(self, dt):
+		print(self.pos)
 		for room in Global.g_myHouse.m_rooms:
 			if room.IsInRoom(self.pos):
 				self.m_currentRoom = room
@@ -909,7 +950,8 @@ class Agent:
 		
 		destination  = self.myPath[self.m_pathIndex]
 		distance = self.pos.DistanceTo(destination)
-		distanceCovered = float(dt) * Agent.s_scaleSpeed / 1000
+		distanceCovered = float(dt) * Agent.s_scaleSpeed / 1000.0
+		Global.Logger.LogDebug("Scale distance "+str(dt)+" "+str(Agent.s_scaleSpeed)+"\n")
 		Global.Logger.LogDebug("Distance "+str(distance)+" covered "+str(distanceCovered)+"\n")
 		Global.Logger.DumpDebug()
 		if distance > distanceCovered:
@@ -941,8 +983,9 @@ class Agent:
 						self.m_hasWait = True
 				
 				if self.needStair:
-					stairIndex = "STAIRS_"+str(self.m_myFloorIndex)
-					stairEntry = next(trgt for trgt in Agent.s_possibleTarget if trgt.hasActivity(stairIndex))
+					stairIndex = "STAIR_"+str(self.m_myFloorIndex)
+					stairEntry = next(entry for entry in Agent.s_entryPointList if entry.target.m_id == stairIndex)
+					# stairEntry = next(trgt for trgt in Agent.s_possibleTarget if trgt.m_id == stairIndex)
 					myNextDest = stairEntry.pos
 				elif self.m_targetRoom.IsInRoom(self.pos):
 					myNextDest = self.entryPoint.pos
@@ -984,10 +1027,10 @@ class Agent:
 						self.pos = rs.PointAdd(self.pos,Vector3d.Multiply(self.moveDir,remainingDistance))
 					remainingDistance = remainingDistance - distance
 				elif self.needStair:
-					nextStairIndex = "STAIRS_"+str(self.m_target.m_floorIndex)
-					nextStairTarget = next(trgt for trgt in Agent.s_possibleTarget if trgt.hasActivity(nextStairIndex))
+					nextStairIndex = "STAIR_"+str(self.m_targetRoom.m_floorIndex)
+					nextStairTarget = next(trgt for trgt in Agent.s_possibleTarget if trgt.m_id == nextStairIndex)
 					nextStairEntry = next(entry for entry in Agent.s_entryPointList if entry.target == nextStairTarget)
-					self.m_myFloorIndex = self.m_target.m_floorIndex
+					self.m_myFloorIndex = self.m_targetRoom.m_floorIndex
 					start = TranslateToGridPos(nextStairEntry.pos,self.m_myFloorIndex)
 					end = TranslateToGridPos(self.entryPoint.pos,self.m_myFloorIndex)
 					
@@ -996,7 +1039,6 @@ class Agent:
 					self.myPath.insert(0,self.pos)
 					if self.entryPoint.pos != self.entryPoint.target.m_targetPoint:
 						self.myPath.append(self.entryPoint.target.m_targetPoint)
-					Global.Logger.LogDebug("lokgit")
 					self.m_pathIndex = 1
 					self.recalculateMoveDir()
 					self.needStair = False
@@ -1034,7 +1076,10 @@ class Agent:
 				self.m_currentActivity.NextTargetRoom()
 				if (self.m_currentActivity.GetTargetRoom() == "None"):
 					self.m_currentActivity.Suspend()
+					self.m_currentActivity.SetToIncidental()
+					self.ClearSuspendForNextActivity(self.m_currentActivity.m_ID)
 				else:
+					Global.Logger.LogDebug("goto 3\n")
 					self.m_currentActivity.GoTo()
 					self.m_state = STATE_WAIT
 				return
@@ -1054,9 +1099,9 @@ class Agent:
 							break
 				
 			
-			Global.Logger.LogDebug("madepic "+self.m_currentActivity.m_device+"\n")
+			Global.Logger.LogDebug("act device "+str(self.m_currentActivity.m_device)+"\n")
 			hasDevice, device = self.m_targetRoom.HasAndAvailable(self.m_currentActivity.m_device[self.m_currentActivity.m_targetRoom])
-			Global.Logger.LogDebug("denpicek "+str(hasDevice)+" "+str(device)+"\n")
+			Global.Logger.LogDebug("device "+str(hasDevice)+" "+str(device)+"\n")
 			Global.Logger.DumpDebug()
 			if hasDevice:
 				for ep in Agent.s_entryPointList:
@@ -1071,33 +1116,40 @@ class Agent:
 				self.m_currentActivity.NextTargetRoom()
 				if (self.m_currentActivity.GetTargetRoom() == "None"):
 					self.m_currentActivity.Suspend()
+					self.m_currentActivity.SetToIncidental()
+					self.ClearSuspendForNextActivity(self.m_currentActivity.m_ID)
 				else:
+					Global.Logger.LogDebug("goto 2\n")
 					self.m_currentActivity.GoTo()
 					self.m_state = STATE_WAIT
 				return
 				# path = self.GeneratePath(start,self.m_targetRoom.m_targetCoord)
 			# else:
 				# newPath = self.GeneratePath(start,self.m_targetRoom.m_targetCoord)
-			Global.Logger.LogDebug("numpeto "+str(newPath)+" reek "+str(recalculatePath)+"\n")
+			Global.Logger.LogDebug("newpath "+str(newPath)+" reek "+str(recalculatePath)+"\n")
 			
-			targetRoomIdx = self.m_currentActivity.m_targetRoom
-			if not self.m_targetRoom.CheckResource(self.m_activity.m_requiredResoure[targetRoomIdx][0],int(self.m_activity.m_requiredResoure[targetRoomIdx][1])):
-				self.m_currentActivity.NextTargetRoom()
-				if (self.m_currentActivity.GetTargetRoom() == "None"):
-					self.m_currentActivity.Suspend()
-				else:
-					self.m_currentActivity.GoTo()
-					self.m_state = STATE_WAIT
-				return
+			Global.Logger.LogDebug("req resource "+str(self.m_currentActivity.m_requiredResource)+"\n")
+			if self.m_currentActivity.m_requiredResource[self.m_currentActivity.m_targetRoom][0] != "-":
+				if not self.m_currentActivity.CheckResource(self.m_targetRoom):
+					self.m_currentActivity.NextTargetRoom()
+					if (self.m_currentActivity.GetTargetRoom() == "None"):
+						self.m_currentActivity.Suspend()
+						self.m_currentActivity.SetToIncidental()
+						self.ClearSuspendForNextActivity(self.m_currentActivity.m_ID)
+						Global.Logger.LogDebug("suspend\n")
+					else:
+						Global.Logger.LogDebug("goto 1\n")
+						self.m_currentActivity.GoTo()
+						self.m_state = STATE_WAIT
+					return
 			
 			if recalculatePath:
 				self.myPath = newPath
 				self.m_pathIndex = 1
 				self.recalculateMoveDir()
-				Global.Logger.LogDebug("lokga")
+				Global.Logger.LogDebug("recalc")
 				self.m_targetType = TARGET_POINT
 		# if self.m_targetType == TARGET_ROOM and self.IsArriveInRoom():
-			# Global.Logger.LogDebug("arrivia\n")
 			# self.GenerateAndCheckPreActivityList()
 		
 	def FindTargetAndEntryPointForObject(self, ID):
@@ -1119,6 +1171,19 @@ class Agent:
 			alreadyEliminated = next((elmAct for elmAct in self.m_eliminatedActivity if elmAct.equals(act)),None)
 			if alreadyEliminated == None:
 				self.m_eliminatedActivity.append(act)
+	
+	def ClearSuspendForNextActivity(self, excepts = ""):
+		for act in self.m_activityList:
+			if self.m_activityList[act].m_ID != excepts and self.m_activityList[act].m_priority == 0 and self.m_activityList[act].m_status ==  Common.ACT_STATUS_SUSPEND:
+				self.m_activityList[act].m_status = Common.ACT_STATUS_NONE
+	
+	def UpdatePendingEffect(self):
+		for effect in Activity.Activity.s_pendingEffect:
+			effect[3] -= 1
+			if effect[3] <= 0:
+				effect[0].m_resource[effect[1]][0] += effect[2]
+			
+			Activity.Activity.s_pendingEffect.remove(effect)
 #-----------------------------------------------------------------------------------------------------------------------------------------
 
 def TranslateToGridPos(pos,mazeIndex):

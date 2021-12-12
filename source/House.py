@@ -66,6 +66,8 @@ class Room:
 		self.m_lamps = self.InitLamps(lamps)
 		self.m_object = []
 		self.m_resource = self.InitResource(resource)
+		self.m_value = 0
+		self.m_usage = 0
 	
 	def InitResource(self, resStr):
 		resource = {}
@@ -73,7 +75,7 @@ class Room:
 			resList = resStr.split("|")
 			for res in resList:
 				resComp = res.split(";")
-				resource[resComp[0]] = int(resComp[1])
+				resource[resComp[0]] = [int(resComp[1]), len(resComp) > 2]
 		return resource
 		
 	def InitLamps(self, lamps):
@@ -112,7 +114,7 @@ class Room:
 		items = itemType.split(";")
 		Global.Logger.LogDebug("Checking item "+str(itemType)+" in room "+self.m_name+" itemlength +"+str(len(self.m_items))+"\n")
 		for item in items:
-			foundItem = next((roomItem for roomItem in self.m_item if roomItem.m_type.equals(item) and roomItem.m_available), None)
+			foundItem = next((roomItem for roomItem in self.m_items if (roomItem.m_type == item and roomItem.m_available)), None)
 			if foundItem:
 				return True, foundItem.m_id
 		
@@ -137,10 +139,24 @@ class Room:
 		for lamp in self.m_lamps:
 			if lamp[0] == lampId:
 				lamp[1] = turnOn
+				
+				lampTarget = next((trgt for trgt in Agent.Agent.s_possibleTarget if trgt.m_id == lampId), None)
+				if lampTarget != None:
+					if turnOn:
+						lampTarget.StartUsage()
+					else:
+						lampTarget.StopUsage()
+				
 				break
 	
 	def CheckResource(self, resource, amount):
-		return (resource in self.m_resource.keys()) and (amount >= self.m_resource[resource])
+		Global.Logger.LogDebug("RKey "+str(self.m_resource.keys())+"\n");
+		Global.Logger.LogDebug("RAmount "+resource+" "+str(amount)+"\n")
+		Global.Logger.LogDebug("Res "+str(self.m_resource)+"\n")
+		return (resource in self.m_resource.keys()) and (amount <= self.m_resource[resource][0])
+	
+	def IsGeneralForResource(self, resourceType):
+		return (resourceType in self.m_resource.keys()) and self.m_resource[resourceType][1]
 
 #--------------------------------------------------------------------------------------------------------------
 #-------------House Class--------------------------------------------------------------------------------------
@@ -156,6 +172,7 @@ class House:
 		self.loadHouseEnergy()
 		self.m_rooms = []
 		self.m_envObj = {}
+		self.m_energyUsage = []
 	
 	def loadHouseEnergy(self):
 		#cFPath = ghenv.Component.OnPingDocument().FilePath
@@ -171,12 +188,25 @@ class House:
 		amount = 0
 		for room in self.m_rooms:
 			if room.CheckResource(resourceType,0):
-				amount += room.m_resource[resourceType]
+				amount += room.m_resource[resourceType][0]
 		return amount
 	
-	def GetResourceM(self, resourceType):
-		amount = 0
-		for room in self.m_rooms:
-			if room.CheckResource(resourceType,0):
-				amount += room.m_resource[resourceType]
-		return amount
+	def UseResource(self, resourceType, amount):
+		roomWithResource = filter(lambda room: room.CheckResource(resourceType,0), self.m_rooms)
+		roomWithResource.sort(key = lambda room: room.m_resource[resourceType][0], reverse = True)
+		index = 0
+		while amount > 0 and index < len(roomWithResource):
+			roomWithResource[index].m_resource[resourceType][0] -= amount
+			if roomWithResource[index].m_resource[resourceType][0] < 0:
+				amount = -roomWithResource[index].m_resource[resourceType][0]
+			else:
+				amount = 0
+			index += 1
+	
+	def CheckGeneralResource(self, resourceType, amount):
+		roomWithResource = next((room for room in self.m_rooms if room.CheckResource(resourceType,amount) and room.IsGeneralForResource(resourceType)), None)
+		return roomWithResource
+	
+	def RegisterEnergyUsage(self, usage):
+		self.m_energyUsage.append(usage)
+		

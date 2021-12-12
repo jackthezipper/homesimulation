@@ -5,7 +5,9 @@ import rhinoscriptsyntax as rs
 import scriptcontext as sc
 
 import House
+House = reload(House)
 import Timer
+Timer = reload(Timer)
 
 
 sourceFilePath	= os.path.dirname(os.path.abspath(__file__))

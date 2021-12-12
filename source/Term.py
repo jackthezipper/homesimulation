@@ -71,18 +71,18 @@ class ActivityTerm():
 				Global.Logger.DumpDebug()
 				continue
 			roomIdx = idx
-			Global.Logger.LogDebug("roufa "+str(roomFactor)+"\n")
+			Global.Logger.LogDebug("room factor "+str(roomFactor)+"\n")
 			if len(roomFactor[ROOM_DEVICE]) == 0:
 				roomTerm.append([ACTIVITY_WALK_TOROOM,CommonEnum.CP_ROOM])
 			for (device,activity) in zip(roomFactor[ROOM_DEVICE],roomFactor[ROOM_FAILACTIVITY]):
-				Global.Logger.LogDebug("depak "+str(device)+" "+str(activity)+"\n" )
+				Global.Logger.LogDebug("device act "+str(device)+" "+str(activity)+"\n" )
 				if device == CommonEnum.RF_NONE:
 					continue
 				available, objectID = room.HasAndAvailable(device)
 				if available:
-					Global.Logger.LogDebug("obedi "+str(objectID)+"\n")
+					Global.Logger.LogDebug("obj id "+str(objectID)+"\n")
 					roomTerm.append([activity, objectID])
-		Global.Logger.LogDebug("teratum "+str(roomTerm))
+		Global.Logger.LogDebug("terms "+str(roomTerm))
 		Global.Logger.DumpDebug()
 		return (roomIdx == -1 or (len(self.m_roomFactor[roomIdx][ROOM_DEVICE]) == 0) or (len(roomTerm) > 0)),roomTerm
 		

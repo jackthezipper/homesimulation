@@ -42,6 +42,9 @@ class Timer():
 		return int(self.m_time % (HOUR_IN_DAY * MINUTE_IN_HOUR))
 	def GetFormattedHour(self):
 		return "{:02d}:{:02d}".format(self.GetHour(), self.GetMinute())
+	
+	def Reset(self):
+		self.m_time = MINUTE_IN_HOUR
 
 def CreateInstance():
 	Timer.s_timerInstance = Timer(Common.FORMAT_TIME_MINUTE)
