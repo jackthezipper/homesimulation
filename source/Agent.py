@@ -324,10 +324,10 @@ class Agent:
 	
 	def LoadDefecateProperty(self, row):
 		habit = self.ConvertToHabit(row[Common.IC_HABIT])
-		rule = self.ConvertToRule(row[Common.IC_EFFECT])
+		# rule = self.ConvertToRule(row[Common.IC_EFFECT])
 		custom = self.ConvertToListFloat(row[Common.IC_CUSTOM])
 		
-		property = BioProperty3.Defecate(self, row[Common.IC_PROPERTY], habit, rule, custom[0], custom[1], custom[2], custom[3])
+		property = BioProperty3.Defecate(self, row[Common.IC_PROPERTY], habit, custom[0], custom[1], custom[2], custom[3])
 		return property
 	
 	def LoadUrinateProperty(self, row):
@@ -481,12 +481,15 @@ class Agent:
 	def UpdateActivity(self):
 		# print("update act "+self.m_bioActivityToTrigger+" cur "+("None" if self.m_currentActivity == None else self.m_currentActivity.m_ID))
 		Global.Logger.LogDebug("Current Activity "+("None" if self.m_currentActivity == None else self.m_currentActivity.m_ID)+" lon "+str(len(self.m_activityList))+" viona "+self.m_bioActivityToTrigger+"\n")
-		Global.Logger.LogDebug("Condition "+str(self.m_currentActivity == None)+" "+str(not self.m_currentActivity.m_isBioActivity)+" "+str((self.m_currentActivity.IsDone() and self.m_currentActivity.m_ID != self.m_bioActivityToTrigger))+"\n")
+		# Global.Logger.LogDebug("Condition "+str(self.m_currentActivity == None)+" "+str(not self.m_currentActivity.m_isBioActivity)+" "+str((self.m_currentActivity.IsDone() and self.m_currentActivity.m_ID != self.m_bioActivityToTrigger))+"\n")
 		if self.m_bioActivityToTrigger != "" and (self.m_currentActivity == None or (not self.m_currentActivity.m_isBioActivity) or (self.m_currentActivity.IsDone() and self.m_currentActivity.m_ID != self.m_bioActivityToTrigger)):
 			if self.m_currentActivity != None and self.m_currentActivity.IsDone():
-				Global.Logger.LogDebug("stop6\n")
+				# Global.Logger.LogDebug("stop6\n")
 				self.m_currentActivity.Stop()
-				# self.m_currentActivity.CalculateEffects(self)
+				if self.m_target != None:
+					self.m_target.SetAvailable(True)
+					self.m_target = None
+				self.m_currentActivity.CalculateEffects(self)
 				self.ClearSuspendForNextActivity()
 				if (self.m_currentActivity.m_next != "-"):
 					self.m_currentActivity = self.GetActivityById(self.m_currentActivity.m_next)
@@ -495,25 +498,28 @@ class Agent:
 				for property in self.m_bioProperty:
 					if property == None:
 						continue
-					Global.Logger.LogDebug("property "+property.m_type+" "+str(property.m_relatedActivity != None)+"\n")
-					if property.m_relatedActivity != None:
-						Global.Logger.LogDebug("relateID "+property.m_relatedActivity.m_ID+"\n")
+					# Global.Logger.LogDebug("property "+property.m_type+" "+str(property.m_relatedActivity != None)+"\n")
+					# if property.m_relatedActivity != None:
+						# Global.Logger.LogDebug("relateID "+property.m_relatedActivity.m_ID+"\n")
 					if property.m_relatedActivity != None and property.m_relatedActivity.m_ID != self.m_bioActivityToTrigger:
-						Global.Logger.LogDebug("Emptying "+property.m_type+"\n")
+						# Global.Logger.LogDebug("Emptying "+property.m_type+"\n")
 						property.m_relatedActivity = None
 			if self.m_currentActivity != None:
 				self.m_pendingActivity = self.m_currentActivity
 				self.m_pendingActivity.Pause()
 			
 			self.m_currentActivity = self.GetActivityById(self.m_bioActivityToTrigger)
-			Global.Logger.LogDebug("goto 5\n")
+			# Global.Logger.LogDebug("goto 5\n")
 			self.m_currentActivity.GoTo()
 		incidentalAct = []
 		if self.m_currentActivity != None:
 			if self.m_currentActivity.IsDone() or self.m_currentActivity.m_status == Common.ACT_STATUS_SUSPEND:
-				Global.Logger.LogDebug("stop2\n")
+				# Global.Logger.LogDebug("stop2\n")
 				self.m_currentActivity.Stop()
-				# self.m_currentActivity.CalculateEffects(self)
+				if self.m_target != None:
+					self.m_target.SetAvailable(True)
+					self.m_target = None
+				self.m_currentActivity.CalculateEffects(self)
 				self.ClearSuspendForNextActivity()
 				if self.m_currentActivity.m_ID == self.m_bioActivityToTrigger:
 					self.m_bioActivityToTrigger = ""
@@ -538,7 +544,7 @@ class Agent:
 				if self.m_activityList[act].CanStart(self) and not self.m_activityList[act].m_isBioActivity:
 					actList.append(self.m_activityList[act])
 			
-			Global.Logger.LogDebug("Activity Calculation: Timed:"+Global.g_timer.GetFormattedHour()+"\n")
+			# Global.Logger.LogDebug("Activity Calculation: Timed:"+Global.g_timer.GetFormattedHour()+"\n")
 			actToRemove = []
 			todayTime = Global.g_timer.GetTodayTime()
 			for act in actList:
@@ -547,8 +553,8 @@ class Agent:
 				if act.m_startTime != -1:
 					timeDiff = abs(todayTime - act.m_startTime)
 					act.m_timeScore = 10 - (timeDiff/60)
-				actDebugStr = "Activity:"+act.m_ID
-				actDebugStr += (" Time Diff: "+Fmt(timeDiff)+" Urgency: "+Fmt(act.m_timeScore))
+				# actDebugStr = "Activity:"+act.m_ID
+				# actDebugStr += (" Time Diff: "+Fmt(timeDiff)+" Urgency: "+Fmt(act.m_timeScore))
 				
 				act.m_score = 0
 				bioDelta = ""
@@ -562,7 +568,7 @@ class Agent:
 				act.m_score /= 8
 				
 				act.m_emotionalScore = 0
-				actDebugStr += (" BioDelta:"+bioDelta+" BioScore:"+Fmt(act.m_score)+"\n")#+" EmoFactor:"+Fmt(self.m_emotionalTotal)+" EmoStd:"+Fmt(act.m_emotionalStandard)
+				# actDebugStr += (" BioDelta:"+bioDelta+" BioScore:"+Fmt(act.m_score)+"\n")#+" EmoFactor:"+Fmt(self.m_emotionalTotal)+" EmoStd:"+Fmt(act.m_emotionalStandard)
 				act.m_emotionalScore = max(0,self.m_emotionalTotal - act.m_emotionalStandard)
 				# if self.m_emotionalTotal > act.m_emotionalStandard:
 					# act.m_emotionalScore = self.m_emotionalTotal - act.m_emotionalStandard
@@ -575,14 +581,14 @@ class Agent:
 				
 				# act.m_planScore = act.m_planProperty[Common.PLAN_PROPERTY_ADVANTAGE] + (act.m_planProperty[Common.PLAN_PROPERTY_AUTHORITY] * act.m_planProperty[Common.PLAN_PROPERTY_OBEDIENCE]) + act.m_planProperty[Common.PLAN_PROPERTY_HABIT] + act.m_planProperty[Common.PLAN_PROPERTY_URGENCY]
 				# actDebugStr += " PlanScore:"+Fmt(act.m_planScore)
-				Global.Logger.LogDebug(actDebugStr)
+				# Global.Logger.LogDebug(actDebugStr)
 			
 			for act in actToRemove:
 				actList.remove(act)
 			
 			actList.sort(key = lambda x: x.m_emotionalScore, reverse = True)
 			
-			Global.Logger.LogDebug("Activity Emotional Multiplication:\n")
+			# Global.Logger.LogDebug("Activity Emotional Multiplication:\n")
 			lastEmoScore = 0
 			curMultiplier = 1
 			for act in actList:
@@ -595,8 +601,8 @@ class Agent:
 				act.m_planScore = act.m_planProperty[Common.PLAN_PROPERTY_WISH] * curMultiplier
 				# print("lasto "+self.m_lastActivity)
 				# print(self.GetActivityById(self.m_lastActivity).m_matrix)
-				actDebugStr = "Activity: "+act.m_ID
-				actDebugStr += " EmoScore:"+Fmt(act.m_emotionalScore)+" Multiplier:"+Fmt(curMultiplier)
+				# actDebugStr = "Activity: "+act.m_ID
+				# actDebugStr += " EmoScore:"+Fmt(act.m_emotionalScore)+" Multiplier:"+Fmt(curMultiplier)
 				advantage = act.m_planProperty[Common.PLAN_PROPERTY_ADVANTAGE] + (0 if self.m_lastActivity == None else self.GetActivityById(self.m_lastActivity).m_matrix[act.m_ID])
 				act.m_planScore += act.m_planProperty[Common.PLAN_PROPERTY_ADVANTAGE] + (0 if self.m_lastActivity == None else self.GetActivityById(self.m_lastActivity).m_matrix[act.m_ID])
 				rule = (act.m_planProperty[Common.PLAN_PROPERTY_AUTHORITY] * act.m_planProperty[Common.PLAN_PROPERTY_OBEDIENCE] * 0) #dummy value 0; fill it with agent existance at home
@@ -605,31 +611,31 @@ class Agent:
 				act.m_planScore += act.m_planProperty[Common.PLAN_PROPERTY_URGENCY]
 				act.m_planScore /= 4
 				
-				actDebugStr += " Wish: "+Fmt(wish)+" Advantage: "+Fmt(advantage)+" Rule: "+Fmt(rule)+" Need: "+Fmt(need)+" PlanScore: "+Fmt(act.m_planScore)
+				# actDebugStr += " Wish: "+Fmt(wish)+" Advantage: "+Fmt(advantage)+" Rule: "+Fmt(rule)+" Need: "+Fmt(need)+" PlanScore: "+Fmt(act.m_planScore)
 				
 				act.m_score += act.m_timeScore + act.m_planScore
 				
-				actDebugStr += " TotalScore:"+Fmt(act.m_score)+"\n"
+				# actDebugStr += " TotalScore:"+Fmt(act.m_score)+"\n"
 				# act.m_score *= curMultiplier
 				# actDebugStr += " TotalScore:"+Fmt(act.m_score)
 				lastEmoScore = act.m_emotionalScore
-				Global.Logger.LogDebug(actDebugStr)
+				# Global.Logger.LogDebug(actDebugStr)
 			
 			actList.sort(key = lambda x: x.m_score,reverse = True)
 			
-			Global.Logger.LogDebug("Activity sorted by score:\n")
-			for act in actList:
-				Global.Logger.LogDebug(act.m_ID+" score "+str(act.m_score)+"\n")
+			# Global.Logger.LogDebug("Activity sorted by score:\n")
+			# for act in actList:
+				# Global.Logger.LogDebug(act.m_ID+" score "+str(act.m_score)+"\n")
 			
 			while(len(actList) > 0):
-				debugStr = "Check ability:"+actList[0].m_ID+" Standard:"+Fmt(actList[0].m_physicalStandard)+" Current:"+Fmt(self.m_currentAbility)
+				# debugStr = "Check ability:"+actList[0].m_ID+" Standard:"+Fmt(actList[0].m_physicalStandard)+" Current:"+Fmt(self.m_currentAbility)
 				if self.m_currentAbility < actList[0].m_physicalStandard:
 					actList[0].SetToIncidental()
-					debugStr += " Move to incidental\n"
-					Global.Logger.LogDebug(debugStr)
+					# debugStr += " Move to incidental\n"
+					# Global.Logger.LogDebug(debugStr)
 					incidentalAct.append(actList.pop(0))
 				else:
-					Global.Logger.LogDebug(debugStr+" OK\n")
+					# Global.Logger.LogDebug(debugStr+" OK\n")
 					break
 			
 			if len(actList) > 0:
@@ -649,9 +655,9 @@ class Agent:
 									parentAct = testAct
 									break
 					self.m_currentActivity = traceAct
-		Global.Logger.LogDebug("act statt "+self.m_currentActivity.m_ID+" "+str(self.m_currentActivity.m_status)+" "+str(self.m_currentActivity.IsDone())+"\n")
+		# Global.Logger.LogDebug("act statt "+self.m_currentActivity.m_ID+" "+str(self.m_currentActivity.m_status)+" "+str(self.m_currentActivity.IsDone())+"\n")
 		if self.m_currentActivity != None  and (not self.m_currentActivity.IsDone()) and (not self.m_currentActivity.IsRunning()):
-			Global.Logger.LogDebug("goto 4 "+self.m_currentActivity.m_ID+" "+str(self.m_currentActivity.m_status)+"\n")
+			# Global.Logger.LogDebug("goto 4 "+self.m_currentActivity.m_ID+" "+str(self.m_currentActivity.m_status)+"\n")
 			self.m_currentActivity.GoTo()
 			for act in incidentalAct:
 				if act.m_priority == 1:
@@ -890,7 +896,7 @@ class Agent:
 		return path
 	
 	def CheckStartMovement(self):
-		Global.Logger.LogDebug("StartCheckMove\n")
+		# Global.Logger.LogDebug("StartCheckMove\n")
 		if self.m_currentActivity.m_status == Common.ACT_STATUS_GOTO and self.m_state != STATE_MOVE:
 			roomName = self.m_currentActivity.GetTargetRoom()
 			if (roomName == "Agent"):
@@ -898,8 +904,8 @@ class Agent:
 				if interactAgent != None:
 					self.m_targetRoom = interactAgent.m_currentRoom
 			else:
-				Global.Logger.LogDebug("Rukiane = "+self.m_currentActivity.m_ID+"|"+str(roomName)+"|"+str(self.m_currentActivity.m_rooms)+" "+"\n")
-				Global.Logger.DumpDebug()
+				# Global.Logger.LogDebug("Rukiane = "+self.m_currentActivity.m_ID+"|"+str(roomName)+"|"+str(self.m_currentActivity.m_rooms)+" "+"\n")
+				# Global.Logger.DumpDebug()
 				#print "rumina "+roomName
 				self.m_targetRoom = next((room for room in Global.g_myHouse.m_rooms if room.m_name == roomName),None)
 			self.m_targetType = TARGET_ROOM
@@ -926,7 +932,7 @@ class Agent:
 			else:
 				self.m_targetType = TARGET_NONE
 				self.m_currentActivity.Start()
-		Global.Logger.LogDebug("EndCheckMove\n")
+		# Global.Logger.LogDebug("EndCheckMove\n")
 	
 	#update pergerakan dan posisi agent
 	def UpdateAgentMovement(self, dt):
@@ -1111,6 +1117,8 @@ class Agent:
 						newPath.extend(path)
 						start = ep.pos
 						recalculatePath = True
+						self.m_target = ep.target
+						self.m_target.SetAvailable(False)
 						break
 			elif (self.m_currentActivity.m_device[self.m_currentActivity.m_targetRoom] != "-"):
 				self.m_currentActivity.NextTargetRoom()

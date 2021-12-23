@@ -1,8 +1,9 @@
 import CommonEnum
+import Global
 
 class Target:
 	s_unNamedCount = 0
-	def __init__(self,fIndex, type, tp = None, id = None, powerCons = 0):
+	def __init__(self,fIndex, type, tp = None, id = None, powerCons = 0, active = False):
 		if id == None:
 			self.m_id = "UNNAMED"+str(Target.s_unNamedCount)
 			Target.s_unNamedCount += 1
@@ -17,6 +18,8 @@ class Target:
 		self.m_type = type
 		self.m_powerCons = powerCons
 		self.m_usageStartTime = 0
+		if active:
+			self.StartUsage()
 		
 	def setTargetPoint(self,point):
 		self.m_targetPoint = point
@@ -48,6 +51,7 @@ class Target:
 	def StartUsage(self, timer = 0, offset = 0):
 		if self.m_usageStartTime == 0:
 			self.m_usageStartTime = Global.g_timer.m_time - offset
+		self.m_usageTimer = timer
 	
 	def StopUsage(self):
 		usage = [Common.ENERGY_TYPE_ELECTRICITY, self.m_usageStartTime, Global.g_timer.m_time, self.m_powerCons]
@@ -59,4 +63,7 @@ class Target:
 		if self.m_usageTimer != 0:
 			if Global.g_timer.m_time - self.m_usageStartTime > self.m_usageTimer:
 				self.StopUsage()
+	
+	def SetAvailable(self, available):
+		self.m_available = available
 	

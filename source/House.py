@@ -150,13 +150,26 @@ class Room:
 				break
 	
 	def CheckResource(self, resource, amount):
-		Global.Logger.LogDebug("RKey "+str(self.m_resource.keys())+"\n");
-		Global.Logger.LogDebug("RAmount "+resource+" "+str(amount)+"\n")
-		Global.Logger.LogDebug("Res "+str(self.m_resource)+"\n")
+		# Global.Logger.LogDebug("RKey "+str(self.m_resource.keys())+"\n");
+		# Global.Logger.LogDebug("RAmount "+resource+" "+str(amount)+"\n")
+		# Global.Logger.LogDebug("Res "+str(self.m_resource)+"\n")
 		return (resource in self.m_resource.keys()) and (amount <= self.m_resource[resource][0])
 	
 	def IsGeneralForResource(self, resourceType):
+		Global.Logger.LogDebug("Check general room "+self.m_name+" res "+resourceType)
+		Global.Logger.LogDebug("my res "+str(self.m_resource.keys())+"\n")
+		Global.Logger.LogDebug("is in "+str(resourceType in self.m_resource.keys())+"\n")
+		if (resourceType in self.m_resource.keys()):
+			Global.Logger.LogDebug("is gen "+str(self.m_resource[resourceType][1])+"\n")
 		return (resourceType in self.m_resource.keys()) and self.m_resource[resourceType][1]
+	
+	def ReportCurrentResource(self):
+		Global.Logger.LogDebug("Resource for room "+self.m_name+"\n")
+		if self.m_resource == None or len(self.m_resource) == 0:
+			Global.Logger.LogDebug("No resource\n")
+		else:
+			for res in self.m_resource.keys():
+				Global.Logger.LogDebug(res+" "+str(self.m_resource[res][0])+"\n")
 
 #--------------------------------------------------------------------------------------------------------------
 #-------------House Class--------------------------------------------------------------------------------------
@@ -209,4 +222,12 @@ class House:
 	
 	def RegisterEnergyUsage(self, usage):
 		self.m_energyUsage.append(usage)
-		
+	
+	def FindGeneralRoomForResource(self, resourceType):
+		roomWithResource = next((room for room in self.m_rooms if room.IsGeneralForResource(resourceType)), None)
+		return roomWithResource
+	
+	def ReportResource(self):
+		for room in self.m_rooms:
+			room.ReportCurrentResource()
+		Global.Logger.DumpDebug()

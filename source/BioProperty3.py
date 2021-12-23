@@ -44,7 +44,7 @@ class BioProperty():
 		if activity != None and activity.CanStart(self.m_agent):
 			activityToTrigger = self.m_relatedActivityId
 		
-		Global.Logger.LogDebug("try trigger "+self.m_relatedActivityId+"|"+activityToTrigger+"\n")
+		# Global.Logger.LogDebug("try trigger "+self.m_relatedActivityId+"|"+activityToTrigger+"\n")
 		
 		if activityToTrigger != "":
 			self.m_relatedActivity = self.m_agent.TryTrigger(activityToTrigger)
@@ -310,7 +310,7 @@ class Sleepy(BioProperty):
 		Global.Logger.LogDebug(self.m_type+" "+Fmt(self.m_currentScore)+" "+Fmt(self.m_curRate)+" "+Fmt(self.m_agent.GetActivityEffect(self.m_type))+" "+Fmt(self.m_agent.GetEmotionalFactor())+" "+Fmt(self.m_scoreActAndEmo)+" "+Fmt(self.m_specialEffect)+" "+Fmt(self.m_totalScore) + " "+ ("KT" if self.IsHabit(Common.AGENT_ASLEEP,Global.g_timer.GetHour()) else ("KB" if self.IsHabit(Common.AGENT_AWAKE,Global.g_timer.GetHour()) else "-"))+" "+("T" if self.m_agent.IsAsleep() else "B")+"\n")
 
 class Defecate(BioProperty):
-	def __init__(self, agent, type, habit, rule, inStomach, curPressure, threshold, constant):
+	def __init__(self, agent, type, habit,  inStomach, curPressure, threshold, constant):
 		BioProperty.__init__(self, agent, type, None, 0)
 		self.m_habit = habit
 		self.m_inStomach = inStomach
@@ -322,7 +322,6 @@ class Defecate(BioProperty):
 		self.m_tickStart = False
 		self.m_inColonEdge = 0
 		self.m_gotoRectum = 0
-		self.m_rule = rule
 		self.m_eatEffect = 0
 		self.m_rateIntestineToColon = 0
 		self.m_agent = agent
