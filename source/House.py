@@ -5,6 +5,7 @@ import os
 
 import Target
 import Global
+import Timer
 
 import Rhino as rh
 from Rhino.Geometry import Curve, Point3d
@@ -55,7 +56,7 @@ class Energy:
 #--------------------------------------------------------------------------------------------------------------
 
 class Room:
-	def __init__(self,name,temperature,light, curve, lamps, resource, floorIndex = 0):
+	def __init__(self,name,temperature,light, curve, lamps, resource, tableLight, tableTemperature, floorIndex = 0):
 		self.m_name = name
 		self.m_temperature = temperature
 		self.m_light = light
@@ -68,6 +69,12 @@ class Room:
 		self.m_resource = self.InitResource(resource)
 		self.m_value = 0
 		self.m_usage = 0
+		self.m_tableLight = []
+		self.m_tableTemperature = []
+	
+	def SetLightAndTemperatureTable(self, tableLight, tableTemperature):
+		self.m_light = tableLight
+		self.m_temperature = tableTemperature
 	
 	def InitResource(self, resStr):
 		resource = {}
@@ -110,21 +117,27 @@ class Room:
 		# Global.Logger.DumpDebug()
 		return False
 	
-	def HasAndAvailable(self, itemType):
+	def HasItem(self, itemType):
 		items = itemType.split(";")
 		Global.Logger.LogDebug("Checking item "+str(itemType)+" in room "+self.m_name+" itemlength +"+str(len(self.m_items))+"\n")
 		for item in items:
-			foundItem = next((roomItem for roomItem in self.m_items if (roomItem.m_type == item and roomItem.m_available)), None)
+			foundItem = next((roomItem for roomItem in self.m_items if roomItem.m_type == item), None)
 			if foundItem:
 				return True, foundItem.m_id
+	
+	def HasAndAvailable(self, itemType):
+		hasItem, item = self.HasItem(self, itemType)
 		
-		# for item in self.m_items:
-			# Global.Logger.LogDebug("\titem "+str(item.m_type)+" "+str(item.m_available)+"\n")
-			# if item.m_type == itemType and item.m_available:
-				# Global.Logger.DumpDebug()
-				# return True,item.m_id
-		Global.Logger.DumpDebug()
-		return False, None
+		if not hasItem or (not item.m_available):
+			return False, None
+		
+		return hasItem, item.m_id
+	
+	def HasAndActive(self, itemType):
+		hasItem, item = self.HasItem(self, itemType)
+		if hasItem and item.m_usageStartTime > 0:
+			return True, True, item.m_id
+		return hasItem, False, (item.m_id if hasItem else None)
 	
 	def GetLampToTurn(self, turnOn = True):
 		if self.m_lamps != None:
@@ -170,6 +183,19 @@ class Room:
 		else:
 			for res in self.m_resource.keys():
 				Global.Logger.LogDebug(res+" "+str(self.m_resource[res][0])+"\n")
+	
+	def UpdateLightAndTemperature(self):
+		index = Global.g_timer.m_time / Timer.MINUTE_IN_HOUR
+		self.m_temperature = self.m_tableTemperature[index]
+		self.m_light = self.m_tableLight[index]
+		
+		hasLight, active, lightDevice = self.HasAndActive("Lamp")
+		if hasLight and active:
+			self.m_light += next(trgt for trgt in Agent.s_possibleTarget if trgt.m_id == lightDevice).m_envEffect[Common.EFFECT_LIGHT]
+		
+		hasFan, active, fanDevice = self.HasAndActive("Fan")
+		if hasFan and active:
+			self.m_temperature += next(trgt for trgt in Agent.s_possibleTarget if trgt.m_id == fanDevice).m_envEffect[Common.EFFECT_TEMPERATURE]
 
 #--------------------------------------------------------------------------------------------------------------
 #-------------House Class--------------------------------------------------------------------------------------
@@ -222,6 +248,10 @@ class House:
 	
 	def RegisterEnergyUsage(self, usage):
 		self.m_energyUsage.append(usage)
+	
+	def ReportEnergyUsage(self):
+		for usage in self.m_energyUsage:
+			Global.Logger.LogDebug("usage "+str(usage)+"\n")
 	
 	def FindGeneralRoomForResource(self, resourceType):
 		roomWithResource = next((room for room in self.m_rooms if room.IsGeneralForResource(resourceType)), None)

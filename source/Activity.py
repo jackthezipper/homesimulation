@@ -255,6 +255,14 @@ class Activity:
 				efSingle[2] = float(efSingle[2])
 				roomEf.append(efSingle)
 			self.m_effect.append(roomEf)
+		
+		self.m_postActivity = []
+		postActivity = params[Common.TABLE_POST_ACTIVITY].split("|")
+		for activities in postActivity:
+			singleRoomPA = []
+			if activities != "-":
+				singleRoomPA = activities.split(";")
+			self.m_postActivity.append(singleRoomPA)
 	
 	def GetBioEffect(self, property):
 		# return self.m_bioEffect[EFFECT_RUN if self.m_status == Common.ACT_STATUS_RUN else EFFECT_SUSPEND][BioProperty3.BIOPROPERTY[property]] if self.m_status != Common.ACT_STATUS_NONE else 0
@@ -423,8 +431,8 @@ class Activity:
 					cancel |= ((self.m_terms[i][self.m_targetRoom] != "-") and (self.m_will > float(self.m_terms[i][self.m_targetRoom])))
 				elif i == Common.TERM_TEMPERATURE:
 					if agent.m_targetRoom.m_temperature > float(self.m_terms[i][self.m_targetRoom]):
-						hasFan, fanObj = agent.m_targetRoom.HasAndAvailable("Fan")
-						if hasFan:
+						hasFan, active, fanObj = agent.m_targetRoom.HasAndActive("Fan")
+						if hasFan and (not active):
 							stopPlaces.append(fanObj)
 						cancel |= hasFan
 		
@@ -512,7 +520,7 @@ class Activity:
 					if generalRoom != None:
 						self.ApplyEffect(generalRoom, effect[0], usage, autoRoom = False)
 			elif effect[1] == 7:
-				if effext[2] == 0:
+				if effect[2] == 0:
 					self.ApplyEffect(agent.m_currentRoom, effect[0], self.m_prevResValue)
 				else:
 					s_pendingEffect.append([agent.m_currentRoom, effect[0], self.m_prevResValue, (effect[2] - self.m_duration)])

@@ -3,7 +3,7 @@ import Global
 
 class Target:
 	s_unNamedCount = 0
-	def __init__(self,fIndex, type, tp = None, id = None, powerCons = 0, active = False):
+	def __init__(self,fIndex, type, envEffect, tp = None, id = None, powerCons = 0, active = False):
 		if id == None:
 			self.m_id = "UNNAMED"+str(Target.s_unNamedCount)
 			Target.s_unNamedCount += 1
@@ -20,6 +20,9 @@ class Target:
 		self.m_usageStartTime = 0
 		if active:
 			self.StartUsage()
+		listEnvEffect = envEffect.split(";")
+		# numericEnvEffect = [float(effect) for effect in listEnvEffect]
+		self.m_envEffect = [float(effect) for effect in listEnvEffect]
 		
 	def setTargetPoint(self,point):
 		self.m_targetPoint = point
