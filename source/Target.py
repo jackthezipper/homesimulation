@@ -3,7 +3,7 @@ import Global
 
 class Target:
 	s_unNamedCount = 0
-	def __init__(self,fIndex, type, envEffect, tp = None, id = None, powerCons = 0, active = False):
+	def __init__(self,fIndex, type, envEffect, tp = None, id = None, powerCons = 0, active = False, autoTrigger = "-"):
 		if id == None:
 			self.m_id = "UNNAMED"+str(Target.s_unNamedCount)
 			Target.s_unNamedCount += 1
@@ -18,11 +18,18 @@ class Target:
 		self.m_type = type
 		self.m_powerCons = powerCons
 		self.m_usageStartTime = 0
+		self.m_activatedByAct = "Auto"
+		self.m_activatorAgent = "Auto"
 		if active:
-			self.StartUsage()
-		listEnvEffect = envEffect.split(";")
+			self.StartUsage("Auto")
+		listEnvEffect = [] if envEffect == "-" else envEffect.split(";")
 		# numericEnvEffect = [float(effect) for effect in listEnvEffect]
 		self.m_envEffect = [float(effect) for effect in listEnvEffect]
+		self.m_autoTrigger = autoTrigger.split(";")
+		if len(self.m_autoTrigger) > 1:
+			self.m_autoTrigger[1] = float(self.m_autoTrigger[1]) #min value to trigger
+			self.m_autoTrigger[2] = float(self.m_autoTrigger[2]) #max valur to stop
+			self.m_autoTrigger[3] = float(self.m_autoTrigger[3]) #rate
 		
 	def setTargetPoint(self,point):
 		self.m_targetPoint = point
@@ -51,13 +58,16 @@ class Target:
 	def CreateCopyForId(self, id):
 		return Target(self.m_floorIndex,self.m_type,self.m_targetPoint,id)
 	
-	def StartUsage(self, timer = 0, offset = 0):
+	def StartUsage(self, activityId, timer = 0, offset = 0, agent = "Auto"):
 		if self.m_usageStartTime == 0:
 			self.m_usageStartTime = Global.g_timer.m_time - offset
 		self.m_usageTimer = timer
+		
+		self.m_activatedByAct = activityId
+		self.m_activatorAgent = agent
 	
 	def StopUsage(self):
-		usage = [Common.ENERGY_TYPE_ELECTRICITY, self.m_usageStartTime, Global.g_timer.m_time, self.m_powerCons]
+		usage = [Common.ENERGY_TYPE_ELECTRICITY, self.m_activatorAgent, self.m_activatedByAct, self.m_usageStartTime, Global.g_timer.m_time, self.m_powerCons]
 		Global.g_myHouse.RegisterEnergyUsage(usage)
 		self.m_usageTimer = 0
 		self.m_usageStartTime = 0
@@ -66,7 +76,14 @@ class Target:
 		if self.m_usageTimer != 0:
 			if Global.g_timer.m_time - self.m_usageStartTime > self.m_usageTimer:
 				self.StopUsage()
+		self.UpdateAutoTrigger()
 	
 	def SetAvailable(self, available):
 		self.m_available = available
 	
+	def UpdateAutoTrigger(self):
+		if len(self.m_autoTrigger) > 1:
+			generalRoom = Global.g_myHouse.FindGeneralRoomForResource(self.m_autoTrigger[0])
+			if generalRoom != None and generalRoom.m_resource[self.m_autoTrigger[0]][0] < self.m_autoTrigger[1]:
+				onTime = (self.m_autoTrigger[2] - generalRoom.m_resource[self.m_autoTrigger[0]][0]) / self.m_autoTrigger[3]
+				self.StartUsage("Auto", onTime)

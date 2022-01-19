@@ -6,6 +6,7 @@ import os
 import Target
 import Global
 import Timer
+import Agent
 
 import Rhino as rh
 from Rhino.Geometry import Curve, Point3d
@@ -56,11 +57,11 @@ class Energy:
 #--------------------------------------------------------------------------------------------------------------
 
 class Room:
-	def __init__(self,name,temperature,light, curve, lamps, resource, tableLight, tableTemperature, floorIndex = 0):
+	def __init__(self,name,temperature,light, curve, lamps, resource, floorIndex = 0):
 		self.m_name = name
 		self.m_temperature = temperature
 		self.m_light = light
-		self.m_targetCoord = Point3d(0,0,0)
+		self.m_targetCoord = []
 		self.m_curve = curve
 		self.m_floorIndex = floorIndex
 		self.m_items = []
@@ -71,6 +72,7 @@ class Room:
 		self.m_usage = 0
 		self.m_tableLight = []
 		self.m_tableTemperature = []
+		self.m_countAgent = 0
 	
 	def SetLightAndTemperatureTable(self, tableLight, tableTemperature):
 		self.m_light = tableLight
@@ -93,6 +95,23 @@ class Room:
 				lampStat.append([lamp,False])
 			return lampStat
 		return None
+	
+	def AddTargetCoord(self, coord):
+		self.m_targetCoord.append([coord, False])
+	
+	def GetAvailableCoord(self):
+		for i in range(0,len(self.m_targetCoord)):
+			if not self.m_targetCoord[i][1]:
+				return i
+		return -1
+	
+	def SetUseCoord(self, index, use):
+		Global.Logger.LogDebug("Set use "+self.m_name+" "+str(index)+" "+str(use)+"\n")
+		if index != -1:
+			self.m_targetCoord[index][1] = use
+	
+	def GetTargetCoord(self, index):
+		return None if ((index == -1) or (index > len(self.m_targetCoord))) else self.m_targetCoord[index][0]
 	
 	def SetTargetCoord(self, coord):
 		Global.Logger.LogDebug("Add coord "+self.m_name+" "+str(coord)+"\n")
@@ -120,13 +139,15 @@ class Room:
 	def HasItem(self, itemType):
 		items = itemType.split(";")
 		Global.Logger.LogDebug("Checking item "+str(itemType)+" in room "+self.m_name+" itemlength +"+str(len(self.m_items))+"\n")
+		Global.Logger.LogDebug("bleki "+str(self.m_items))
 		for item in items:
 			foundItem = next((roomItem for roomItem in self.m_items if roomItem.m_type == item), None)
 			if foundItem:
-				return True, foundItem.m_id
+				return True, foundItem
+		return False, None
 	
 	def HasAndAvailable(self, itemType):
-		hasItem, item = self.HasItem(self, itemType)
+		hasItem, item = self.HasItem(itemType)
 		
 		if not hasItem or (not item.m_available):
 			return False, None
@@ -134,7 +155,8 @@ class Room:
 		return hasItem, item.m_id
 	
 	def HasAndActive(self, itemType):
-		hasItem, item = self.HasItem(self, itemType)
+		Global.Logger.LogDebug("hagger "+itemType+"\n")
+		hasItem, item = self.HasItem(itemType)
 		if hasItem and item.m_usageStartTime > 0:
 			return True, True, item.m_id
 		return hasItem, False, (item.m_id if hasItem else None)
@@ -148,7 +170,7 @@ class Room:
 			return lampToTurn
 		return None
 		
-	def SetLampTurn(self, lampId, turnOn):
+	def SetLampTurn(self, agent, lampId, turnOn):
 		for lamp in self.m_lamps:
 			if lamp[0] == lampId:
 				lamp[1] = turnOn
@@ -156,7 +178,7 @@ class Room:
 				lampTarget = next((trgt for trgt in Agent.Agent.s_possibleTarget if trgt.m_id == lampId), None)
 				if lampTarget != None:
 					if turnOn:
-						lampTarget.StartUsage()
+						lampTarget.StartUsage("L1", agent = agent.m_role)
 					else:
 						lampTarget.StopUsage()
 				
@@ -196,6 +218,13 @@ class Room:
 		hasFan, active, fanDevice = self.HasAndActive("Fan")
 		if hasFan and active:
 			self.m_temperature += next(trgt for trgt in Agent.s_possibleTarget if trgt.m_id == fanDevice).m_envEffect[Common.EFFECT_TEMPERATURE]
+	
+	def CountAgentInRoom(self):
+		count = 0
+		for agent in Agent.Agent.agentList:
+			if self.IsInRoom(agent.pos):
+				count += 1
+		return count
 
 #--------------------------------------------------------------------------------------------------------------
 #-------------House Class--------------------------------------------------------------------------------------

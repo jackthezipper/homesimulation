@@ -23,7 +23,7 @@ K_MET_AWAKE = 0.033
 K_MET_ASLEEP = 0.015
 
 def Fmt(val):
-	return "{:.3f}".format(val)
+	return "{:.3f}".format(float(val))
 
 class BioProperty():
 	def __init__(self, agent, type, rate, current):
@@ -136,6 +136,7 @@ class Thirst(BioProperty):
 			self.TryTriggerRelatedActivity()
 		
 		if (self.m_relatedActivity != None and self.m_relatedActivity.IsRunning()):
+			Global.Logger.LogDebug("hokofa "+Fmt(index)+" "+Fmt(self.m_effect[index][Common.EFFECT_NEW_VALUE])+" "+Fmt(self.m_relatedActivity.m_duration)+"\n")
 			return self.m_effect[index][Common.EFFECT_NEW_VALUE] / self.m_relatedActivity.m_duration
 		
 		return 0
@@ -144,6 +145,7 @@ class Thirst(BioProperty):
 		self.m_totalScore = Common.clamp((self.m_currentScore + (self.m_rate[Common.AGENT_ASLEEP if self.m_agent.IsAsleep() else Common.AGENT_AWAKE] * self.m_agent.GetEmotionalFactor()) + self.m_agent.GetActivityEffect(self.m_type)),0,10)
 		self.m_mlUrinate = 15 * self.m_currentEffectScore
 		self.m_currentEffectScore = self.CalculateEffect()
+		self.PrintProperty()
 	
 	def IsHabit(self, time):
 		if self.m_habit == None:
@@ -280,8 +282,9 @@ class Sleepy(BioProperty):
 		self.m_curRate = self.m_rate[Common.AGENT_ASLEEP if self.m_agent.IsAsleep() else Common.AGENT_AWAKE]
 		self.m_totalScore = self.m_specialEffect + self.m_curRate
 		
+		# Global.Logger.LogDebug("selubeg "+str(self.m_totalScore)+"\n")
 		self.m_totalScore = Common.clamp(self.m_totalScore,0,10)
-		
+		# Global.Logger.LogDebug("selabeg "+str(self.m_totalScore)+"\n")
 		randVal = (random.random() * 2) + 1
 		
 		self.m_constraint = self.m_totalScore + (((( -randVal if self.m_totalScore > 2 else -1) if self.IsHabit(Common.AGENT_AWAKE,Global.g_timer.GetHour()) else randVal)if self.m_agent.IsAsleep() else (randVal if (self.m_totalScore < 8 and self.IsHabit(Common.AGENT_ASLEEP,Global.g_timer.GetHour())) else 0)) / Timer.MINUTE_IN_HOUR)
@@ -298,12 +301,14 @@ class Sleepy(BioProperty):
 		
 	def PostUpdateActivityCalculation(self):
 		Global.Logger.LogDebug("Post update "+Global.g_timer.GetFormattedHour()+" "+str(self.m_relatedActivity != None)+" "+str(self.m_constraint)+" "+str(self.IsHabit(Common.AGENT_AWAKE,Global.g_timer.GetHour()))+"\n")
+		self.PrintProperty()
 		if self.m_relatedActivity != None and ((self.m_constraint <= 0) or (self.IsHabit(Common.AGENT_AWAKE,Global.g_timer.GetHour()) and self.m_constraint <= 2)):
 			Global.Logger.LogDebug("Forcestop\n")
 			self.m_relatedActivity.ForceStop()
 		pass
 	
 	def GetScore(self):
+		# Global.Logger.LogDebug("selibeg "+str(self.m_totalScore)+"\n")
 		return self.m_totalScore
 	
 	def PrintProperty(self):

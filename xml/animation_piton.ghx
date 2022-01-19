@@ -48,10 +48,10 @@
             <chunk name="Projection">
               <items count="2">
                 <item name="Target" type_name="gh_drawing_point" type_code="30">
-                  <X>-299</X>
-                  <Y>-908</Y>
+                  <X>-27</X>
+                  <Y>-342</Y>
                 </item>
-                <item name="Zoom" type_name="gh_single" type_code="5">1.38408291</item>
+                <item name="Zoom" type_name="gh_single" type_code="5">1</item>
               </items>
             </chunk>
             <chunk name="Views">
@@ -390,11 +390,11 @@ class MyComponent(component):
 </item>
                     <item name="Description" type_name="gh_string" type_code="10">GhPython provides a Python script component</item>
                     <item name="EditorLocation" type_name="gh_drawing_point" type_code="30">
-                      <X>467</X>
-                      <Y>4</Y>
+                      <X>501</X>
+                      <Y>45</Y>
                     </item>
                     <item name="EditorSize" type_name="gh_drawing_size" type_code="32">
-                      <W>909</W>
+                      <W>614</W>
                       <H>788</H>
                     </item>
                     <item name="HideInput" type_name="gh_bool" type_code="1">true</item>
@@ -409,14 +409,14 @@ class MyComponent(component):
                     <chunk name="Attributes">
                       <items count="2">
                         <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
-                          <X>709</X>
-                          <Y>877</Y>
+                          <X>717</X>
+                          <Y>882</Y>
                           <W>154</W>
                           <H>118</H>
                         </item>
                         <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
-                          <X>792</X>
-                          <Y>936</Y>
+                          <X>800</X>
+                          <Y>941</Y>
                         </item>
                       </items>
                     </chunk>
@@ -450,14 +450,14 @@ class MyComponent(component):
                             <chunk name="Attributes">
                               <items count="2">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
-                                  <X>711</X>
-                                  <Y>879</Y>
+                                  <X>719</X>
+                                  <Y>884</Y>
                                   <W>66</W>
                                   <H>28</H>
                                 </item>
                                 <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
-                                  <X>745.5</X>
-                                  <Y>893.25</Y>
+                                  <X>753.5</X>
+                                  <Y>898.25</Y>
                                 </item>
                               </items>
                             </chunk>
@@ -482,14 +482,14 @@ class MyComponent(component):
                             <chunk name="Attributes">
                               <items count="2">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
-                                  <X>711</X>
-                                  <Y>907</Y>
+                                  <X>719</X>
+                                  <Y>912</Y>
                                   <W>66</W>
                                   <H>29</H>
                                 </item>
                                 <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
-                                  <X>745.5</X>
-                                  <Y>921.75</Y>
+                                  <X>753.5</X>
+                                  <Y>926.75</Y>
                                 </item>
                               </items>
                             </chunk>
@@ -513,14 +513,14 @@ class MyComponent(component):
                             <chunk name="Attributes">
                               <items count="2">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
-                                  <X>711</X>
-                                  <Y>936</Y>
+                                  <X>719</X>
+                                  <Y>941</Y>
                                   <W>66</W>
                                   <H>28</H>
                                 </item>
                                 <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
-                                  <X>745.5</X>
-                                  <Y>950.25</Y>
+                                  <X>753.5</X>
+                                  <Y>955.25</Y>
                                 </item>
                               </items>
                             </chunk>
@@ -545,14 +545,14 @@ class MyComponent(component):
                             <chunk name="Attributes">
                               <items count="2">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
-                                  <X>711</X>
-                                  <Y>964</Y>
+                                  <X>719</X>
+                                  <Y>969</Y>
                                   <W>66</W>
                                   <H>29</H>
                                 </item>
                                 <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
-                                  <X>745.5</X>
-                                  <Y>978.75</Y>
+                                  <X>753.5</X>
+                                  <Y>983.75</Y>
                                 </item>
                               </items>
                             </chunk>
@@ -571,14 +571,14 @@ class MyComponent(component):
                             <chunk name="Attributes">
                               <items count="2">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
-                                  <X>807</X>
-                                  <Y>879</Y>
+                                  <X>815</X>
+                                  <Y>884</Y>
                                   <W>54</W>
                                   <H>114</H>
                                 </item>
                                 <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
-                                  <X>834</X>
-                                  <Y>936</Y>
+                                  <X>842</X>
+                                  <Y>941</Y>
                                 </item>
                               </items>
                             </chunk>
@@ -2412,7 +2412,7 @@ class MyComponent(component):
                     <item name="Target" index="2" type_name="gh_guid" type_code="9">fb8b5d51-4a23-4e49-90f8-cf13586022a7</item>
                     <item name="Target" index="3" type_name="gh_guid" type_code="9">7f001b47-0726-44fb-a29a-62b6976333d7</item>
                     <item name="TargetCount" type_name="gh_int32" type_code="3">4</item>
-                    <item name="TimerInterval" type_name="gh_int32" type_code="3">10000000</item>
+                    <item name="TimerInterval" type_name="gh_int32" type_code="3">1</item>
                   </items>
                   <chunks count="1">
                     <chunk name="Attributes">
@@ -2653,7 +2653,7 @@ using GH_IO.Serialization;</item>
                   </items>
                   <chunks count="1">
                     <chunk name="Attributes">
-                      <items count="2">
+                      <items count="3">
                         <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                           <X>61</X>
                           <Y>504</Y>
@@ -2664,6 +2664,7 @@ using GH_IO.Serialization;</item>
                           <X>61.73356</X>
                           <Y>504.5618</Y>
                         </item>
+                        <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                       </items>
                     </chunk>
                   </chunks>
@@ -3673,8 +3674,8 @@ class MyComponent(component):
 </item>
                     <item name="Description" type_name="gh_string" type_code="10">GhPython provides a Python script component</item>
                     <item name="EditorLocation" type_name="gh_drawing_point" type_code="30">
-                      <X>130</X>
-                      <Y>130</Y>
+                      <X>195</X>
+                      <Y>1</Y>
                     </item>
                     <item name="EditorSize" type_name="gh_drawing_size" type_code="32">
                       <W>558</W>
@@ -4690,832 +4691,6 @@ class MyComponent(component):
               </chunks>
             </chunk>
             <chunk name="Object" index="31">
-              <items count="3">
-                <item name="GUID" type_name="gh_guid" type_code="9">410755b1-224a-4c1e-a407-bf32fb45ea7e</item>
-                <item name="Lib" type_name="gh_guid" type_code="9">00000000-0000-0000-0000-000000000000</item>
-                <item name="Name" type_name="gh_string" type_code="10">GhPython Script</item>
-              </items>
-              <chunks count="1">
-                <chunk name="Container">
-                  <items count="11">
-                    <item name="CodeInput" type_name="gh_string" type_code="10">from ghpythonlib.componentbase import executingcomponent as component
-import Grasshopper, GhPython
-import System
-import Rhino as rh
-import rhinoscriptsyntax as rs
-import scriptcontext as sc
-import math
-import csv
-import Rhino.Geometry as rg
-import sys
-
-from Rhino.Geometry import Point3d,Point,NurbsSurface
-
-cFPath = ghenv.Component.OnPingDocument().FilePath
-cpath = cFPath[0:cFPath.rfind('\\')+1]
-my_path = cpath+'..\source'
-if not my_path in sys.path:
-    sys.path.append(my_path)
-
-import Global
-import Target
-Target = reload(Target)
-
-import HomeObject
-HomeObject = reload(HomeObject)
-
-import Agent
-Agent = reload(Agent)
-
-import EntryPoint
-EntryPoint = reload(EntryPoint)
-
-import House
-House = reload(House)
-
-import PathFinding
-
-import CommonEnum
-import Timer
-import Config
-Timer = reload(Timer)
-
-STATE_FREE = 0
-STATE_BLOCKED = 1
-STATE_ENTRY = 2
-STATE_BLOCKED_OBJ = 3
-
-
-class MyComponent(component):
-    
-    def __init__(self):
-        self.NEIGHBOR_CHECK = []
-        self.NEIGHBOR_DIS = 2
-        self.WALL_DISTANCE = 0.12
-        self.gridSize = 0.08
-        self.grids = []
-        self.gridInitialized = False
-        self.topPos = []
-        self.possibleTarget = []
-        self.entryPoint = []
-        self.isRun = False
-        self.additionalWeight = []
-        self.m_rooms = []
-        self.polina = []
-    
-    def GenerateNeighborCheck(self):
-        self.NEIGHBOR_CHECK = []
-        for i in range(-self.NEIGHBOR_DIS,self.NEIGHBOR_DIS+1):
-            for j in range(-self.NEIGHBOR_DIS,self.NEIGHBOR_DIS+1):
-                if i == 0 and j == 0:
-                    continue
-                self.NEIGHBOR_CHECK.append((i,j))
-    
-    def GenerateRooms(self,objectList,idx):
-        sc.doc = rh.RhinoDoc.ActiveDoc
-        roomIndex = sc.doc.Layers.Find("ROOM_AREA",True)
-        sc.doc = ghdoc
-        newRoom = []
-        roomCoord = []
-        roomCoordGroup = []
-        roomGroup = []
-        for oi in objectList:
-            if oi.Attributes.LayerIndex == roomIndex:
-                #pos = rs.GetUserText(oi,"TargetCoord").split(",")
-                if oi.GetType() == rh.DocObjects.PointObject:
-                    roomCoord.append(oi.PointGeometry.Location)
-                    roomCoordGroup.append(oi.GetGroupList())
-                else:
-                    newRoom.append(House.Room(rs.GetUserText(oi,"RName"),27,100,oi.Geometry,rs.GetUserText(oi,"Lamp"), rs.GetUserText(oi,"Resource"),idx))
-                    rh.Geometry.PointContainment.Inside
-                    roomGroup.append(oi.GetGroupList())
-        Global.Logger.LogDebug("G count "+str(len(roomCoord))+" "+str(len(roomCoordGroup))+"\n")
-        i = 0;
-        for (coord,rCGroup) in zip(roomCoord,roomCoordGroup):
-            Global.Logger.LogDebug("iterate "+str(i))
-            i+=1
-            paired = False
-            Global.Logger.LogDebug("Room coord "+str(coord)+" group "+str(rCGroup)+"\n")
-            for g in rCGroup:
-                for (room,rGroup) in zip(newRoom,roomGroup):
-                    Global.Logger.LogDebug("Room "+room.m_name+" group "+str(rGroup)+"\n")
-                    for rg in rGroup:
-                        if g == rg:
-                            room.SetTargetCoord(coord)
-                            paired = True
-                            break
-                    if paired:
-                        break
-                if paired:
-                    break
-            Global.Logger.LogDebug("end loop\n")
-        self.m_rooms.extend(newRoom)
-        Global.Logger.DumpDebug()
-    def InitializeGrid(self,area,idx):
-        print "intinialisazuuuu "+str(idx)
-        import rhinoscriptsyntax as rs
-        self.GenerateNeighborCheck()
-        
-        sc.doc = rh.RhinoDoc.ActiveDoc
-        groundIndex = sc.doc.Layers.Find("ARS-LANTAI",True)
-        sc.doc = ghdoc
-        
-        entryPointObject = []
-        targetPointObject = []
-        
-        self.polina = []
-        #get nurbscurve or rectangle
-        rectArea = rs.coercecurve(area)
-        
-        minX = min(rectArea.Points[0].Location[0],rectArea.Points[2].Location[0])
-        maxX = max(rectArea.Points[0].Location[0],rectArea.Points[2].Location[0])
-        
-        minY = min(rectArea.Points[0].Location[1],rectArea.Points[2].Location[1])
-        maxY = max(rectArea.Points[0].Location[1],rectArea.Points[2].Location[1])
-        
-        #get width/height of the area and gridCount
-        gridCountW = abs(int(math.ceil(maxX/self.gridSize)) - int(math.floor(minX/self.gridSize)))
-        
-        gridCountH = abs(int(math.ceil(maxY/self.gridSize)) - int(math.floor(minY/self.gridSize)))
-        
-        #initialize grid array
-        curGrids = [[STATE_FREE for i in range(gridCountH)]for j in range(gridCountW)]
-        curAdditionalWeight = [[0 for i in range(gridCountH)]for j in range(gridCountW)]
-        curTargets = []
-        curEntries = []
-        
-        gridStartX = float(math.floor(minX/self.gridSize)) * self.gridSize
-        gridStartY = float(math.ceil(maxY/self.gridSize)) * self.gridSize
-        
-        if rectArea:
-            rh.DocObjects.Tables.ObjectTable.UnselectAll(rh.RhinoDoc.ActiveDoc.Objects)
-            #get objects inside the region
-            rc,pl = rectArea.TryGetPolyline()
-            view = sc.doc.Views.ActiveView.ActiveViewport
-            objectList = rh.RhinoDoc.ActiveDoc.Objects.FindByCrossingWindowRegion(view,pl,True,rh.DocObjects.ObjectType.AnyObject)#rh.DocObjects.ObjectType.Curve|rh.DocObjects.ObjectType.Point|rh.DocObjects.ObjectType.InstanceDefinition)
-            
-            for oi in objectList:
-                if oi.Attributes.LayerIndex == groundIndex or rs.GetUserText(oi,"IgnoreGrid") != None:
-                    continue
-                
-                if oi.ObjectType == rh.DocObjects.ObjectType.Point:
-                    if rs.GetUserText(oi,"Target") != None:
-                        type = rs.GetUserText(oi,"Type")
-                        if type == None:
-                            type = "Other"
-                        usage = rs.GetUserText(oi,"Usage")
-                        pUsage = 0 if usage == None else float(usage)
-                        active = rs.GetUserText(oi,"Active") != None
-                        envEffect = rs.GetUserText(oi,"EnvEffect")
-                        if envEffect = None:
-                            envEffect = ""
-                        target = Target.Target(idx,type,envEffect,oi.PointGeometry.Location,rs.GetUserText(oi,"ID"),pUsage, active)
-                        targetPointObject.append(oi)
-                        specific = rs.GetUserText(oi,"Specific")
-                        if specific != None:
-                            specList = specific.split(',')
-                            for spec in specList:
-                                target.setSpecificAgent(int(spec))
-                        activity = rs.GetUserText(oi,"Activity")
-                        if activity != None:
-                            actList = activity.split(',')
-                            for act in actList:
-                                target.setActivity(act)
-                        curTargets.append(target)
-                    if rs.GetUserText(oi,"Entry") != None:
-                        entryPointObject.append(oi)
-                        curEntries.append(EntryPoint.EntryPoint(oi.PointGeometry.Location,idx))
-                    continue
-                    
-                if oi.GetType() == rh.DocObjects.InstanceObject:
-                    Global.Logger.LogDebug("opite "+str(oi.Geometry.GetType())+"\n")
-                    bbox = oi.Geometry.GetBoundingBox(rh.Geometry.Plane.WorldXY)
-                    sc.doc = rh.RhinoDoc.ActiveDoc
-                    new = rs.CopyObject(oi.Id)
-                    blockInstanceElements = rs.ExplodeBlockInstance(new,True)
-                    curveBlockInstanceElements = []
-                    for elm in blockInstanceElements:
-                        cv = rs.coercecurve(elm)
-                        if cv != None:
-                            curveBlockInstanceElements.append(cv)
-                    sc.doc=ghdoc
-                    Global.Logger.DumpDebug()
-                elif oi.GetType() == rh.DocObjects.CurveObject:
-                    curve = oi.CurveGeometry
-                    if not curve:
-                        continue
-                    bbox = curve.GetBoundingBox(True)
-                else:
-                    continue
-                if not bbox.IsValid: continue
-                
-                xMin = int(((float(math.floor((bbox.Min.X - self.WALL_DISTANCE)/self.gridSize)) * self.gridSize) - gridStartX)/self.gridSize)
-                xMax = int(((float(math.ceil((bbox.Max.X + self.WALL_DISTANCE)/self.gridSize)) * self.gridSize) - gridStartX)/self.gridSize)
-                yMin = int((gridStartY - (float(math.floor((bbox.Min.Y - self.WALL_DISTANCE)/self.gridSize)) * self.gridSize))/self.gridSize)
-                yMax = int((gridStartY - (float(math.ceil((bbox.Max.Y + self.WALL_DISTANCE)/self.gridSize)) * self.gridSize))/self.gridSize)
-            
-                for i in range(yMax,yMin+1):
-                    for j in range(xMin,xMax+1):
-                        if i &gt;= gridCountH or j &gt;= gridCountW or i &lt; 0 or j &lt; 0:
-                            continue
-                        cRect = rh.Geometry.Rectangle3d(rh.Geometry.Plane.WorldXY,rg.Point3d(gridStartX+(j*self.gridSize),gridStartY-(i*self.gridSize),0),rg.Point3d(gridStartX+((j+1)*self.gridSize),gridStartY-((i+1)*self.gridSize),0))
-                        if oi.GetType() == rh.DocObjects.InstanceObject:
-                            for elm in curveBlockInstanceElements:
-                                inter = rg.Intersect.Intersection.CurveCurve(elm,cRect.ToNurbsCurve(),self.WALL_DISTANCE,0)
-                                if inter:
-                                    curGrids[j][i] = STATE_BLOCKED
-                                    self.polina.append(cRect)
-                        else:
-                            inter = rg.Intersect.Intersection.CurveCurve(oi.CurveGeometry,cRect.ToNurbsCurve(),self.WALL_DISTANCE,0)
-                            if inter:
-                                curGrids[j][i] = STATE_BLOCKED
-                                self.polina.append(cRect)
-                if oi.GetType() == rh.DocObjects.InstanceObject:
-                    sc.doc = rh.RhinoDoc.ActiveDoc
-                    rs.DeleteObjects(blockInstanceElements)
-                    sc.doc=ghdoc
-            
-            self.GenerateRooms(objectList,idx)
-            
-        #make way for entry
-        for (epObject,ep) in zip(entryPointObject,curEntries):
-            gridEpX = int(math.floor((ep.pos.X - gridStartX)/self.gridSize))
-            gridEpY = int(math.floor((gridStartY - ep.pos.Y)/self.gridSize))
-            
-            curGrids[gridEpX][gridEpY] = STATE_ENTRY
-            epGroupList = epObject.GetGroupList()
-            dir = rs.GetUserText(epObject,"Direction")
-            checker = 5
-            if dir == "LEFT":
-                for i in range(-1,-checker,-1):
-                    if curGrids[gridEpX + i][gridEpY] == STATE_BLOCKED:
-                        curGrids[gridEpX + i][gridEpY] = STATE_FREE
-                    elif curGrids[gridEpX + i][gridEpY] == STATE_FREE:
-                        break
-            elif dir == "RIGHT":
-                for i in range(1,checker):
-                    if curGrids[gridEpX + i][gridEpY] == STATE_BLOCKED:
-                        curGrids[gridEpX + i][gridEpY] = STATE_FREE
-                    elif curGrids[gridEpX + i][gridEpY] == STATE_FREE:
-                        break
-            elif dir == "UP":
-                for i in range(-1,-checker,-1):
-                    if curGrids[gridEpX][gridEpY + i] == STATE_BLOCKED:
-                        curGrids[gridEpX][gridEpY + i] = STATE_FREE
-                    elif curGrids[gridEpX][gridEpY + i] == STATE_FREE:
-                        break
-            elif dir == "DOWN":
-                for i in range(1,checker):
-                    if curGrids[gridEpX][gridEpY + i] == STATE_BLOCKED:
-                        curGrids[gridEpX][gridEpY + i] = STATE_FREE
-                    elif curGrids[gridEpX][gridEpY + i] == STATE_FREE:
-                        break
-            for (tObject,target) in zip(targetPointObject,curTargets):
-                #entrypoint and targetpoint is similar
-                if epObject.Geometry.Location == tObject.Geometry.Location:
-                    ep.target = target
-                    break
-                    
-                #entrypoint different with targetpoint
-                targetGroupList = tObject.GetGroupList()
-                counter = 0
-                #target and entry point must have all their group similar
-                if targetGroupList == None or epGroupList == None:
-                    continue
-                for tGroup in targetGroupList:
-                    for eGroup in epGroupList:
-                        if tGroup == eGroup:
-                            counter +=1
-                            break
-                if counter == len(targetGroupList):
-                    ep.target = target
-                    break
-        
-        #calculate additional weight, to make agent not walk to close with object or wall
-        for i in range(len(curGrids[0])):
-            for j in range(len(curGrids)):
-                for neighbor in self.NEIGHBOR_CHECK:
-                    toCheckX = i + neighbor[0]
-                    toCheckY = j + neighbor[1]
-                    
-                    #out of area
-                    if (toCheckX &lt; 0) or (toCheckX &gt;= gridCountH) or (toCheckY &lt; 0) or (toCheckY &gt;= gridCountW):
-                        continue
-                    
-                    #wall
-                    if curGrids[j][i] == STATE_BLOCKED:
-                        continue
-                    
-                    if curGrids[toCheckY][toCheckX] == STATE_BLOCKED:
-                        curAdditionalWeight[j][i] = max(curAdditionalWeight[j][i],(self.NEIGHBOR_DIS - max(abs(neighbor[0]),abs(neighbor[1])) + 1) * self.gridSize * 100)
-                    
-        sc.doc = rh.RhinoDoc.ActiveDoc
-        furnitureIndex = sc.doc.Layers.Find("ARS-FURNITURE",True)
-        sc.doc = ghdoc
-        #Rhino.DocObjects.ObjectType.InstanceReference
-        #homeFurniture = [object for object in objectList if (object.ObjectType != rh.DocObjects.ObjectType.Point and object.Attributes.LayerIndex == furnitureIndex)]
-        homeFurniture = [object for object in objectList if (object.ObjectType == rh.DocObjects.ObjectType.InstanceReference and object.Attributes.LayerIndex == furnitureIndex)]
-        print "homik "+str(len(homeFurniture))
-        #honca = 
-        homeObjects = []
-        homeGroupList = []
-        for hf in homeFurniture:
-            index = 0
-            hfGroup = hf.GetGroupList()
-            haveSame = False
-            if hfGroup != None:
-                for (idx,gList) in enumerate(homeGroupList):
-                    if gList != None:
-                        haveSame = any(item in hfGroup for item in gList)
-                        if haveSame:
-                            index = idx
-                            break
-            if haveSame:
-                homeObjects[index].AddParts(hf)
-                homeGroupList[index] += hfGroup
-                homeGroupList[index] = list(set(homeGroupList[index]))
-            else:
-                hObject = HomeObject.HomeObject()
-                hObject.AddParts(hf)
-                homeObjects.append(hObject)
-                homeGroupList.append(hfGroup)
-        
-        for (tObject,target) in zip(targetPointObject,curTargets):
-            targetGroupList = tObject.GetGroupList()
-            for room in self.m_rooms:
-                if room.CheckAndAddItem(target):
-                    break
-            if targetGroupList == None:
-                continue
-            for (hfGroup,hObject) in zip(homeGroupList,homeObjects):
-                if hfGroup == None:
-                    continue
-                haveSame = any(item in targetGroupList for item in hfGroup)
-                if haveSame:
-                    hObject.AddTargetPoint(target)
-                    if not(hObject in room.m_object):
-                        room.m_object.append(hObject)
-                
-        entryToRemove = []
-        for entry in curEntries:
-            #EntryPoint.EntryPoint.
-            ids = entry.target.m_id.split(";")
-            #Global.Logger.LogDebug(str(ids)+"\n")
-            if len(ids) &gt; 1:
-                for id in ids:
-                    nTarget = entry.target.CreateCopyForId(id)
-                    nEntry = entry.CreateCopyForTarget(nTarget)
-                    curEntries.append(nEntry)
-                    curTargets.append(nTarget)
-                entryToRemove.append(entry)
-        for entry in entryToRemove:
-            curTargets.remove(entry.target)
-            curEntries.remove(entry)
-        
-        HomeObject.HomeObject.HomeObjectList = homeObjects
-        self.gridInitialized = True
-            
-        self.topPos.append(Point3d(gridStartX,gridStartY,0))
-        self.grids.append(curGrids)
-        self.additionalWeight.append(curAdditionalWeight)
-        self.possibleTarget = self.possibleTarget + curTargets
-        self.entryPoint = self.entryPoint + curEntries
-        Global.g_myHouse.m_rooms = self.m_rooms
-        Global.Logger.DumpDebug()
-        
-    def LoadLightAndTemperatureTable(self):
-        tableLight = {}
-        tableTemperature = {}
-        
-        cFPath = ghenv.Component.OnPingDocument().FilePath
-        cpath = cFPath[0:cFPath.rfind('\\')+1]
-        resPath = cpath+'..\\res\\'+self.m_mapName+'\\'
-        
-        lightFile = resPath+Config.ROOM_LIGHT_FILE
-        with open(lightFile) as csvfile:
-            reader = csv.reader(csvfile)
-            columnTable = []
-            for row in reader:
-                if row[0] == "Day":
-                    for i in range(2,len(row)):
-                        columnTable.append(row[i])
-                        tableLight[row[i]] = []
-                else:
-                    for i in range(2,len(row)):
-                        tableLight[columnTable[i-2]].append(float(row[i]))
-        
-        temperatureFile = resPath+Config.ROOM_LIGHT_FILE
-        with open(temperatureFile) as csvfile:
-            reader = csv.reader(csvfile)
-            columnTable = []
-            for row in reader:
-                if row[0] == "Day":
-                    for i in range(2,len(row)):
-                        columnTable.append(row[i])
-                        tableTemperature[row[i]] = []
-                else:
-                    for i in range(2,len(row)):
-                        tableTemperature[columnTable[i-2]].append(float(row[i]))
-        
-        for room in self.m_rooms:
-            if room.m_name in tableLight:
-                room.SetLightAndTemperatureTable(tableLight[room.m_name], tableTemperature.m_name)
-        
-    def RunScript(self, area,counter,reset, mapName):
-        print "asaw"
-        self.m_mapName = mapName
-        #self.LoadLightAndTemperatureTable()
-        gridArea = None
-        topPos = None
-        entryPoints = None
-        """Provides a scripting component.
-            Inputs:
-                x: The x script variable
-                y: The y script variable
-            Output:
-                a: The a output variable"""
-        
-        __author__ = "andri.setiawan"
-        __version__ = "2020.03.16"
-        
-        
-        import rhinoscriptsyntax as rs
-        import sys
-        
-        print reset
-        if reset:
-            self.gridInitialized = False
-            self.isRun = False
-            return None,None,None
-        
-        if (not self.isRun) and (not reset):
-            self.isRun = True
-            self.grids = []
-            self.gridInitialized = False
-            self.topPos = []
-            self.possibleTarget = []
-            self.entryPoint = []
-            
-        if not self.gridInitialized:
-            self.m_mapName = mapName
-            self.m_rooms = []
-            Global.Logger.LogDebug("initsukopet\n")
-            for (idx,floor) in enumerate(area):
-                Global.Logger.LogDebug("initsukopet "+str(idx)+" "+str(floor)+"\n")
-                self.InitializeGrid(floor,idx)
-            self.LoadLightAndTemperatureTable()
-            Global.Logger.LogDebug("inetnot\n")
-            PathFinding.Map.InitNode()
-            for target in self.possibleTarget:
-                Global.Logger.LogDebug( "torogenta "+str(target.m_targetPoint)+" "+str(target.m_floorIndex) +"\n")
-            Timer.ResetTimer()
-            Global.Logger.LogDebug("yahukimo")
-            Global.Logger.DumpDebug()
-            sc.sticky["PossibleTarget"] = self.possibleTarget
-            sc.sticky["EntryPoint"] = self.entryPoint
-
-        gridArea = self.grids
-        topPos = self.topPos
-        #possibleTarget = self.possibleTarget
-        #entryPoints = self.entryPoint
-        additionalWeight = self.additionalWeight
-        
-        
-        #print "maze"
-        #for i in range(len(self.grids[0][0])):
-            #s = ""
-            #for j in range(len(self.grids[0])):
-                #s+=(str(self.grids[0][j][len(self.grids[0][0]) - i -1])+" ")
-            #print s
-        #print "weight"
-        #for i in range(len(self.grids[0])):
-            #s = ""
-            #for j in range(len(self.grids)):
-                #s+=(str(int(self.additionalWeight[j][len(self.additionalWeight[0]) - i -1]/10))+" ")
-            #print s
-    
-        #Global.g_myHouse.m_rooms = self.m_rooms
-        
-        return gridArea,topPos,additionalWeight,self.m_rooms,None #self.polina
-</item>
-                    <item name="Description" type_name="gh_string" type_code="10">GhPython provides a Python script component</item>
-                    <item name="EditorLocation" type_name="gh_drawing_point" type_code="30">
-                      <X>231</X>
-                      <Y>153</Y>
-                    </item>
-                    <item name="EditorSize" type_name="gh_drawing_size" type_code="32">
-                      <W>984</W>
-                      <H>788</H>
-                    </item>
-                    <item name="HideInput" type_name="gh_bool" type_code="1">true</item>
-                    <item name="HideOutput" type_name="gh_bool" type_code="1">true</item>
-                    <item name="InstanceGuid" type_name="gh_guid" type_code="9">0ff1f629-e49d-461c-b1b4-b97bc9271879</item>
-                    <item name="IsAdvancedMode" type_name="gh_bool" type_code="1">true</item>
-                    <item name="MarshalOutGuids" type_name="gh_bool" type_code="1">true</item>
-                    <item name="Name" type_name="gh_string" type_code="10">GhPython Script</item>
-                    <item name="NickName" type_name="gh_string" type_code="10">GridGenerator</item>
-                  </items>
-                  <chunks count="2">
-                    <chunk name="Attributes">
-                      <items count="3">
-                        <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
-                          <X>693</X>
-                          <Y>734</Y>
-                          <W>186</W>
-                          <H>107</H>
-                        </item>
-                        <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
-                          <X>768</X>
-                          <Y>788</Y>
-                        </item>
-                        <item name="Selected" type_name="gh_bool" type_code="1">true</item>
-                      </items>
-                    </chunk>
-                    <chunk name="ParameterData">
-                      <items count="11">
-                        <item name="InputCount" type_name="gh_int32" type_code="3">4</item>
-                        <item name="InputId" index="0" type_name="gh_guid" type_code="9">84fa917c-1ed8-4db3-8be1-7bdc4a6495a2</item>
-                        <item name="InputId" index="1" type_name="gh_guid" type_code="9">84fa917c-1ed8-4db3-8be1-7bdc4a6495a2</item>
-                        <item name="InputId" index="2" type_name="gh_guid" type_code="9">84fa917c-1ed8-4db3-8be1-7bdc4a6495a2</item>
-                        <item name="InputId" index="3" type_name="gh_guid" type_code="9">84fa917c-1ed8-4db3-8be1-7bdc4a6495a2</item>
-                        <item name="OutputCount" type_name="gh_int32" type_code="3">5</item>
-                        <item name="OutputId" index="0" type_name="gh_guid" type_code="9">8ec86459-bf01-4409-baee-174d0d2b13d0</item>
-                        <item name="OutputId" index="1" type_name="gh_guid" type_code="9">8ec86459-bf01-4409-baee-174d0d2b13d0</item>
-                        <item name="OutputId" index="2" type_name="gh_guid" type_code="9">8ec86459-bf01-4409-baee-174d0d2b13d0</item>
-                        <item name="OutputId" index="3" type_name="gh_guid" type_code="9">8ec86459-bf01-4409-baee-174d0d2b13d0</item>
-                        <item name="OutputId" index="4" type_name="gh_guid" type_code="9">8ec86459-bf01-4409-baee-174d0d2b13d0</item>
-                      </items>
-                      <chunks count="9">
-                        <chunk name="InputParam" index="0">
-                          <items count="12">
-                            <item name="Access" type_name="gh_int32" type_code="3">1</item>
-                            <item name="AllowTreeAccess" type_name="gh_bool" type_code="1">true</item>
-                            <item name="Description" type_name="gh_string" type_code="10">Script variable Python</item>
-                            <item name="InstanceGuid" type_name="gh_guid" type_code="9">9ec46ca8-d4e6-4bcb-8018-ae18bb7dff2b</item>
-                            <item name="Name" type_name="gh_string" type_code="10">area</item>
-                            <item name="NickName" type_name="gh_string" type_code="10">area</item>
-                            <item name="Optional" type_name="gh_bool" type_code="1">true</item>
-                            <item name="ScriptParamAccess" type_name="gh_int32" type_code="3">1</item>
-                            <item name="ShowTypeHints" type_name="gh_bool" type_code="1">true</item>
-                            <item name="Source" index="0" type_name="gh_guid" type_code="9">227a0273-804a-420f-9cd5-0ec323b6d6f5</item>
-                            <item name="SourceCount" type_name="gh_int32" type_code="3">1</item>
-                            <item name="TypeHintID" type_name="gh_guid" type_code="9">87f87f55-5b71-41f4-8aea-21d494016f81</item>
-                          </items>
-                          <chunks count="1">
-                            <chunk name="Attributes">
-                              <items count="3">
-                                <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
-                                  <X>695</X>
-                                  <Y>736</Y>
-                                  <W>58</W>
-                                  <H>25</H>
-                                </item>
-                                <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
-                                  <X>725.5</X>
-                                  <Y>748.875</Y>
-                                </item>
-                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
-                              </items>
-                            </chunk>
-                          </chunks>
-                        </chunk>
-                        <chunk name="InputParam" index="1">
-                          <items count="10">
-                            <item name="AllowTreeAccess" type_name="gh_bool" type_code="1">true</item>
-                            <item name="Description" type_name="gh_string" type_code="10">Script input counter.</item>
-                            <item name="InstanceGuid" type_name="gh_guid" type_code="9">0f791e14-3e0f-45f9-a678-e46dbba2fa4e</item>
-                            <item name="Name" type_name="gh_string" type_code="10">counter</item>
-                            <item name="NickName" type_name="gh_string" type_code="10">counter</item>
-                            <item name="Optional" type_name="gh_bool" type_code="1">true</item>
-                            <item name="ScriptParamAccess" type_name="gh_int32" type_code="3">0</item>
-                            <item name="ShowTypeHints" type_name="gh_bool" type_code="1">true</item>
-                            <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
-                            <item name="TypeHintID" type_name="gh_guid" type_code="9">48d01794-d3d8-4aef-990e-127168822244</item>
-                          </items>
-                          <chunks count="1">
-                            <chunk name="Attributes">
-                              <items count="3">
-                                <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
-                                  <X>695</X>
-                                  <Y>761</Y>
-                                  <W>58</W>
-                                  <H>26</H>
-                                </item>
-                                <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
-                                  <X>725.5</X>
-                                  <Y>774.625</Y>
-                                </item>
-                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
-                              </items>
-                            </chunk>
-                          </chunks>
-                        </chunk>
-                        <chunk name="InputParam" index="2">
-                          <items count="11">
-                            <item name="AllowTreeAccess" type_name="gh_bool" type_code="1">true</item>
-                            <item name="Description" type_name="gh_string" type_code="10">Script input reset.</item>
-                            <item name="InstanceGuid" type_name="gh_guid" type_code="9">85a4d4d4-0191-4551-be90-e44335672a8c</item>
-                            <item name="Name" type_name="gh_string" type_code="10">reset</item>
-                            <item name="NickName" type_name="gh_string" type_code="10">reset</item>
-                            <item name="Optional" type_name="gh_bool" type_code="1">true</item>
-                            <item name="ScriptParamAccess" type_name="gh_int32" type_code="3">0</item>
-                            <item name="ShowTypeHints" type_name="gh_bool" type_code="1">true</item>
-                            <item name="Source" index="0" type_name="gh_guid" type_code="9">053e5d7a-f31b-431b-bc9f-a94d333b59e7</item>
-                            <item name="SourceCount" type_name="gh_int32" type_code="3">1</item>
-                            <item name="TypeHintID" type_name="gh_guid" type_code="9">d60527f5-b5af-4ef6-8970-5f96fe412559</item>
-                          </items>
-                          <chunks count="1">
-                            <chunk name="Attributes">
-                              <items count="3">
-                                <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
-                                  <X>695</X>
-                                  <Y>787</Y>
-                                  <W>58</W>
-                                  <H>26</H>
-                                </item>
-                                <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
-                                  <X>725.5</X>
-                                  <Y>800.375</Y>
-                                </item>
-                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
-                              </items>
-                            </chunk>
-                          </chunks>
-                        </chunk>
-                        <chunk name="InputParam" index="3">
-                          <items count="11">
-                            <item name="AllowTreeAccess" type_name="gh_bool" type_code="1">true</item>
-                            <item name="Description" type_name="gh_string" type_code="10">Script input mapName.</item>
-                            <item name="InstanceGuid" type_name="gh_guid" type_code="9">c00c9708-5c5a-4671-9d84-50332528a2b4</item>
-                            <item name="Name" type_name="gh_string" type_code="10">mapName</item>
-                            <item name="NickName" type_name="gh_string" type_code="10">mapName</item>
-                            <item name="Optional" type_name="gh_bool" type_code="1">true</item>
-                            <item name="ScriptParamAccess" type_name="gh_int32" type_code="3">0</item>
-                            <item name="ShowTypeHints" type_name="gh_bool" type_code="1">true</item>
-                            <item name="Source" index="0" type_name="gh_guid" type_code="9">3e341901-c33f-46c1-b9e5-dc8f016198cf</item>
-                            <item name="SourceCount" type_name="gh_int32" type_code="3">1</item>
-                            <item name="TypeHintID" type_name="gh_guid" type_code="9">87f87f55-5b71-41f4-8aea-21d494016f81</item>
-                          </items>
-                          <chunks count="1">
-                            <chunk name="Attributes">
-                              <items count="3">
-                                <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
-                                  <X>695</X>
-                                  <Y>813</Y>
-                                  <W>58</W>
-                                  <H>26</H>
-                                </item>
-                                <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
-                                  <X>725.5</X>
-                                  <Y>826.125</Y>
-                                </item>
-                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
-                              </items>
-                            </chunk>
-                          </chunks>
-                        </chunk>
-                        <chunk name="OutputParam" index="0">
-                          <items count="6">
-                            <item name="Description" type_name="gh_string" type_code="10">Script output gridArea.</item>
-                            <item name="InstanceGuid" type_name="gh_guid" type_code="9">419bc103-907e-4d2c-89ef-b9ce5f020c3e</item>
-                            <item name="Name" type_name="gh_string" type_code="10">gridArea</item>
-                            <item name="NickName" type_name="gh_string" type_code="10">gridArea</item>
-                            <item name="Optional" type_name="gh_bool" type_code="1">false</item>
-                            <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
-                          </items>
-                          <chunks count="1">
-                            <chunk name="Attributes">
-                              <items count="3">
-                                <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
-                                  <X>783</X>
-                                  <Y>736</Y>
-                                  <W>94</W>
-                                  <H>20</H>
-                                </item>
-                                <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
-                                  <X>830</X>
-                                  <Y>746.3</Y>
-                                </item>
-                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
-                              </items>
-                            </chunk>
-                          </chunks>
-                        </chunk>
-                        <chunk name="OutputParam" index="1">
-                          <items count="6">
-                            <item name="Description" type_name="gh_string" type_code="10">Script output topPos.</item>
-                            <item name="InstanceGuid" type_name="gh_guid" type_code="9">b52f5dbd-c295-4f10-83b4-6d92ecf34736</item>
-                            <item name="Name" type_name="gh_string" type_code="10">topPos</item>
-                            <item name="NickName" type_name="gh_string" type_code="10">topPos</item>
-                            <item name="Optional" type_name="gh_bool" type_code="1">false</item>
-                            <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
-                          </items>
-                          <chunks count="1">
-                            <chunk name="Attributes">
-                              <items count="3">
-                                <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
-                                  <X>783</X>
-                                  <Y>756</Y>
-                                  <W>94</W>
-                                  <H>21</H>
-                                </item>
-                                <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
-                                  <X>830</X>
-                                  <Y>766.9</Y>
-                                </item>
-                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
-                              </items>
-                            </chunk>
-                          </chunks>
-                        </chunk>
-                        <chunk name="OutputParam" index="2">
-                          <items count="6">
-                            <item name="Description" type_name="gh_string" type_code="10">Script output additionalWeight.</item>
-                            <item name="InstanceGuid" type_name="gh_guid" type_code="9">6d2c867f-e396-48da-a48f-4ac66ee68e86</item>
-                            <item name="Name" type_name="gh_string" type_code="10">additionalWeight</item>
-                            <item name="NickName" type_name="gh_string" type_code="10">additionalWeight</item>
-                            <item name="Optional" type_name="gh_bool" type_code="1">false</item>
-                            <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
-                          </items>
-                          <chunks count="1">
-                            <chunk name="Attributes">
-                              <items count="3">
-                                <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
-                                  <X>783</X>
-                                  <Y>777</Y>
-                                  <W>94</W>
-                                  <H>20</H>
-                                </item>
-                                <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
-                                  <X>830</X>
-                                  <Y>787.5</Y>
-                                </item>
-                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
-                              </items>
-                            </chunk>
-                          </chunks>
-                        </chunk>
-                        <chunk name="OutputParam" index="3">
-                          <items count="6">
-                            <item name="Description" type_name="gh_string" type_code="10">Script output rooms.</item>
-                            <item name="InstanceGuid" type_name="gh_guid" type_code="9">6431a466-6f1d-45df-a7f2-e8ae33b57572</item>
-                            <item name="Name" type_name="gh_string" type_code="10">rooms</item>
-                            <item name="NickName" type_name="gh_string" type_code="10">rooms</item>
-                            <item name="Optional" type_name="gh_bool" type_code="1">false</item>
-                            <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
-                          </items>
-                          <chunks count="1">
-                            <chunk name="Attributes">
-                              <items count="3">
-                                <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
-                                  <X>783</X>
-                                  <Y>797</Y>
-                                  <W>94</W>
-                                  <H>21</H>
-                                </item>
-                                <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
-                                  <X>830</X>
-                                  <Y>808.1</Y>
-                                </item>
-                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
-                              </items>
-                            </chunk>
-                          </chunks>
-                        </chunk>
-                        <chunk name="OutputParam" index="4">
-                          <items count="6">
-                            <item name="Description" type_name="gh_string" type_code="10">Script output polina.</item>
-                            <item name="InstanceGuid" type_name="gh_guid" type_code="9">5d1829dc-f9a8-4a44-b155-66b5270cd331</item>
-                            <item name="Name" type_name="gh_string" type_code="10">polina</item>
-                            <item name="NickName" type_name="gh_string" type_code="10">polina</item>
-                            <item name="Optional" type_name="gh_bool" type_code="1">false</item>
-                            <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
-                          </items>
-                          <chunks count="1">
-                            <chunk name="Attributes">
-                              <items count="3">
-                                <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
-                                  <X>783</X>
-                                  <Y>818</Y>
-                                  <W>94</W>
-                                  <H>21</H>
-                                </item>
-                                <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
-                                  <X>830</X>
-                                  <Y>828.7</Y>
-                                </item>
-                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
-                              </items>
-                            </chunk>
-                          </chunks>
-                        </chunk>
-                      </chunks>
-                    </chunk>
-                  </chunks>
-                </chunk>
-              </chunks>
-            </chunk>
-            <chunk name="Object" index="32">
               <items count="2">
                 <item name="GUID" type_name="gh_guid" type_code="9">b6236720-8d88-4289-93c3-ac4c99f9b97b</item>
                 <item name="Name" type_name="gh_string" type_code="10">Relay</item>
@@ -5551,7 +4726,7 @@ class MyComponent(component):
                 </chunk>
               </chunks>
             </chunk>
-            <chunk name="Object" index="33">
+            <chunk name="Object" index="32">
               <items count="3">
                 <item name="GUID" type_name="gh_guid" type_code="9">410755b1-224a-4c1e-a407-bf32fb45ea7e</item>
                 <item name="Lib" type_name="gh_guid" type_code="9">00000000-0000-0000-0000-000000000000</item>
@@ -5593,6 +4768,8 @@ class MyComponent(component):
         self.s = 0
         self.pointScreen = []
         self.m_lastReport = 0
+        self.m_frameCount = 0
+        self.m_frameEndCount = 0
     
     def RunScript(self,checkAgent, anySelected,mArea, agent,topPos,additionalWeight,boundArea,deltaTime, scaleSpeed):
         timeRS1 = int(time.time()*1000)
@@ -5607,6 +4784,8 @@ class MyComponent(component):
             self.pointScreen = []
             self.myAgent = []
             PathFinding.Map.liveBlock = []
+            self.m_frameCount = 0
+            self.m_frameEndCount = 0
             return
         elif len(self.pointScreen) == 0:
             for i in range(len(agent)):
@@ -5621,6 +4800,11 @@ class MyComponent(component):
                 y: The y script variable
             Output:
                 a: The a output variable"""
+        if self.m_frameEndCount != self.m_frameCount:
+            Global.Logger.LogDebug("Problem at frame "+str(self.m_frameEndCount)+"\n")
+            self.m_frameEndCount = self.m_frameCount
+        self.m_frameCount += 1
+        Global.Logger.LogDebug("Starting frame "+str(self.m_frameCount)+"\n")
         if not self.myAgent:
             self.myAgent = agent
             Agent.Agent.s_possibleTarget = sc.sticky["PossibleTarget"]
@@ -5641,6 +4825,7 @@ class MyComponent(component):
         objectInView = []
         #print "aa "+str(deltaTime)
         Global.g_timer.Update(deltaTime)
+        Global.Logger.LogDebug("CurTime = "+Global.g_timer.GetFormattedHour()+"\n")
         print Global.g_timer.GetFormattedHour()
         curHour = Global.g_timer.GetHour()
         if curHour != self.m_lastReport:
@@ -5676,6 +4861,8 @@ class MyComponent(component):
         timeRS2 = int(time.time()*1000)
         print str(timeRS2 - sc.sticky["StartFrame"])
         print str(timeRS2 - timeRS1)
+        self.m_frameEndCount += 1
+        Global.Logger.LogDebug("End frame "+str(self.m_frameEndCount)+"\n")
         return self.myAgent,a,angle,vectorDir,floorList,objectInView
         
     def UpdateViewAgent(self,agent):
@@ -5743,8 +4930,8 @@ def TranslateToGridPos(topPos,pos):
     return gridX,gridY</item>
                     <item name="Description" type_name="gh_string" type_code="10">GhPython provides a Python script component</item>
                     <item name="EditorLocation" type_name="gh_drawing_point" type_code="30">
-                      <X>451</X>
-                      <Y>11</Y>
+                      <X>611</X>
+                      <Y>41</Y>
                     </item>
                     <item name="EditorSize" type_name="gh_drawing_size" type_code="32">
                       <W>748</W>
@@ -6240,6 +5427,822 @@ def TranslateToGridPos(topPos,pos):
                 </chunk>
               </chunks>
             </chunk>
+            <chunk name="Object" index="33">
+              <items count="3">
+                <item name="GUID" type_name="gh_guid" type_code="9">410755b1-224a-4c1e-a407-bf32fb45ea7e</item>
+                <item name="Lib" type_name="gh_guid" type_code="9">00000000-0000-0000-0000-000000000000</item>
+                <item name="Name" type_name="gh_string" type_code="10">GhPython Script</item>
+              </items>
+              <chunks count="1">
+                <chunk name="Container">
+                  <items count="11">
+                    <item name="CodeInput" type_name="gh_string" type_code="10">from ghpythonlib.componentbase import executingcomponent as component
+import Grasshopper, GhPython
+import System
+import Rhino as rh
+import rhinoscriptsyntax as rs
+import scriptcontext as sc
+import math
+import csv
+import Rhino.Geometry as rg
+import sys
+
+from Rhino.Geometry import Point3d,Point,NurbsSurface
+
+cFPath = ghenv.Component.OnPingDocument().FilePath
+cpath = cFPath[0:cFPath.rfind('\\')+1]
+my_path = cpath+'..\source'
+if not my_path in sys.path:
+    sys.path.append(my_path)
+
+import Global
+import Target
+Target = reload(Target)
+
+import HomeObject
+HomeObject = reload(HomeObject)
+
+import Agent
+Agent = reload(Agent)
+
+import EntryPoint
+EntryPoint = reload(EntryPoint)
+
+import House
+House = reload(House)
+
+import PathFinding
+
+import CommonEnum
+import Timer
+import Config
+Timer = reload(Timer)
+
+STATE_FREE = 0
+STATE_BLOCKED = 1
+STATE_ENTRY = 2
+STATE_BLOCKED_OBJ = 3
+
+
+class MyComponent(component):
+    
+    def __init__(self):
+        self.NEIGHBOR_CHECK = []
+        self.NEIGHBOR_DIS = 2
+        self.WALL_DISTANCE = 0.12
+        self.gridSize = 0.08
+        self.grids = []
+        self.gridInitialized = False
+        self.topPos = []
+        self.possibleTarget = []
+        self.entryPoint = []
+        self.isRun = False
+        self.additionalWeight = []
+        self.m_rooms = []
+        self.polina = []
+    
+    def GenerateNeighborCheck(self):
+        self.NEIGHBOR_CHECK = []
+        for i in range(-self.NEIGHBOR_DIS,self.NEIGHBOR_DIS+1):
+            for j in range(-self.NEIGHBOR_DIS,self.NEIGHBOR_DIS+1):
+                if i == 0 and j == 0:
+                    continue
+                self.NEIGHBOR_CHECK.append((i,j))
+    
+    def GenerateRooms(self,objectList,idx):
+        sc.doc = rh.RhinoDoc.ActiveDoc
+        roomIndex = sc.doc.Layers.Find("ROOM_AREA",True)
+        sc.doc = ghdoc
+        newRoom = []
+        roomCoord = []
+        roomCoordGroup = []
+        roomGroup = []
+        for oi in objectList:
+            if oi.Attributes.LayerIndex == roomIndex:
+                #pos = rs.GetUserText(oi,"TargetCoord").split(",")
+                if oi.GetType() == rh.DocObjects.PointObject:
+                    roomCoord.append(oi.PointGeometry.Location)
+                    roomCoordGroup.append(oi.GetGroupList())
+                else:
+                    newRoom.append(House.Room(rs.GetUserText(oi,"RName"),27,100,oi.Geometry,rs.GetUserText(oi,"Lamp"), rs.GetUserText(oi,"Resource"),idx))
+                    rh.Geometry.PointContainment.Inside
+                    roomGroup.append(oi.GetGroupList())
+        Global.Logger.LogDebug("G count "+str(len(roomCoord))+" "+str(len(roomCoordGroup))+"\n")
+        i = 0;
+        for (coord,rCGroup) in zip(roomCoord,roomCoordGroup):
+            Global.Logger.LogDebug("iterate "+str(i))
+            i+=1
+            paired = False
+            Global.Logger.LogDebug("Room coord "+str(coord)+" group "+str(rCGroup)+"\n")
+            for g in rCGroup:
+                for (room,rGroup) in zip(newRoom,roomGroup):
+                    Global.Logger.LogDebug("Room "+room.m_name+" group "+str(rGroup)+"\n")
+                    for rg in rGroup:
+                        if g == rg:
+                            room.AddTargetCoord(coord)# SetTargetCoord(coord)
+                            paired = True
+                            break
+                    if paired:
+                        break
+                if paired:
+                    break
+            Global.Logger.LogDebug("end loop\n")
+        self.m_rooms.extend(newRoom)
+        Global.Logger.DumpDebug()
+    def InitializeGrid(self,area,idx):
+        print "intinialisazuuuu "+str(idx)
+        import rhinoscriptsyntax as rs
+        self.GenerateNeighborCheck()
+        
+        sc.doc = rh.RhinoDoc.ActiveDoc
+        groundIndex = sc.doc.Layers.Find("ARS-LANTAI",True)
+        sc.doc = ghdoc
+        
+        entryPointObject = []
+        targetPointObject = []
+        
+        self.polina = []
+        #get nurbscurve or rectangle
+        rectArea = rs.coercecurve(area)
+        
+        minX = min(rectArea.Points[0].Location[0],rectArea.Points[2].Location[0])
+        maxX = max(rectArea.Points[0].Location[0],rectArea.Points[2].Location[0])
+        
+        minY = min(rectArea.Points[0].Location[1],rectArea.Points[2].Location[1])
+        maxY = max(rectArea.Points[0].Location[1],rectArea.Points[2].Location[1])
+        
+        #get width/height of the area and gridCount
+        gridCountW = abs(int(math.ceil(maxX/self.gridSize)) - int(math.floor(minX/self.gridSize)))
+        
+        gridCountH = abs(int(math.ceil(maxY/self.gridSize)) - int(math.floor(minY/self.gridSize)))
+        
+        #initialize grid array
+        curGrids = [[STATE_FREE for i in range(gridCountH)]for j in range(gridCountW)]
+        curAdditionalWeight = [[0 for i in range(gridCountH)]for j in range(gridCountW)]
+        curTargets = []
+        curEntries = []
+        
+        gridStartX = float(math.floor(minX/self.gridSize)) * self.gridSize
+        gridStartY = float(math.ceil(maxY/self.gridSize)) * self.gridSize
+        
+        if rectArea:
+            rh.DocObjects.Tables.ObjectTable.UnselectAll(rh.RhinoDoc.ActiveDoc.Objects)
+            #get objects inside the region
+            rc,pl = rectArea.TryGetPolyline()
+            view = sc.doc.Views.ActiveView.ActiveViewport
+            objectList = rh.RhinoDoc.ActiveDoc.Objects.FindByCrossingWindowRegion(view,pl,True,rh.DocObjects.ObjectType.AnyObject)#rh.DocObjects.ObjectType.Curve|rh.DocObjects.ObjectType.Point|rh.DocObjects.ObjectType.InstanceDefinition)
+            
+            for oi in objectList:
+                if oi.Attributes.LayerIndex == groundIndex or rs.GetUserText(oi,"IgnoreGrid") != None:
+                    continue
+                
+                if oi.ObjectType == rh.DocObjects.ObjectType.Point:
+                    if rs.GetUserText(oi,"Target") != None:
+                        type = rs.GetUserText(oi,"Type")
+                        if type == None:
+                            type = "Other"
+                        usage = rs.GetUserText(oi,"Usage")
+                        pUsage = 0 if usage == None else float(usage)
+                        active = rs.GetUserText(oi,"Active") != None
+                        envEffect = rs.GetUserText(oi,"EnvEffect")
+                        if envEffect == None:
+                            envEffect = "-"
+                        target = Target.Target(idx,type,envEffect,oi.PointGeometry.Location,rs.GetUserText(oi,"ID"),pUsage, active)
+                        targetPointObject.append(oi)
+                        specific = rs.GetUserText(oi,"Specific")
+                        if specific != None:
+                            specList = specific.split(',')
+                            for spec in specList:
+                                target.setSpecificAgent(int(spec))
+                        activity = rs.GetUserText(oi,"Activity")
+                        if activity != None:
+                            actList = activity.split(',')
+                            for act in actList:
+                                target.setActivity(act)
+                        curTargets.append(target)
+                    if rs.GetUserText(oi,"Entry") != None:
+                        entryPointObject.append(oi)
+                        curEntries.append(EntryPoint.EntryPoint(oi.PointGeometry.Location,idx))
+                    continue
+                    
+                if oi.GetType() == rh.DocObjects.InstanceObject:
+                    Global.Logger.LogDebug("opite "+str(oi.Geometry.GetType())+"\n")
+                    bbox = oi.Geometry.GetBoundingBox(rh.Geometry.Plane.WorldXY)
+                    sc.doc = rh.RhinoDoc.ActiveDoc
+                    new = rs.CopyObject(oi.Id)
+                    blockInstanceElements = rs.ExplodeBlockInstance(new,True)
+                    curveBlockInstanceElements = []
+                    for elm in blockInstanceElements:
+                        cv = rs.coercecurve(elm)
+                        if cv != None:
+                            curveBlockInstanceElements.append(cv)
+                    sc.doc=ghdoc
+                    Global.Logger.DumpDebug()
+                elif oi.GetType() == rh.DocObjects.CurveObject:
+                    curve = oi.CurveGeometry
+                    if not curve:
+                        continue
+                    bbox = curve.GetBoundingBox(True)
+                else:
+                    continue
+                if not bbox.IsValid: continue
+                
+                xMin = int(((float(math.floor((bbox.Min.X - self.WALL_DISTANCE)/self.gridSize)) * self.gridSize) - gridStartX)/self.gridSize)
+                xMax = int(((float(math.ceil((bbox.Max.X + self.WALL_DISTANCE)/self.gridSize)) * self.gridSize) - gridStartX)/self.gridSize)
+                yMin = int((gridStartY - (float(math.floor((bbox.Min.Y - self.WALL_DISTANCE)/self.gridSize)) * self.gridSize))/self.gridSize)
+                yMax = int((gridStartY - (float(math.ceil((bbox.Max.Y + self.WALL_DISTANCE)/self.gridSize)) * self.gridSize))/self.gridSize)
+            
+                for i in range(yMax,yMin+1):
+                    for j in range(xMin,xMax+1):
+                        if i &gt;= gridCountH or j &gt;= gridCountW or i &lt; 0 or j &lt; 0:
+                            continue
+                        cRect = rh.Geometry.Rectangle3d(rh.Geometry.Plane.WorldXY,rg.Point3d(gridStartX+(j*self.gridSize),gridStartY-(i*self.gridSize),0),rg.Point3d(gridStartX+((j+1)*self.gridSize),gridStartY-((i+1)*self.gridSize),0))
+                        if oi.GetType() == rh.DocObjects.InstanceObject:
+                            for elm in curveBlockInstanceElements:
+                                inter = rg.Intersect.Intersection.CurveCurve(elm,cRect.ToNurbsCurve(),self.WALL_DISTANCE,0)
+                                if inter:
+                                    curGrids[j][i] = STATE_BLOCKED
+                                    self.polina.append(cRect)
+                        else:
+                            inter = rg.Intersect.Intersection.CurveCurve(oi.CurveGeometry,cRect.ToNurbsCurve(),self.WALL_DISTANCE,0)
+                            if inter:
+                                curGrids[j][i] = STATE_BLOCKED
+                                self.polina.append(cRect)
+                if oi.GetType() == rh.DocObjects.InstanceObject:
+                    sc.doc = rh.RhinoDoc.ActiveDoc
+                    rs.DeleteObjects(blockInstanceElements)
+                    sc.doc=ghdoc
+            
+            self.GenerateRooms(objectList,idx)
+            
+        #make way for entry
+        for (epObject,ep) in zip(entryPointObject,curEntries):
+            gridEpX = int(math.floor((ep.pos.X - gridStartX)/self.gridSize))
+            gridEpY = int(math.floor((gridStartY - ep.pos.Y)/self.gridSize))
+            
+            curGrids[gridEpX][gridEpY] = STATE_ENTRY
+            epGroupList = epObject.GetGroupList()
+            dir = rs.GetUserText(epObject,"Direction")
+            checker = 5
+            if dir == "LEFT":
+                for i in range(-1,-checker,-1):
+                    if curGrids[gridEpX + i][gridEpY] == STATE_BLOCKED:
+                        curGrids[gridEpX + i][gridEpY] = STATE_FREE
+                    elif curGrids[gridEpX + i][gridEpY] == STATE_FREE:
+                        break
+            elif dir == "RIGHT":
+                for i in range(1,checker):
+                    if curGrids[gridEpX + i][gridEpY] == STATE_BLOCKED:
+                        curGrids[gridEpX + i][gridEpY] = STATE_FREE
+                    elif curGrids[gridEpX + i][gridEpY] == STATE_FREE:
+                        break
+            elif dir == "UP":
+                for i in range(-1,-checker,-1):
+                    if curGrids[gridEpX][gridEpY + i] == STATE_BLOCKED:
+                        curGrids[gridEpX][gridEpY + i] = STATE_FREE
+                    elif curGrids[gridEpX][gridEpY + i] == STATE_FREE:
+                        break
+            elif dir == "DOWN":
+                for i in range(1,checker):
+                    if curGrids[gridEpX][gridEpY + i] == STATE_BLOCKED:
+                        curGrids[gridEpX][gridEpY + i] = STATE_FREE
+                    elif curGrids[gridEpX][gridEpY + i] == STATE_FREE:
+                        break
+            for (tObject,target) in zip(targetPointObject,curTargets):
+                #entrypoint and targetpoint is similar
+                if epObject.Geometry.Location == tObject.Geometry.Location:
+                    ep.target = target
+                    break
+                    
+                #entrypoint different with targetpoint
+                targetGroupList = tObject.GetGroupList()
+                counter = 0
+                #target and entry point must have all their group similar
+                if targetGroupList == None or epGroupList == None:
+                    continue
+                for tGroup in targetGroupList:
+                    for eGroup in epGroupList:
+                        if tGroup == eGroup:
+                            counter +=1
+                            break
+                if counter == len(targetGroupList):
+                    ep.target = target
+                    break
+        
+        #calculate additional weight, to make agent not walk to close with object or wall
+        for i in range(len(curGrids[0])):
+            for j in range(len(curGrids)):
+                for neighbor in self.NEIGHBOR_CHECK:
+                    toCheckX = i + neighbor[0]
+                    toCheckY = j + neighbor[1]
+                    
+                    #out of area
+                    if (toCheckX &lt; 0) or (toCheckX &gt;= gridCountH) or (toCheckY &lt; 0) or (toCheckY &gt;= gridCountW):
+                        continue
+                    
+                    #wall
+                    if curGrids[j][i] == STATE_BLOCKED:
+                        continue
+                    
+                    if curGrids[toCheckY][toCheckX] == STATE_BLOCKED:
+                        curAdditionalWeight[j][i] = max(curAdditionalWeight[j][i],(self.NEIGHBOR_DIS - max(abs(neighbor[0]),abs(neighbor[1])) + 1) * self.gridSize * 100)
+                    
+        sc.doc = rh.RhinoDoc.ActiveDoc
+        furnitureIndex = sc.doc.Layers.Find("ARS-FURNITURE",True)
+        sc.doc = ghdoc
+        #Rhino.DocObjects.ObjectType.InstanceReference
+        #homeFurniture = [object for object in objectList if (object.ObjectType != rh.DocObjects.ObjectType.Point and object.Attributes.LayerIndex == furnitureIndex)]
+        homeFurniture = [object for object in objectList if (object.ObjectType == rh.DocObjects.ObjectType.InstanceReference and object.Attributes.LayerIndex == furnitureIndex)]
+        print "homik "+str(len(homeFurniture))
+        #honca = 
+        homeObjects = []
+        homeGroupList = []
+        for hf in homeFurniture:
+            index = 0
+            hfGroup = hf.GetGroupList()
+            haveSame = False
+            if hfGroup != None:
+                for (idx,gList) in enumerate(homeGroupList):
+                    if gList != None:
+                        haveSame = any(item in hfGroup for item in gList)
+                        if haveSame:
+                            index = idx
+                            break
+            if haveSame:
+                homeObjects[index].AddParts(hf)
+                homeGroupList[index] += hfGroup
+                homeGroupList[index] = list(set(homeGroupList[index]))
+            else:
+                hObject = HomeObject.HomeObject()
+                hObject.AddParts(hf)
+                homeObjects.append(hObject)
+                homeGroupList.append(hfGroup)
+        
+        for (tObject,target) in zip(targetPointObject,curTargets):
+            targetGroupList = tObject.GetGroupList()
+            for room in self.m_rooms:
+                if room.CheckAndAddItem(target):
+                    break
+            if targetGroupList == None:
+                continue
+            for (hfGroup,hObject) in zip(homeGroupList,homeObjects):
+                if hfGroup == None:
+                    continue
+                haveSame = any(item in targetGroupList for item in hfGroup)
+                if haveSame:
+                    hObject.AddTargetPoint(target)
+                    if not(hObject in room.m_object):
+                        room.m_object.append(hObject)
+                
+        entryToRemove = []
+        for entry in curEntries:
+            #EntryPoint.EntryPoint.
+            ids = entry.target.m_id.split(";")
+            #Global.Logger.LogDebug(str(ids)+"\n")
+            if len(ids) &gt; 1:
+                for id in ids:
+                    nTarget = entry.target.CreateCopyForId(id)
+                    nEntry = entry.CreateCopyForTarget(nTarget)
+                    curEntries.append(nEntry)
+                    curTargets.append(nTarget)
+                entryToRemove.append(entry)
+        for entry in entryToRemove:
+            curTargets.remove(entry.target)
+            curEntries.remove(entry)
+        
+        HomeObject.HomeObject.HomeObjectList = homeObjects
+        self.gridInitialized = True
+            
+        self.topPos.append(Point3d(gridStartX,gridStartY,0))
+        self.grids.append(curGrids)
+        self.additionalWeight.append(curAdditionalWeight)
+        self.possibleTarget = self.possibleTarget + curTargets
+        self.entryPoint = self.entryPoint + curEntries
+        Global.g_myHouse.m_rooms = self.m_rooms
+        Global.Logger.DumpDebug()
+        
+    def LoadLightAndTemperatureTable(self):
+        tableLight = {}
+        tableTemperature = {}
+        
+        cFPath = ghenv.Component.OnPingDocument().FilePath
+        cpath = cFPath[0:cFPath.rfind('\\')+1]
+        resPath = cpath+'..\\res\\'+self.m_mapName+'\\'
+        
+        lightFile = resPath+Config.ROOM_LIGHT_FILE
+        with open(lightFile) as csvfile:
+            reader = csv.reader(csvfile)
+            columnTable = []
+            for row in reader:
+                if row[0] == "Day":
+                    for i in range(2,len(row)):
+                        columnTable.append(row[i])
+                        tableLight[row[i]] = []
+                else:
+                    for i in range(2,len(row)):
+                        tableLight[columnTable[i-2]].append(float(row[i]))
+        
+        temperatureFile = resPath+Config.ROOM_LIGHT_FILE
+        with open(temperatureFile) as csvfile:
+            reader = csv.reader(csvfile)
+            columnTable = []
+            for row in reader:
+                if row[0] == "Day":
+                    for i in range(2,len(row)):
+                        columnTable.append(row[i])
+                        tableTemperature[row[i]] = []
+                else:
+                    for i in range(2,len(row)):
+                        tableTemperature[columnTable[i-2]].append(float(row[i]))
+        
+        for room in self.m_rooms:
+            if room.m_name in tableLight:
+                room.SetLightAndTemperatureTable(tableLight[room.m_name], tableTemperature[room.m_name])
+        
+    def RunScript(self, area,counter,reset, mapName):
+        print "asaw"
+        self.m_mapName = mapName
+        #self.LoadLightAndTemperatureTable()
+        gridArea = None
+        topPos = None
+        entryPoints = None
+        """Provides a scripting component.
+            Inputs:
+                x: The x script variable
+                y: The y script variable
+            Output:
+                a: The a output variable"""
+        
+        __author__ = "andri.setiawan"
+        __version__ = "2020.03.16"
+        
+        
+        import rhinoscriptsyntax as rs
+        import sys
+        
+        print reset
+        if reset:
+            self.gridInitialized = False
+            self.isRun = False
+            return None,None,None
+        
+        if (not self.isRun) and (not reset):
+            self.isRun = True
+            self.grids = []
+            self.gridInitialized = False
+            self.topPos = []
+            self.possibleTarget = []
+            self.entryPoint = []
+            
+        if not self.gridInitialized:
+            self.m_mapName = mapName
+            self.m_rooms = []
+            Global.Logger.LogDebug("initsukopet\n")
+            for (idx,floor) in enumerate(area):
+                Global.Logger.LogDebug("initsukopet "+str(idx)+" "+str(floor)+"\n")
+                self.InitializeGrid(floor,idx)
+            self.LoadLightAndTemperatureTable()
+            Global.Logger.LogDebug("inetnot\n")
+            PathFinding.Map.InitNode()
+            for target in self.possibleTarget:
+                Global.Logger.LogDebug( "torogenta "+str(target.m_targetPoint)+" "+str(target.m_floorIndex) +"\n")
+            Timer.ResetTimer()
+            Global.Logger.LogDebug("yahukimo")
+            Global.Logger.DumpDebug()
+            sc.sticky["PossibleTarget"] = self.possibleTarget
+            sc.sticky["EntryPoint"] = self.entryPoint
+
+        gridArea = self.grids
+        topPos = self.topPos
+        #possibleTarget = self.possibleTarget
+        #entryPoints = self.entryPoint
+        additionalWeight = self.additionalWeight
+        
+        
+        #print "maze"
+        #for i in range(len(self.grids[0][0])):
+            #s = ""
+            #for j in range(len(self.grids[0])):
+                #s+=(str(self.grids[0][j][len(self.grids[0][0]) - i -1])+" ")
+            #print s
+        #print "weight"
+        #for i in range(len(self.grids[0])):
+            #s = ""
+            #for j in range(len(self.grids)):
+                #s+=(str(int(self.additionalWeight[j][len(self.additionalWeight[0]) - i -1]/10))+" ")
+            #print s
+    
+        #Global.g_myHouse.m_rooms = self.m_rooms
+        
+        return gridArea,topPos,additionalWeight,self.m_rooms,None #self.polina
+</item>
+                    <item name="Description" type_name="gh_string" type_code="10">GhPython provides a Python script component</item>
+                    <item name="EditorLocation" type_name="gh_drawing_point" type_code="30">
+                      <X>52</X>
+                      <Y>52</Y>
+                    </item>
+                    <item name="EditorSize" type_name="gh_drawing_size" type_code="32">
+                      <W>895</W>
+                      <H>788</H>
+                    </item>
+                    <item name="HideInput" type_name="gh_bool" type_code="1">true</item>
+                    <item name="HideOutput" type_name="gh_bool" type_code="1">true</item>
+                    <item name="InstanceGuid" type_name="gh_guid" type_code="9">0ff1f629-e49d-461c-b1b4-b97bc9271879</item>
+                    <item name="IsAdvancedMode" type_name="gh_bool" type_code="1">true</item>
+                    <item name="MarshalOutGuids" type_name="gh_bool" type_code="1">true</item>
+                    <item name="Name" type_name="gh_string" type_code="10">GhPython Script</item>
+                    <item name="NickName" type_name="gh_string" type_code="10">GridGenerator</item>
+                  </items>
+                  <chunks count="2">
+                    <chunk name="Attributes">
+                      <items count="2">
+                        <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
+                          <X>693</X>
+                          <Y>734</Y>
+                          <W>186</W>
+                          <H>107</H>
+                        </item>
+                        <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
+                          <X>768</X>
+                          <Y>788</Y>
+                        </item>
+                      </items>
+                    </chunk>
+                    <chunk name="ParameterData">
+                      <items count="11">
+                        <item name="InputCount" type_name="gh_int32" type_code="3">4</item>
+                        <item name="InputId" index="0" type_name="gh_guid" type_code="9">84fa917c-1ed8-4db3-8be1-7bdc4a6495a2</item>
+                        <item name="InputId" index="1" type_name="gh_guid" type_code="9">84fa917c-1ed8-4db3-8be1-7bdc4a6495a2</item>
+                        <item name="InputId" index="2" type_name="gh_guid" type_code="9">84fa917c-1ed8-4db3-8be1-7bdc4a6495a2</item>
+                        <item name="InputId" index="3" type_name="gh_guid" type_code="9">84fa917c-1ed8-4db3-8be1-7bdc4a6495a2</item>
+                        <item name="OutputCount" type_name="gh_int32" type_code="3">5</item>
+                        <item name="OutputId" index="0" type_name="gh_guid" type_code="9">8ec86459-bf01-4409-baee-174d0d2b13d0</item>
+                        <item name="OutputId" index="1" type_name="gh_guid" type_code="9">8ec86459-bf01-4409-baee-174d0d2b13d0</item>
+                        <item name="OutputId" index="2" type_name="gh_guid" type_code="9">8ec86459-bf01-4409-baee-174d0d2b13d0</item>
+                        <item name="OutputId" index="3" type_name="gh_guid" type_code="9">8ec86459-bf01-4409-baee-174d0d2b13d0</item>
+                        <item name="OutputId" index="4" type_name="gh_guid" type_code="9">8ec86459-bf01-4409-baee-174d0d2b13d0</item>
+                      </items>
+                      <chunks count="9">
+                        <chunk name="InputParam" index="0">
+                          <items count="12">
+                            <item name="Access" type_name="gh_int32" type_code="3">1</item>
+                            <item name="AllowTreeAccess" type_name="gh_bool" type_code="1">true</item>
+                            <item name="Description" type_name="gh_string" type_code="10">Script variable Python</item>
+                            <item name="InstanceGuid" type_name="gh_guid" type_code="9">9ec46ca8-d4e6-4bcb-8018-ae18bb7dff2b</item>
+                            <item name="Name" type_name="gh_string" type_code="10">area</item>
+                            <item name="NickName" type_name="gh_string" type_code="10">area</item>
+                            <item name="Optional" type_name="gh_bool" type_code="1">true</item>
+                            <item name="ScriptParamAccess" type_name="gh_int32" type_code="3">1</item>
+                            <item name="ShowTypeHints" type_name="gh_bool" type_code="1">true</item>
+                            <item name="Source" index="0" type_name="gh_guid" type_code="9">227a0273-804a-420f-9cd5-0ec323b6d6f5</item>
+                            <item name="SourceCount" type_name="gh_int32" type_code="3">1</item>
+                            <item name="TypeHintID" type_name="gh_guid" type_code="9">87f87f55-5b71-41f4-8aea-21d494016f81</item>
+                          </items>
+                          <chunks count="1">
+                            <chunk name="Attributes">
+                              <items count="2">
+                                <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
+                                  <X>695</X>
+                                  <Y>736</Y>
+                                  <W>58</W>
+                                  <H>25</H>
+                                </item>
+                                <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
+                                  <X>725.5</X>
+                                  <Y>748.875</Y>
+                                </item>
+                              </items>
+                            </chunk>
+                          </chunks>
+                        </chunk>
+                        <chunk name="InputParam" index="1">
+                          <items count="10">
+                            <item name="AllowTreeAccess" type_name="gh_bool" type_code="1">true</item>
+                            <item name="Description" type_name="gh_string" type_code="10">Script input counter.</item>
+                            <item name="InstanceGuid" type_name="gh_guid" type_code="9">0f791e14-3e0f-45f9-a678-e46dbba2fa4e</item>
+                            <item name="Name" type_name="gh_string" type_code="10">counter</item>
+                            <item name="NickName" type_name="gh_string" type_code="10">counter</item>
+                            <item name="Optional" type_name="gh_bool" type_code="1">true</item>
+                            <item name="ScriptParamAccess" type_name="gh_int32" type_code="3">0</item>
+                            <item name="ShowTypeHints" type_name="gh_bool" type_code="1">true</item>
+                            <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
+                            <item name="TypeHintID" type_name="gh_guid" type_code="9">48d01794-d3d8-4aef-990e-127168822244</item>
+                          </items>
+                          <chunks count="1">
+                            <chunk name="Attributes">
+                              <items count="2">
+                                <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
+                                  <X>695</X>
+                                  <Y>761</Y>
+                                  <W>58</W>
+                                  <H>26</H>
+                                </item>
+                                <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
+                                  <X>725.5</X>
+                                  <Y>774.625</Y>
+                                </item>
+                              </items>
+                            </chunk>
+                          </chunks>
+                        </chunk>
+                        <chunk name="InputParam" index="2">
+                          <items count="11">
+                            <item name="AllowTreeAccess" type_name="gh_bool" type_code="1">true</item>
+                            <item name="Description" type_name="gh_string" type_code="10">Script input reset.</item>
+                            <item name="InstanceGuid" type_name="gh_guid" type_code="9">85a4d4d4-0191-4551-be90-e44335672a8c</item>
+                            <item name="Name" type_name="gh_string" type_code="10">reset</item>
+                            <item name="NickName" type_name="gh_string" type_code="10">reset</item>
+                            <item name="Optional" type_name="gh_bool" type_code="1">true</item>
+                            <item name="ScriptParamAccess" type_name="gh_int32" type_code="3">0</item>
+                            <item name="ShowTypeHints" type_name="gh_bool" type_code="1">true</item>
+                            <item name="Source" index="0" type_name="gh_guid" type_code="9">053e5d7a-f31b-431b-bc9f-a94d333b59e7</item>
+                            <item name="SourceCount" type_name="gh_int32" type_code="3">1</item>
+                            <item name="TypeHintID" type_name="gh_guid" type_code="9">d60527f5-b5af-4ef6-8970-5f96fe412559</item>
+                          </items>
+                          <chunks count="1">
+                            <chunk name="Attributes">
+                              <items count="2">
+                                <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
+                                  <X>695</X>
+                                  <Y>787</Y>
+                                  <W>58</W>
+                                  <H>26</H>
+                                </item>
+                                <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
+                                  <X>725.5</X>
+                                  <Y>800.375</Y>
+                                </item>
+                              </items>
+                            </chunk>
+                          </chunks>
+                        </chunk>
+                        <chunk name="InputParam" index="3">
+                          <items count="11">
+                            <item name="AllowTreeAccess" type_name="gh_bool" type_code="1">true</item>
+                            <item name="Description" type_name="gh_string" type_code="10">Script input mapName.</item>
+                            <item name="InstanceGuid" type_name="gh_guid" type_code="9">c00c9708-5c5a-4671-9d84-50332528a2b4</item>
+                            <item name="Name" type_name="gh_string" type_code="10">mapName</item>
+                            <item name="NickName" type_name="gh_string" type_code="10">mapName</item>
+                            <item name="Optional" type_name="gh_bool" type_code="1">true</item>
+                            <item name="ScriptParamAccess" type_name="gh_int32" type_code="3">0</item>
+                            <item name="ShowTypeHints" type_name="gh_bool" type_code="1">true</item>
+                            <item name="Source" index="0" type_name="gh_guid" type_code="9">3e341901-c33f-46c1-b9e5-dc8f016198cf</item>
+                            <item name="SourceCount" type_name="gh_int32" type_code="3">1</item>
+                            <item name="TypeHintID" type_name="gh_guid" type_code="9">87f87f55-5b71-41f4-8aea-21d494016f81</item>
+                          </items>
+                          <chunks count="1">
+                            <chunk name="Attributes">
+                              <items count="2">
+                                <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
+                                  <X>695</X>
+                                  <Y>813</Y>
+                                  <W>58</W>
+                                  <H>26</H>
+                                </item>
+                                <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
+                                  <X>725.5</X>
+                                  <Y>826.125</Y>
+                                </item>
+                              </items>
+                            </chunk>
+                          </chunks>
+                        </chunk>
+                        <chunk name="OutputParam" index="0">
+                          <items count="6">
+                            <item name="Description" type_name="gh_string" type_code="10">Script output gridArea.</item>
+                            <item name="InstanceGuid" type_name="gh_guid" type_code="9">419bc103-907e-4d2c-89ef-b9ce5f020c3e</item>
+                            <item name="Name" type_name="gh_string" type_code="10">gridArea</item>
+                            <item name="NickName" type_name="gh_string" type_code="10">gridArea</item>
+                            <item name="Optional" type_name="gh_bool" type_code="1">false</item>
+                            <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
+                          </items>
+                          <chunks count="1">
+                            <chunk name="Attributes">
+                              <items count="2">
+                                <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
+                                  <X>783</X>
+                                  <Y>736</Y>
+                                  <W>94</W>
+                                  <H>20</H>
+                                </item>
+                                <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
+                                  <X>830</X>
+                                  <Y>746.3</Y>
+                                </item>
+                              </items>
+                            </chunk>
+                          </chunks>
+                        </chunk>
+                        <chunk name="OutputParam" index="1">
+                          <items count="6">
+                            <item name="Description" type_name="gh_string" type_code="10">Script output topPos.</item>
+                            <item name="InstanceGuid" type_name="gh_guid" type_code="9">b52f5dbd-c295-4f10-83b4-6d92ecf34736</item>
+                            <item name="Name" type_name="gh_string" type_code="10">topPos</item>
+                            <item name="NickName" type_name="gh_string" type_code="10">topPos</item>
+                            <item name="Optional" type_name="gh_bool" type_code="1">false</item>
+                            <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
+                          </items>
+                          <chunks count="1">
+                            <chunk name="Attributes">
+                              <items count="2">
+                                <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
+                                  <X>783</X>
+                                  <Y>756</Y>
+                                  <W>94</W>
+                                  <H>21</H>
+                                </item>
+                                <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
+                                  <X>830</X>
+                                  <Y>766.9</Y>
+                                </item>
+                              </items>
+                            </chunk>
+                          </chunks>
+                        </chunk>
+                        <chunk name="OutputParam" index="2">
+                          <items count="6">
+                            <item name="Description" type_name="gh_string" type_code="10">Script output additionalWeight.</item>
+                            <item name="InstanceGuid" type_name="gh_guid" type_code="9">6d2c867f-e396-48da-a48f-4ac66ee68e86</item>
+                            <item name="Name" type_name="gh_string" type_code="10">additionalWeight</item>
+                            <item name="NickName" type_name="gh_string" type_code="10">additionalWeight</item>
+                            <item name="Optional" type_name="gh_bool" type_code="1">false</item>
+                            <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
+                          </items>
+                          <chunks count="1">
+                            <chunk name="Attributes">
+                              <items count="2">
+                                <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
+                                  <X>783</X>
+                                  <Y>777</Y>
+                                  <W>94</W>
+                                  <H>20</H>
+                                </item>
+                                <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
+                                  <X>830</X>
+                                  <Y>787.5</Y>
+                                </item>
+                              </items>
+                            </chunk>
+                          </chunks>
+                        </chunk>
+                        <chunk name="OutputParam" index="3">
+                          <items count="6">
+                            <item name="Description" type_name="gh_string" type_code="10">Script output rooms.</item>
+                            <item name="InstanceGuid" type_name="gh_guid" type_code="9">6431a466-6f1d-45df-a7f2-e8ae33b57572</item>
+                            <item name="Name" type_name="gh_string" type_code="10">rooms</item>
+                            <item name="NickName" type_name="gh_string" type_code="10">rooms</item>
+                            <item name="Optional" type_name="gh_bool" type_code="1">false</item>
+                            <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
+                          </items>
+                          <chunks count="1">
+                            <chunk name="Attributes">
+                              <items count="2">
+                                <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
+                                  <X>783</X>
+                                  <Y>797</Y>
+                                  <W>94</W>
+                                  <H>21</H>
+                                </item>
+                                <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
+                                  <X>830</X>
+                                  <Y>808.1</Y>
+                                </item>
+                              </items>
+                            </chunk>
+                          </chunks>
+                        </chunk>
+                        <chunk name="OutputParam" index="4">
+                          <items count="6">
+                            <item name="Description" type_name="gh_string" type_code="10">Script output polina.</item>
+                            <item name="InstanceGuid" type_name="gh_guid" type_code="9">5d1829dc-f9a8-4a44-b155-66b5270cd331</item>
+                            <item name="Name" type_name="gh_string" type_code="10">polina</item>
+                            <item name="NickName" type_name="gh_string" type_code="10">polina</item>
+                            <item name="Optional" type_name="gh_bool" type_code="1">false</item>
+                            <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
+                          </items>
+                          <chunks count="1">
+                            <chunk name="Attributes">
+                              <items count="2">
+                                <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
+                                  <X>783</X>
+                                  <Y>818</Y>
+                                  <W>94</W>
+                                  <H>21</H>
+                                </item>
+                                <item name="Pivot" type_name="gh_drawing_pointf" type_code="31">
+                                  <X>830</X>
+                                  <Y>828.7</Y>
+                                </item>
+                              </items>
+                            </chunk>
+                          </chunks>
+                        </chunk>
+                      </chunks>
+                    </chunk>
+                  </chunks>
+                </chunk>
+              </chunks>
+            </chunk>
           </chunks>
         </chunk>
       </chunks>
@@ -6247,7 +6250,7 @@ def TranslateToGridPos(topPos,pos):
     <chunk name="Thumbnail">
       <items count="1">
         <item name="Thumbnail" type_name="gh_drawing_bitmap" type_code="37">
-          <bitmap length="15853">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</bitmap>
+          <bitmap length="12715">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</bitmap>
         </item>
       </items>
     </chunk>
