@@ -69,7 +69,7 @@ class Hunger(BioProperty):
 		self.m_currentRate = 0
 		self.m_activityEffect = 0;
 		# self.m_constraint = 0
-		self.m_relatedActivityId = "A123"
+		self.m_relatedActivityId = "A119"
 		self.m_energyStorage = self.m_threshold[Common.HUNGER_LIMIT_DOWN] * 0.05  / 60#self.m_agent.GetActivityById(self.m_relatedActivityId).m_duration
 		self.K_COLUMN_NAME = ["MAKAN", "Energy Storage","Tingkat Lapar Terkini", "Laju Lapar", "Efek Aktivitas", "Pengaruh Emosi", "Total Lapar 1 jam berikutnya", "Kebiasaan", "Constraint Efek Makan", "Konversi Kalori ke Poin", "Konversi Poin ke mL(URINASI)"]
 	
@@ -110,6 +110,9 @@ class Hunger(BioProperty):
 	def PrintProperty(self):
 		# pass
 		Global.Logger.LogDebug(self.m_type+" "+Fmt(self.m_currentScore)+" "+Fmt(self.m_rate[Common.AGENT_ASLEEP if self.m_agent.IsAsleep() else Common.AGENT_AWAKE])+" "+Fmt(self.m_agent.GetActivityEffect(self.m_type))+" "+Fmt(self.m_agent.GetEmotionalFactor())+" "+Fmt(self.m_totalScore)+" "+("K" if self.IsHabit(Global.g_timer.GetHour()) else "-")+" "+Fmt(self.m_currentEffectScore)+" "+Fmt(self.m_mlUrinate)+" "+Fmt(self.m_pointHunger)+"\n")
+	
+	def ProcessOutput(self):
+		return [Global.g_timer.GetFormattedHour(), Fmt(self.m_energyStorage), Fmt(self.m_currentScore), Fmt(self.m_rate[Common.AGENT_ASLEEP if self.m_agent.IsAsleep() else Common.AGENT_AWAKE]), Fmt(self.m_agent.GetActivityEffect(self.m_type)), Fmt(self.m_agent.GetEmotionalFactor()), Fmt(self.m_totalScore), ("K" if self.IsHabit(Timer.GetInstance().GetHour()) else "-"), Fmt(self.m_constraintEffectScore), Fmt(self.m_pointHunger), Fmt(self.m_mlUrinate)]
 
 class Thirst(BioProperty):
 	def __init__(self, agent, type, rate, current, habit, effect):
@@ -126,7 +129,7 @@ class Thirst(BioProperty):
 		self.m_currentScore = self.m_totalScore - self.m_currentEffectScore + self.m_rate[Common.AGENT_ASLEEP if self.m_agent.IsAsleep() else Common.AGENT_AWAKE]
 	
 	def CalculateEffect(self):
-		if self.m_agent.GetProperty("Hunger").m_relatedActivity != None:
+		if self.m_agent.GetProperty("Hunger").m_relatedActivity != None and self.m_agent.GetProperty("Hunger").m_relatedActivity.IsRunning():
 			return (self.m_effect[Common.EFFECT_HABIT_NONHABIT][Common.EFFECT_NEW_VALUE] if self.m_totalScore > self.m_effect[Common.EFFECT_EAT][Common.EFFECT_NEW_LIMIT] else self.m_effect[Common.EFFECT_EAT][Common.EFFECT_NEW_VALUE]) / self.m_agent.GetProperty("Hunger").m_relatedActivity.m_duration * self.m_agent.GetActivityById(self.m_relatedActivityId).m_duration
 		
 		index = Common.EFFECT_HABIT_HABIT if self.IsHabit(Global.g_timer.GetHour()) else Common.EFFECT_HABIT_NONHABIT
@@ -159,6 +162,10 @@ class Thirst(BioProperty):
 		# pass
 		Global.Logger.LogDebug(self.m_type+" "+Fmt(self.m_currentScore)+" "+Fmt(self.m_rate[Common.AGENT_ASLEEP if self.m_agent.IsAsleep() else Common.AGENT_AWAKE])+" "+Fmt(self.m_agent.GetActivityEffect(self.m_type))+" "+Fmt(self.m_agent.GetEmotionalFactor())+" "+Fmt(self.m_totalScore)+" "+("K" if self.IsHabit(Global.g_timer.GetHour()) else "-")+" "+Fmt(self.m_currentEffectScore)+" "+Fmt(self.m_mlUrinate)+"\n")
 	
+	def ProcessOutput(self):
+		# pass
+		return [Global.g_timer.GetFormattedHour(), Fmt(self.m_currentScore), Fmt(self.m_rate[Common.AGENT_ASLEEP if self.m_agent.IsAsleep() else Common.AGENT_AWAKE]), Fmt(self.m_agent.GetActivityEffect(self.m_type)), Fmt(self.m_agent.GetEmotionalFactor()), Fmt(self.m_totalScore), ("K" if self.IsHabit(Timer.GetInstance().GetHour()) else "-"), Fmt(self.m_currentEffectScore), Fmt(self.m_mlUrinate)]
+	
 class Dirty(BioProperty):
 	def __init__(self, agent, type, rate, current, habit, effect ):
 		BioProperty.__init__(self, agent, type, rate, current)
@@ -169,7 +176,7 @@ class Dirty(BioProperty):
 		self.m_currentEffectScore = 0
 		self.m_relatedActivityId = "B07"
 		self.m_lastBathHour = -1
-		self.K_COLUMN_NAME = ["KOTOR","Tingkat Kotor Terkini", "Laju Kotor", "Kebiasaan Mandi", "Efek Aktivitas", "Pengaruh Emosi", "Total Kotor", "Constraint","Efek Mandi", "Total kotor 1 jam berikutnya"]
+		self.K_COLUMN_NAME = ["KOTOR","Tingkat Kotor Terkini", "Laju Kotor", "Efek Aktivitas", "Pengaruh Emosi","Total kotor 1 jam berikutnya", "Kebiasaan Mandi","Efek Mandi", "Constraint"]
 	
 	def CalculateScore(self):
 		self.m_currentScore = self.m_constraint
@@ -205,6 +212,10 @@ class Dirty(BioProperty):
 	def PrintProperty(self):
 		# pass
 		Global.Logger.LogDebug(self.m_type+" "+Fmt(self.m_currentScore)+" "+Fmt(self.m_rate[Common.AGENT_ASLEEP if self.m_agent.IsAsleep() else Common.AGENT_AWAKE])+" "+Fmt(self.m_agent.GetActivityEffect(self.m_type))+" "+Fmt(self.m_agent.GetEmotionalFactor())+" "+Fmt(self.m_totalScore)+" "+("M" if self.IsHabit(Global.g_timer.GetHour()) else "-")+" "+Fmt(self.m_currentEffectScore)+"\n")
+	
+	def ProcessOutput(self):
+	#self.K_COLUMN_NAME = ["KOTOR",					"Tingkat Kotor Terkini", "Laju Kotor", 																				"Efek Aktivitas", 								"Pengaruh Emosi",						"Total kotor 1 jam berikutnya", "Kebiasaan Mandi",										"Efek Mandi", 					"Constraint"]
+		return [Global.g_timer.GetFormattedHour(), Fmt(self.m_currentScore), Fmt(self.m_rate[Common.AGENT_ASLEEP if self.m_agent.IsAsleep() else Common.AGENT_AWAKE]), Fmt(self.m_agent.GetActivityEffect(self.m_type)), Fmt(self.m_agent.GetEmotionalFactor()), Fmt(self.m_totalScore), ("M" if self.IsHabit(Timer.GetInstance().GetHour()) else "-"), Fmt(self.m_currentEffectScore), Fmt(self.m_constraint)]
 
 class Energy(BioProperty):
 	def __init__(self, agent, type, rate, current):
@@ -238,6 +249,9 @@ class Energy(BioProperty):
 	
 	def PrintProperty(self):
 		Global.Logger.LogDebug(self.m_type+" "+Fmt(self.m_currentScore)+" "+Fmt(self.m_rate[Common.AGENT_ASLEEP if self.m_agent.IsAsleep() else Common.AGENT_AWAKE])+" "+Fmt(self.m_agent.GetActivityEffect(self.m_type))+" "+Fmt(self.m_agent.GetEmotionalFactor())+" "+Fmt(self.m_scoreActAndEmo)+" "+Fmt(self.m_eatEffect)+" "+Fmt(self.m_totalScore)+" "+Fmt(self.m_pointEnergy)+"\n")
+	
+	def ProcessOutput(self):
+		return [Global.g_timer.GetFormattedHour(), Fmt(self.m_energyStorage), Fmt(self.m_currentScore), Fmt(self.m_rate[Common.AGENT_ASLEEP if self.m_agent.IsAsleep() else Common.AGENT_AWAKE]), Fmt(self.m_agent.GetActivityEffect(self.m_type)), Fmt(self.m_agent.GetEmotionalFactor()), Fmt(self.m_scoreActAndEmo), Fmt(self.m_eatEffect), Fmt(self.m_totalScore), Fmt(self.m_pointEnergy)]
 
 class Exhausted(BioProperty):
 	def __init__(self, agent, type, rate, current):
@@ -251,7 +265,7 @@ class Exhausted(BioProperty):
 		self.m_scoreActAndEmo = self.m_currentScore + (self.m_rate[Common.AGENT_ASLEEP if self.m_agent.IsAsleep() else Common.AGENT_AWAKE] * self.m_agent.GetEmotionalFactor()) + self.m_agent.GetActivityEffect(self.m_type)
 		self.m_specialEffect = 10 - ((self.m_scoreActAndEmo + self.m_agent.GetProperty("Energy").m_pointEnergy) / 2)
 		self.m_totalScore = self.m_specialEffect + self.m_rate[Common.AGENT_ASLEEP if self.m_agent.IsAsleep() else Common.AGENT_AWAKE]
-		
+		self.K_COLUMN_NAME = ["KELELAHAN", "Tingkat Kelelahan Terkini", "Laju Kelelahan", "Efek Aktivitas", "Pengaruh Emosi", "Kalkulasi krn Efek Akt. dan Emosi","Kalkulasi efek khusus", "Total Kelelahan 1 jam berikutnya"]
 		self.m_totalScore = Common.clamp(self.m_totalScore,0,10)
 		
 	def PostUpdateActivityCalculation(self):
@@ -262,6 +276,9 @@ class Exhausted(BioProperty):
 	
 	def PrintProperty(self):
 		Global.Logger.LogDebug("Exhausted"+" "+Fmt(self.m_currentScore)+" "+Fmt(self.m_rate[Common.AGENT_ASLEEP if self.m_agent.IsAsleep() else Common.AGENT_AWAKE])+" "+Fmt(self.m_agent.GetActivityEffect(self.m_type))+" "+Fmt(self.m_agent.GetEmotionalFactor())+" "+Fmt(self.m_scoreActAndEmo)+" "+Fmt(self.m_specialEffect)+" "+Fmt(self.m_totalScore)+"\n")
+	
+	def ProcessOutput(self):
+		return [Global.g_timer.GetFormattedHour(), Fmt(self.m_currentScore), Fmt(self.m_rate[Common.AGENT_ASLEEP if self.m_agent.IsAsleep() else Common.AGENT_AWAKE]), Fmt(self.m_agent.GetActivityEffect(self.m_type)), Fmt(self.m_agent.GetEmotionalFactor()), Fmt(self.m_scoreActAndEmo), Fmt(self.m_specialEffect), Fmt(self.m_totalScore)]
 	
 class Sleepy(BioProperty):
 	def __init__(self, agent, type, rate, current, habit):
@@ -293,7 +310,7 @@ class Sleepy(BioProperty):
 		# self.m_constraint = self.m_totalScore + ((((-) if self.m_totalScore > 2 else -1 ) if self.IsHabit(Common.AGENT_AWAKE,Timer.GetInstance().GetHour()) else (random.random() * 3)) if self.m_agent.IsAsleep() else ((random.random()*3) if self.m_totalScore < 8 and  else 0))
 		
 		
-		if ((self.m_constraint >= 10) or (self.IsHabit(Common.AGENT_ASLEEP,Global.g_timer.GetHour()) and self.m_constraint >= 8)) and self.m_relatedActivity == None:
+		if ((self.m_constraint >= 10 and self.IsHabit(Common.AGENT_ASLEEP,Global.g_timer.GetHour())) or (self.IsHabit(Common.AGENT_ASLEEP,Global.g_timer.GetHour()) and self.m_constraint >= 8)) and self.m_relatedActivity == None:
 			self.TryTriggerRelatedActivity()
 	
 	def IsHabit(self, index, time):
@@ -303,8 +320,10 @@ class Sleepy(BioProperty):
 		Global.Logger.LogDebug("Post update "+Global.g_timer.GetFormattedHour()+" "+str(self.m_relatedActivity != None)+" "+str(self.m_constraint)+" "+str(self.IsHabit(Common.AGENT_AWAKE,Global.g_timer.GetHour()))+"\n")
 		self.PrintProperty()
 		if self.m_relatedActivity != None and ((self.m_constraint <= 0) or (self.IsHabit(Common.AGENT_AWAKE,Global.g_timer.GetHour()) and self.m_constraint <= 2)):
-			Global.Logger.LogDebug("Forcestop\n")
-			self.m_relatedActivity.ForceStop()
+			if self.m_relatedActivity.m_next == "-" or not (self.m_relatedActivity.m_next in self.m_agent.m_nonIndependentAct):
+				Global.Logger.LogDebug("Forcestop\n")
+				Global.Logger.LogDebug(str(self.m_agent.m_nonIndependentAct)+"\n")
+				self.m_relatedActivity.ForceStop()
 		pass
 	
 	def GetScore(self):
@@ -313,6 +332,9 @@ class Sleepy(BioProperty):
 	
 	def PrintProperty(self):
 		Global.Logger.LogDebug(self.m_type+" "+Fmt(self.m_currentScore)+" "+Fmt(self.m_curRate)+" "+Fmt(self.m_agent.GetActivityEffect(self.m_type))+" "+Fmt(self.m_agent.GetEmotionalFactor())+" "+Fmt(self.m_scoreActAndEmo)+" "+Fmt(self.m_specialEffect)+" "+Fmt(self.m_totalScore) + " "+ ("KT" if self.IsHabit(Common.AGENT_ASLEEP,Global.g_timer.GetHour()) else ("KB" if self.IsHabit(Common.AGENT_AWAKE,Global.g_timer.GetHour()) else "-"))+" "+("T" if self.m_agent.IsAsleep() else "B")+"\n")
+	
+	def ProcessOutput(self):
+		return [Global.g_timer.GetFormattedHour(), Fmt(self.m_currentScore), Fmt(self.m_curRate), Fmt(self.m_agent.GetActivityEffect(self.m_type)), Fmt(self.m_agent.GetEmotionalFactor()), Fmt(self.m_scoreActAndEmo), Fmt(self.m_specialEffect), Fmt(self.m_totalScore), ("KT" if self.IsHabit(Common.AGENT_ASLEEP,Timer.GetInstance().GetHour()) else ("KB" if self.IsHabit(Common.AGENT_AWAKE,Timer.GetInstance().GetHour()) else "-")),Fmt(self.m_constraint), ("T" if self.m_agent.IsAsleep() else "B")]
 
 class Defecate(BioProperty):
 	def __init__(self, agent, type, habit,  inStomach, curPressure, threshold, constant):
@@ -364,14 +386,14 @@ class Defecate(BioProperty):
 		self.m_inColon = (self.m_inColonEdge - (self.m_rateToRectum * 3)) if (self.m_relatedActivity != None and self.m_relatedActivity.IsRunning()) else ((self.m_inColonEdge + self.m_rateIntestineToColon) if (self.m_inIntestine > 1) else (0 if self.m_inColonEdge <= 1 else self.m_rateToRectum))
 		# self.m_inColon = (self.m_inColonEdge - ((self.m_rateToRectum if self.IsHabit(Timer.GetInstance().GetHourForTime(Timer.GetInstance().m_time - 1)) else 453.592) * 5 / self.m_relatedActivity.m_duration)) if (self.m_relatedActivity != None) else ((self.m_inColonEdge + self.m_rateIntestineToColon) if (self.m_inIntestine > 0) else ((self.m_inColonEdge - self.m_rateToRectum) if self.m_inColonEdge > 0 else 0))
 		# self.m_inColonEdge = (self.m_inColon + (self.m_rateIntestineToColon / 24)) if self.m_agent.m_wasAsleep else (self.m_inColon + (self.m_rateIntestineToColon / 12) - (0 if (self.m_relatedActivity == None) else (453.592 / self.m_relatedActivity.m_duration)))
-		self.m_inColonEdge = (self.m_inColon + (self.m_rateIntestineToColon / 24)) if self.m_agent.m_wasAsleep else (((self.m_inColon * (1 - (self.m_relatedActivity.m_runningTime / self.m_relatedActivity.m_duration))) + (self.m_rateIntestineToColon / 12)) if (self.m_relatedActivity != None) else (self.m_inColon + (self.m_rateIntestineToColon / 12)))
+		self.m_inColonEdge = (self.m_inColon + (self.m_rateIntestineToColon / 24)) if self.m_agent.m_wasAsleep else (((self.m_inColon * (1 - (self.m_relatedActivity.m_runningTime / self.m_relatedActivity.m_duration))) + (self.m_rateIntestineToColon / 12)) if (self.m_relatedActivity != None  and self.m_relatedActivity.IsRunning()) else (self.m_inColon + (self.m_rateIntestineToColon / 12)))
 		
 		self.m_rateToRectum = self.m_inColonEdge * 0.1
 		self.m_toRectum = (self.m_rateToRectum / 24) + (self.m_agent.GetActivityEffect(self.m_type) * self.m_agent.GetEmotionalFactor())
 		
 		# calc1 = (self.m_score / 8 + self.m_clepPressure + self.m_agent.GetActivityEffect(self.m_type)) * self.m_agent.GetEmotionalFactor()
 		
-		self.m_score = self.m_toRectum if (self.IsHabit(Global.g_timer.GetHour()) and self.m_relatedActivity == None and self.m_toRectum < self.m_constant) else (self.m_toRectum * 0.7355)
+		self.m_score = self.m_toRectum if (self.IsHabit(Global.g_timer.GetHour()) and (self.m_relatedActivity == None or not self.m_relatedActivity.IsRunning()) and self.m_toRectum < self.m_constant) else (self.m_toRectum * 0.7355)
 		
 		
 		# self.m_score = (self.m_clepPressure * self.m_agent.GetEmotionalFactor() )if (self.m_agent.m_wasAsleep) else ((self.m_score / 12 + self.m_clepPressure + self.m_agent.GetActivityEffect(self.m_type))if (self.m_relatedActivity == None) else ((calc1 - ((27.539 if calc1 >= 23.955 else 23.955)/self.m_relatedActivity.m_duration)) if self.IsHabit(Timer.GetInstance().GetHourForTime(Timer.GetInstance().m_time - 1)) else (calc1 - ((31.143 if calc1 >= 28.747 else 28.747)/self.m_relatedActivity.m_duration))))
@@ -397,6 +419,9 @@ class Defecate(BioProperty):
 	def PrintProperty(self):
 		# pass
 		Global.Logger.LogDebug(self.m_type+" "+Fmt(self.m_eatEffect)+" "+Fmt(self.m_inStomach)+" "+Fmt(self.m_rateStomachToIntestine)+" "+Fmt(self.m_inIntestine)+" "+Fmt(self.m_rateIntestineToColon)+" "+Fmt(self.m_inColon)+" "+Fmt(self.m_inColonEdge)+" "+Fmt(self.m_rateToRectum)+" "+("K" if self.IsHabit(Global.g_timer.GetHour()) else "-")+" "+Fmt(self.m_agent.GetActivityEffect(self.m_type))+" "+Fmt(self.m_agent.GetEmotionalFactor())+" "+Fmt(self.m_toRectum)+" "+Fmt(self.m_clepPressure)+" "+Fmt(self.m_score)+" "+ ("B" if self.m_relatedActivity != None else "T")+" "+Fmt(self.m_scorePoint)+"\n")
+	
+	def ProcessOutput(self):
+		return [Global.g_timer.GetFormattedHour(), Fmt(self.m_eatEffect), Fmt(self.m_inStomach), Fmt(self.m_rateStomachToIntestine), Fmt(self.m_inIntestine), Fmt(self.m_rateIntestineToColon), Fmt(self.m_inColon), Fmt(self.m_inColonEdge), Fmt(self.m_rateToRectum), ("K" if self.IsHabit(Timer.GetInstance().GetHour()) else "-"), Fmt(self.m_agent.GetActivityEffect(self.m_type)), Fmt(self.m_agent.GetEmotionalFactor()), Fmt(self.m_toRectum), Fmt(self.m_score), Fmt(self.m_score / self.m_relatedActivity.m_duration if self.m_relatedActivity != None else 0), ("B" if self.m_relatedActivity != None else "T"), Fmt(self.m_scorePoint)]
 
 class Urinate(BioProperty):
 	def __init__(self, agent, type, rate, effect, bodyWater, inBladder, remainingInBladder):
@@ -421,7 +446,7 @@ class Urinate(BioProperty):
 		self.m_eatEffect = self.m_agent.GetProperty("Hunger").m_mlUrinate * 0.05
 		self.m_bodyWater += self.m_drinkEffect + self.m_eatEffect - self.m_rate
 		
-		self.m_inBladder = self.m_inBladder - self.m_urinateVol + (self.m_rate * self.m_agent.GetEmotionalFactor()) + self.m_agent.GetActivityEffect(self.m_type) + (0 if self.m_agent.GetProperty("Defecate").m_relatedActivity == None else self.m_rate)
+		self.m_inBladder = self.m_inBladder - self.m_urinateVol + (self.m_rate * self.m_agent.GetEmotionalFactor()) + self.m_agent.GetActivityEffect(self.m_type) + (0 if self.m_agent.GetProperty("Defecate").m_relatedActivity == None or not self.m_agent.GetProperty("Defecate").m_relatedActivity.IsRunning() else self.m_rate)
 		
 		if self.m_inBladder > self.m_effect[Common.EFFECT_URINATE_NORMAL][Common.EFFECT_NEW_LIMIT] and self.m_relatedActivity == None:
 			self.TryTriggerRelatedActivity()
@@ -429,10 +454,10 @@ class Urinate(BioProperty):
 			# self.m_effectStarted = True
 			# self.m_effectRemainingTime = self.m_duration
 	def PostUpdateActivityCalculation(self):
-		if self.m_relatedActivity != None and self.m_urinateVol == 0:
+		if self.m_relatedActivity != None and self.m_relatedActivity.IsRunning() and self.m_urinateVol == 0:
 			self.m_urinateVol = (self.m_inBladder - self.m_effect[Common.EFFECT_URINATE_NORMAL][Common.EFFECT_NEW_VALUE]) / self.m_relatedActivity.m_duration
 		
-		if self.m_relatedActivity == None:
+		if self.m_relatedActivity == None or not self.m_relatedActivity.IsRunning() :
 			self.m_urinateVol = 0
 		
 		# if self.m_relatedActivity != None or (self.m_agent.GetProperty("Defecate").m_relatedActivity != None and self.m_inBladder > self.m_effect[Common.EFFECT_URINATE_NORMAL][Common.EFFECT_NEW_LIMIT]):
@@ -451,3 +476,6 @@ class Urinate(BioProperty):
 	def PrintProperty(self):
 		# pass
 		Global.Logger.LogDebug(self.m_type+" "+Fmt(self.m_drinkEffect)+" "+Fmt(self.m_eatEffect)+" "+Fmt(self.m_bodyWater)+" "+Fmt(self.m_rate)+" "+Fmt(self.m_agent.GetActivityEffect(self.m_type))+" "+Fmt(self.m_agent.GetEmotionalFactor())+" "+Fmt(self.m_inBladder)+" "+Fmt(self.m_remainingInBladder)+" "+Fmt(self.m_point)+"\n")
+	
+	def ProcessOutput(self):
+		return [Global.g_timer.GetFormattedHour(), Fmt(self.m_drinkEffect), Fmt(self.m_eatEffect), Fmt(self.m_bodyWater), Fmt(self.m_rate), Fmt(self.m_agent.GetActivityEffect(self.m_type)), Fmt(self.m_agent.GetEmotionalFactor()), Fmt(self.m_inBladder), Fmt(self.m_urinateVol), Fmt(self.m_remainingInBladder), Fmt(self.m_point)]

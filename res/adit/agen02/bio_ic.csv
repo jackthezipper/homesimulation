@@ -5,6 +5,7 @@ EmotionNorm,0.5,,,,
 EmotionCurrent,0.625,,,,
 RateGood,0.05489022,,,,
 RateBad,0.04491018,,,,
+NonIndependentAct,-,,,,
 Property,Current,Rate,Habit,Effect,Custom
 Hunger,1258.13,2516.25|24|0.125:0.25:0.1,06-09;12-15;18-21,993.85;2484.63,-
 Dirty,4,10|24|0.3:0.15,03-06;15-18,8,-

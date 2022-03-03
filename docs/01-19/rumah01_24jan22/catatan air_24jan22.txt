@@ -1,0 +1,67 @@
+B05 (BAK)
+RKM02|RKM03
+Room:0:0.1;Water:11:-0.095;Water:6:-0.25;Water:0:-10|Room:0:0.1;Water:6:-0.25;Water:0:-10
+ruang;konstanta sumber daya x waktu;pindah ke bak dari tandon x waktu;berkurang konstan|ruang;pindah ke bak dari tandon x waktu;berkurang konstan
+
+B06 (BAB)
+RKM02|RKM03
+Room:0:0.1;Water:11:-0.095;Water:6:-0.25;Water:0:-15|Room:0:0.1;Water:6:-0.25;Water:0:-15
+ruang;konstanta sumber daya x waktu;pindah ke bak dari tandon x waktu;berkurang konstan|ruang;pindah ke bak dari tandon x waktu;berkurang konstan
+
+B07 (MANDI)
+RKM02|RKM04
+Room:0:0.1;Water:6:-0.25;Water:0:-60|Room:0:0.1;Water:6:-0.091;Water:0:-60
+ruang;pindah ke bak dari tandon x waktu;berkurang konstan|ruang;pindah ke bak dari tandon x waktu;berkurang konstan
+
+A74 (Mencuci piring dan alat masak)
+RDP02|NONE
+Room:0:0.1;DirtyUtensil:5:0;Water:11:-0.043|-
+ruang;set ke 0;konstanta sumber daya x waktu|-
+
+A63 (Memasak makan malam dengan kompor gas)
+RDP01|RDP02
+Room:0:0.1;Gas:11:-0.0048;Trash:0:0.2;Food:4:5|Room:0:0.1;RawFood:0:-5;Water:0:-8;Water:6:-0.043;DirtyUtensil:0:1
+ruang;konstanta sumber daya x waktu;tambahan setelah durasi selesai|ruang;berkurang konstan;berkurang konstan;berpindah ke penampungan dari tandon;bertambah konstan
+
+A104 (Membuat jus)
+RDP02|NONE
+Room:0:0.1;RawFood:0:-3;DrinkWater:0:-500;DrinkWater:4:1000;Blender1:1:0.35;DirtyUtensil:0:1|-
+ruang;berkurang konstan;berkurang konstan;bertambah setelah durasi selesai;konstanta device x waktu;bertambah konstan
+
+A60 (Memasak makan malam dengan rice cooker)
+RDP02|NONE
+Room:0:0.1;RawFood:0:-3;Food:4:5;Water:0:-5;Water:6:-0.043;DirtyUtensil:7:60;Rcooker:1:0.3179|-
+ruang;berkurang konstan;tambahan setelah durasi selesai;berkurang konstan;berpindah ke penampungan dari tandon;tambahan sumber daya setelah waktu tertentu;konstanta device x waktu
+
+A40 (Membersihkan KM Lt. 2)
+tidak ada perubahan
+
+A42 (Mencuci dengan mesin cuci)
+RKM03|NONE
+Room:0:1;DirtyCloth:5:0;CleanWetCloth:7:90;Water:0:-100;Water:6:-0.25;WMachine:1:0.0395|-
+ruang;set ke 0;tambahan sumber daya setelah waktu tertentu;berkurang konstan;berpindah ke penampungan dari tandon;konstanta device x waktu
+
+A41 (Mencuci baju konvensional)
+RKM03|NONE
+Room:0:1;DirtyCloth:5:0;CleanWetCloth:7:30;Water:0:-150;Water:6:-0.25|-
+ruang;set ke 0;tambahan sumber daya setelah waktu tertentu;berkurang konstan;berpindah ke penampungan dari tandon
+
+A24 (Memasak makan pagi dengan kompor gas)
+sama dengan A60 (Memasak makan malam dengan rice cooker)
+
+A30 (Memandikan agen03 pagi hari)
+tidak ada perubahan
+
+P11 (Menyiapkan air mandi pagi)
+RKM01|NONE
+Room:0:0.1;Water:6:-0.2;Water:0:-40|-
+ruang;berpindah ke penampungan dari tandon;berkurang konstan
+
+A29 (Memasak air untuk mandi di pagi hari)
+RDP01|RDP02
+Room:0:0.1;Gas:11:-0.0048|Water:6:-0.043;Water;0;-5
+ruang;konstanta sumber daya x waktu|berpindah ke penampungan dari tandon;berkurang konstan
+
+A26 (Membuat susu agen03 di pagi hari)
+Room:0:0.1;Gas:11:-0.0048;DrinkWater:0:-150|-
+ruang;konstanta sumber daya x waktu;berkurang konstan

@@ -140,6 +140,7 @@ EFFECT_SUSPEND	= EFFECT_RUN + 1
 
 SUSPEND_TIME = [1, 6, 12, 24, 168]
 class Activity:
+	s_multiAgent = {}
 	s_pendingEffect = []
 	# def __init__(self, ID, description, auto, duration, maxRepeat, isBioActivity, bioEffect, emotionalEffect, startTime, priority, bioStandard, emotionalStandard, phyStandard, planProperty, rooms, routine, prequisite, interactAgent, outdoor, terms, device, next, eliminate, activitySet, resource, effect):
 	def __init__(self, params):
@@ -194,6 +195,7 @@ class Activity:
 		self.m_alreadyDoItYesterday = False
 		self.m_maxRepeat = int(params[Common.TABLE_ACTIVITY_REPEAT])
 		self.m_repeatCount = 0
+		self.m_lastUsedRoom = -1
 		
 		self.m_routine = []
 		match = re.match(r'(\d+)\|(.+)',params[Common.TABLE_ACTIVITY_ROUTINE])
@@ -277,8 +279,10 @@ class Activity:
 		self.m_followMovement = params[Common.TABLE_ACTIVITY_FOLLOW_MOVEMENT] == "1"
 		self.m_urgency = int(params[Common.TABLE_ACTIVITY_URGENCY_TYPE])
 		self.m_urgencyValue = params[Common.TABLE_ACTIVITY_URGENCY_VALUE]
+		self.m_lastRunningTime = 0
 	
 	def GetPostActivity(self):
+		Global.Logger.LogDebug("Gapoktan "+str(self.m_postActivity)+" "+str(self.m_targetRoom)+"\n")
 		return self.m_postActivity[self.m_targetRoom]
 	
 	def GetBioEffect(self, property):
@@ -306,22 +310,23 @@ class Activity:
 				self.m_quota = 0
 				if self.m_ID == "A74" or self.m_ID == "A72":
 					print(self.m_ID+" do "+str(self.m_alreadyDoItYesterday))
-				if not self.IsRunning():
-					Global.Logger.LogDebug("stop9\n")
-					self.Stop()
-				self.m_alreadyDoItYesterday = self.m_alreadyDoIt
-				self.m_alreadyDoIt = False
+			if not self.IsRunning():
+				Global.Logger.LogDebug(self.m_ID+" stop9\n")
+				self.Stop()
+			self.m_alreadyDoItYesterday = self.m_alreadyDoIt
+			self.m_alreadyDoIt = False
 		# if ((Timer.GetInstance().GetHour() - self.m_startTime) % Timer.HOUR_IN_DAY) > 3:
 			# self.m_repeatCount = 0
 	
 	def Start(self, runTime = 0):
 		print("Starting activity "+self.m_ID+" - "+self.m_description)
+		Global.Logger.LogDebug("Starting activity "+self.m_ID+" - "+self.m_description)
 		# self.m_targetRoom = 0
 		self.m_status = Common.ACT_STATUS_RUN
 		self.m_currentInteractAgent = self.GetInteractAgent()
 	
 	def IsDone(self):
-		Global.Logger.LogDebug("check done "+self.m_ID+" "+str(self.m_duration)+" "+str(self.m_runningTime)+" "+str(self.m_forceStop)+"\n")
+		# Global.Logger.LogDebug("check done "+self.m_ID+" "+str(self.m_duration)+" "+str(self.m_runningTime)+" "+str(self.m_forceStop)+"\n")
 		return (self.m_duration != -1 and (self.m_runningTime >= self.m_duration)) or self.m_forceStop
 	
 	def ForceStop(self):
@@ -332,13 +337,16 @@ class Activity:
 	
 	def Stop(self):
 		self.m_status = Common.ACT_STATUS_NONE
-		self.m_runningTime = 0
 		self.m_forceStop = False
 		if not self.m_isBioActivity:
 			self.m_repeatCount +=1
 		self.m_alreadyDoIt = True
+		self.m_lastUsedRoom = self.m_targetRoom
 		self.m_targetRoom = 0
 		self.m_currentInteractAgent = None
+		self.m_lastRunningTime = self.m_runningTime
+		self.m_runningTime = 0
+		Global.Logger.LogDebug("sutop meee "+self.m_ID+" "+str(self.m_lastRunningTime)+" "+str(self.m_runningTime)+"\n")
 		# pass
 
 	def GetDescription(self):
@@ -346,6 +354,7 @@ class Activity:
 	
 	def GoTo(self):
 		self.m_status = Common.ACT_STATUS_GOTO
+		self.m_currentInteractAgent = self.GetInteractAgent()
 	
 	def Suspend(self):
 		self.m_status = Common.ACT_STATUS_SUSPEND
@@ -361,26 +370,35 @@ class Activity:
 		#if self.m_isIncidental:
 			#print(self.m_ID + " is incidental remaining "+str(self.m_remainingIncidentalTime)+" range "+str(self.m_rangeDuration))
 		# Global.Logger.LogDebug("time "+str(Global.g_timer.GetHour())+" sti "+str(self.m_startTime)+" do "+str(self.m_alreadyDoIt)+" ins "+str(((Global.g_timer.GetHour() - self.m_startTime) % Timer.HOUR_IN_DAY))+"\n")
-		if self.m_alreadyDoIt and not self.m_isBioActivity:
-			# Global.Logger.LogDebug("canstart fail already done\n")
+		Global.Logger.LogDebug(agent.m_role+" CheckStart "+self.m_ID+"\n")
+		if self.m_alreadyDoIt and not self.m_isBioActivity and self.m_maxRepeat != -1:
+			Global.Logger.LogDebug("canstart fail already done\n")
 			return False
 		
 		if self.m_ID in agent.m_eliminatedActivity:
-			# Global.Logger.LogDebug("canstart fail eliminated\n")
+			Global.Logger.LogDebug("canstart fail eliminated\n")
 			return False
 		
-		if ((self.m_activitySet != "-") and self.m_activitySet.endswith("C")):
+		# if ((self.m_activitySet != "-") and self.m_activitySet.endswith("C")):
 			# Global.Logger.LogDebug("canstart fail set\n")
-			return False
+			# return False
 		
 		if (len(self.m_interactAgent) > 0):
+			if not agent.IsIndependentAgent():
+				Global.Logger.LogDebug("canstart fail non independent agent but have to interact")
+				return False
 			for iAgent in self.m_interactAgent:
-				interactAgent = next((agent for agent in Agent.Agent.agentList if (agent.m_role == iAgent)), None)
+				interactAgent = next((agt for agt in Agent.Agent.agentList if (agt.m_role == iAgent)), None)
 				if interactAgent != None:
 					break
-			if interactAgent == None:
-				# Global.Logger.LogDebug("canstart fail interact\n")
+			if interactAgent == None or (interactAgent.m_currentActivity != None and interactAgent.m_currentActivity.m_isBioActivity and self.m_ID != "P01" and self.m_ID != "A25"):
+				Global.Logger.LogDebug("canstart fail interact\n")
 				return False
+		
+			if self.m_ID == "P01" or self.m_ID == "A25":
+				if not interactAgent.IsAsleep():
+					Global.Logger.LogDebug("canstart agent awake\n")
+					return False
 		
 		prequisiteDone = len(self.m_prequisite) == 0
 		for prequisite in self.m_prequisite:
@@ -390,7 +408,7 @@ class Activity:
 				prequisiteDone |= agent.GetActivityById(prequisite).m_alreadyDoItYesterday
 			
 		if not prequisiteDone:
-			# Global.Logger.LogDebug("canstart fail prequisite\n")
+			Global.Logger.LogDebug("canstart fail prequisite\n")
 			return False
 		
 		routineTime = (Global.g_timer.GetDay() % self.m_routine[0]) + 1
@@ -399,7 +417,7 @@ class Activity:
 		# print(self.m_routine)
 		if not routineOK:
 			for routine in self.m_routine[1]:
-				# print("cek routine "+str(routine)+" "+str(self.m_quota)+" "+str(routineTime))
+				Global.Logger.LogDebug("cek routine "+str(routine)+" "+str(self.m_quota)+" "+str(routineTime)+"\n")
 				if routine < 0 and self.m_quota < abs(routine):
 					routineOK = True
 					break
@@ -408,11 +426,11 @@ class Activity:
 					break
 		
 		if not routineOK:
-			# Global.Logger.LogDebug("canstart fail routine\n")
+			Global.Logger.LogDebug("canstart fail routine\n")
 			return False
 		
 		if self.m_isIncidental:
-			# Global.Logger.LogDebug("canstart fail incidental\n")
+			Global.Logger.LogDebug("canstart fail incidental\n")
 			return False
 		
 		return True
@@ -421,12 +439,15 @@ class Activity:
 		return self.m_status == Common.ACT_STATUS_RUN
 	
 	def SetToIncidental(self):
+		Global.Logger.LogDebug("Set act "+self.m_ID+" to incindetsu\n")
+		self.m_targetRoom = 0
 		if not self.m_isBioActivity:
 			self.m_isIncidental = True
 			self.m_remainingIncidentalTime = SUSPEND_TIME[self.m_priority] * Timer.MINUTE_IN_HOUR
 			#self.m_rangeDuration = ((3 + SUSPEND_TIME[self.m_priority]) * Timer.MINUTE_IN_HOUR) - self.m_duration
 	
 	def GetTargetRoom(self):
+		Global.Logger.LogDebug("gato da rum "+self.m_ID+" "+str(self.m_targetRoom))
 		if len(self.m_rooms) == 0:
 			return "Agent"
 		if (self.m_targetRoom == -1) or (self.m_rooms[self.m_targetRoom] == "NONE"):
@@ -443,24 +464,50 @@ class Activity:
 		stopPlaces = []
 		cancel = False
 		
+		Global.Logger.LogDebug("Ceka termia "+self.m_ID+"\n");
+		agent.Log("Check terms:\n")
 		for i in range(0, Common.TERM_COUNT):
+			Global.Logger.LogDebug("Hamburterm "+str(self.m_terms)+"\n")
+			Global.Logger.LogDebug("In da chucked "+str(i)+" "+str(self.m_targetRoom)+" "+self.m_terms[i][self.m_targetRoom]+" "+str(self.m_terms[i][self.m_targetRoom] != "-")+"\n")
 			if (self.m_terms[i][self.m_targetRoom] != "-"):
+				Global.Logger.LogDebug("apipah\n "+str(i)+" "+str(Common.TERM_LIGHT)+"\n")
 				if i == Common.TERM_LIGHT:
 					lightTerm = self.m_terms[i][self.m_targetRoom].split(";")
+					Global.Logger.LogDebug("Terma da laito "+str(lightTerm[0]) + " "+str(agent.m_targetRoom.m_light)+"\n")
+					agent.Log("Check light: Require = "+lightTerm[0]+" Current = "+str(agent.m_targetRoom.m_light))
 					if agent.m_targetRoom.m_light < int(lightTerm[0]):
 						if (lightTerm[1] == "CC"):
 							cancel |= True
-							break;
+							agent.Log(" CANCEL\n")
+							break
 						else:
 							stopPlaces.extend(agent.m_targetRoom.GetLampToTurn())
+							agent.Log(" TURN ON\n")
+					else:
+						agent.Log(" OK\n")
 				elif i == Common.TERM_STATUS:
-					cancel |= ((self.m_terms[i][self.m_targetRoom] != "-") and (self.m_targetRoom.m_countAgent > float(self.m_terms[i][self.m_targetRoom])))
+					Global.Logger.LogDebug("StatStur "+str(agent.m_targetRoom.CountAgentInRoom()) +"\n")
+					cancel |= ((self.m_terms[i][self.m_targetRoom] != "-") and (agent.m_targetRoom.CountAgentInRoom() > float(self.m_terms[i][self.m_targetRoom])))
+					agent.Log("Check status: Require = "+str(agent.m_targetRoom.CountAgentInRoom())+" Current "+self.m_terms[i][self.m_targetRoom]+(" CANCEL\n" if cancel else " OK\n"))
+					if cancel:
+						break
 				elif i == Common.TERM_TEMPERATURE:
+					Global.Logger.LogDebug("Tempertotor "+self.m_terms[i][self.m_targetRoom] + " "+str(agent.m_targetRoom.m_temperature)+"\n")
+					agent.Log("Check temperature: Require = "+self.m_terms[i][self.m_targetRoom]+" Current = "+str(agent.m_targetRoom.m_temperature))
 					if agent.m_targetRoom.m_temperature > float(self.m_terms[i][self.m_targetRoom]):
 						hasFan, active, fanObj = agent.m_targetRoom.HasAndActive("Fan")
-						if hasFan and (not active):
-							stopPlaces.append(fanObj)
-						cancel |= hasFan
+						if hasFan:
+							if (not active):
+								stopPlaces.append(fanObj)
+								agent.Log(" TURN ON\n")
+							else:
+								agent.Log(" OK\n")
+						cancel |= (not hasFan)
+						if cancel:
+							agent.Log(" CANCEL\n")
+					else:
+						agent.Log(" OK\n")
+				Global.Logger.LogDebug("Cancera "+str(cancel)+"\n")
 		
 		return cancel, stopPlaces
 	
@@ -488,7 +535,8 @@ class Activity:
 			interactAgent = self.GetInteractAgent()
 			if interactAgent == None:
 				return 0
-			return float(toCheck[1]) * interactAgent.GetProperty(toCheck[0])
+			Global.Logger.LogDebug("urgenteract "+str(toCheck)+"\n")
+			return float(toCheck[1]) * interactAgent.GetProperty(toCheck[0]).GetScore()
 		elif self.m_urgency == 5:
 			# resource amount
 			return Global.g_myHouse.GetResourceAmount(self.m_urgencyValue)
@@ -503,6 +551,12 @@ class Activity:
 			room = next((rom for rom in Global.g_myHouse.m_rooms if(rom.m_name == self.GetTargetRoom())), None)
 			return 10 - room.m_light/10
 		elif self.m_urgency == 8:
+			# room
+			room = next((room for room in Global.g_myHouse.m_rooms if room.m_name == self.m_urgencyValue),None)
+			if room != None:
+				return room.m_value
+			return 0
+		elif self.m_urgency == 9:
 			# resource amount 2
 			return (100 - Global.g_myHouse.GetResourceAmount(self.m_urgencyValue))/10
 	
@@ -524,46 +578,53 @@ class Activity:
 		else:
 			effectValue = 0
 			if effect[1] == 0:
-				self.ApplyEffect(agent.m_currentRoom, effect[0], effect[2])
+				self.ApplyEffect(agent, agent.m_currentRoom, effect[0], effect[2])
 			elif effect[1] == 1:
 				#should find object and calculate usage
-				usage = effect[2] * self.m_duration
-				if agent.m_currentRoom.CheckResource(effect[0], usage):
-					self.ApplyEffect(agent.m_currentRoom, effect[0], -usage)
+				object = next(obj for obj in Agent.Agent.s_possibleTarget if obj.m_id == effect[0])
+				# usage = effect[2] * self.m_duration
+				if self.m_auto:
+					object.StartUsage(self.m_ID, self.m_realDuration, self.m_duration, agent.m_role, useTimer = True)
 				else:
-					object = next(obj for obj in Agent.Agent.s_possibleTarget if obj.m_id == effect[0])
-					if self.m_auto:
-						object.StartUsage(self.m_ID, (self.m_realDuration - self.m_duration), self.m_duration, agent.m_role)
+					powerUsage = effect[2]
+					if powerUsage == 0:
+						powerUsage = object.m_powerCons
+					energyUsage = [Common.ENERGY_TYPE_ELECTRICITY, object.m_id, agent.m_role, self.m_ID, Global.g_timer.m_time - self.m_lastRunningTime, Global.g_timer.m_time, powerUsage]
+					Global.g_myHouse.RegisterEnergyUsage(energyUsage)
+					Global.Logger.LogDebug("RegisterUsage by effect "+object.m_id+" larunta "+str(self.m_lastRunningTime)+" end "+str(Global.g_timer.m_time)+"\n")
+				# if agent.m_currentRoom.CheckResource(effect[0], usage):
+					# self.ApplyEffect(agent.m_currentRoom, effect[0], -usage)
+				# else:
 			elif effect[1] == 2:
-				self.ApplyEffect(agent.m_currentRoom, effect[0], (10.0 - (Global.g_myHouse.GetResourceAmount(effect[0]))))
+				self.ApplyEffect(agent, agent.m_currentRoom, effect[0], (10.0 - (Global.g_myHouse.GetResourceAmount(effect[0]))))
 			elif effect[1] == 3:
-				self.ApplyEffect(agent.m_currentRoom, effect[0], (effect[2] * agent.m_currentRoom.m_resource[effect[0]]))
+				self.ApplyEffect(agent, agent.m_currentRoom, effect[0], (effect[2] * agent.m_currentRoom.m_resource[effect[0]]))
 			elif effect[1] == 4:
 				Activity.s_pendingEffect.append([agent.m_currentRoom, effect[0], effect[2], (self.m_realDuration - self.m_duration)])
 			elif effect[1] == 5:
-				self.ApplyEffect(agent.m_currentRoom, effect[0], effect[2], True)
+				self.ApplyEffect(agent, agent.m_currentRoom, effect[0], effect[2], True)
 			elif effect[1] == 6:
 				Global.Logger.LogDebug("pesix "+agent.m_currentRoom.m_name+" "+str(agent.m_currentRoom.m_resource))
 				if agent.m_currentRoom.m_resource[effect[0]][0] <= 0:
 					usage = effect[2] * self.m_duration * 60
-					self.ApplyEffect(agent.m_currentRoom, effect[0], -usage, autoRoom = False)
+					self.ApplyEffect(agent, agent.m_currentRoom, effect[0], -usage, autoRoom = False)
 					generalRoom = Global.g_myHouse.FindGeneralRoomForResource(effect[0])
 					if generalRoom != None:
-						self.ApplyEffect(generalRoom, effect[0], usage, autoRoom = False)
+						self.ApplyEffect(agent, generalRoom, effect[0], usage, autoRoom = False)
 			elif effect[1] == 7:
 				if effect[2] == 0:
-					self.ApplyEffect(agent.m_currentRoom, effect[0], self.m_prevResValue)
+					self.ApplyEffect(agent, agent.m_currentRoom, effect[0], self.m_prevResValue)
 				else:
 					Activity.s_pendingEffect.append([agent.m_currentRoom, effect[0], self.m_prevResValue, (effect[2] - self.m_duration)])
 			elif effect[1] == 8:
-				s_savedEffect = agent.m_currentRoom.m_resource[effect[0]][0]
-				self.ApplyEffect(agent.m_currentRoom, effect[0], effect[2], True)
+				s_savedEffect = Global.g_myHouse.GetResourceAmount(effect[0])
+				self.ApplyEffect(agent, agent.m_currentRoom, effect[0], effect[2], True)
 			elif effect[1] == 9:
-				self.ApplyEffect(agent.m_currentRoom, effect[0], s_savedEffect, True)
+				self.ApplyEffect(agent, agent.m_currentRoom, effect[0], s_savedEffect, True)
 			elif effect[1] == 10:
-				self.ApplyEffect(agent.m_currentRoom, effect[0], (-agent.GetProperty("Thirst").m_currentEffectScore * self.m_duration))
+				self.ApplyEffect(agent, agent.m_currentRoom, effect[0], (-agent.GetProperty("Thirst").m_currentEffectScore * self.m_duration * 15))
 			elif effect[1] == 11:
-				self.ApplyEffect(agent.m_currentRoom, effect[0], effect[2] * self.m_duration * 60)
+				self.ApplyEffect(agent, agent.m_currentRoom, effect[0], effect[2] * self.m_duration * 60)
 			
 			if effect[1] != 1:
 				room = agent.m_currentRoom if effect in agent.m_currentRoom.m_resource.keys() else Global.g_myHouse.FindGeneralRoomForResource(effect[0])
@@ -572,18 +633,18 @@ class Activity:
 	def CheckResource(self, room):
 		ok = True
 		for res in self.m_requiredResource[self.m_targetRoom]:
-			ok = ok and room.CheckResource(res[0],int(res[1]))
+			ok = ok and room.CheckResource(res[0],float(res[1]))
 			if not ok:
 				generalRoom = Global.g_myHouse.FindGeneralRoomForResource(res[0])#,int(self.m_requiredResource[self.m_targetRoom][1]))
 				if generalRoom != None:
-					ok = ok and generalRoom.CheckResource(res[0],int(res[1]))
+					ok = ok or generalRoom.CheckResource(res[0],int(res[1]))
 			
 			if not ok:
 				break
 		
 		return ok
 	
-	def ApplyEffect(self, room, effectType, amount, set = False, autoRoom = True):
+	def ApplyEffect(self, agent, room, effectType, amount, set = False, autoRoom = True):
 		affectedRoom = room
 		if autoRoom and not room.CheckResource(effectType, amount):
 			Global.Logger.LogDebug("Search general room\n")
@@ -593,26 +654,40 @@ class Activity:
 				affectedRoom = generalRoom
 		
 		Global.Logger.LogDebug("Applyeffect room "+affectedRoom.m_name+" "+str(effectType)+" "+str(amount)+"\n")
+		# self.Log("Applyeffect room "+affectedRoom.m_name+" "+str(effectType)+" "+str(amount)+"\n")
 		Global.Logger.LogDebug("Before "+str(affectedRoom.m_resource[effectType][0])+"\n")
 		
 		if set:
 			affectedRoom.m_resource[effectType][0] = amount
+			agent.Log("Apply effect "+effectType+" at "+affectedRoom.m_name+" set "+str(amount)+"\n")
 		else:
 			affectedRoom.m_resource[effectType][0] += amount
+			agent.Log("Apply effect "+effectType+" at "+affectedRoom.m_name+" change "+str(amount)+"\n")
 		
 		Global.Logger.LogDebug("After "+str(affectedRoom.m_resource[effectType][0])+"\n")
 		
 		if (effectType == "Water" or effectType == "Gas") and autoRoom:
 			if effectType == "Water":
-				usage = [Common.ENERGY_TYPE_WATER, self.m_ID, room.m_name, Global.g_timer.m_time, amount]
+				usage = [Common.ENERGY_TYPE_WATER, agent.m_role, self.m_ID, room.m_name, Global.g_timer.m_time, amount]
 			else:
-				usage = [Common.ENERGY_TYPE_GAS, self.m_ID, Global.g_timer.m_time, amount]
+				usage = [Common.ENERGY_TYPE_GAS, agent.m_role, self.m_ID, Global.g_timer.m_time, amount]
 			Global.g_myHouse.RegisterEnergyUsage(usage)
 	
 	def GetInteractAgent(self):
 		interactAgent = None
+		Global.Logger.LogDebug("GetInteractAgent - Act "+self.m_ID+" "+str(self.m_interactAgent)+"\n")
 		for iAgent in self.m_interactAgent:
 			interactAgent = next((agent for agent in Agent.Agent.agentList if (agent.m_role == iAgent)), None)
 			if interactAgent != None:
 				break
+		Global.Logger.LogDebug("Final interactAgent "+str(interactAgent)+"\n")
 		return interactAgent
+	
+def LoadMultiAgent():
+	multiAgentFile = Agent.resPath+"multi_agent.csv"
+	with open(multiAgentFile) as csvfile:
+		reader = csv.reader(csvfile)
+		for row in reader:
+			if row[Common.TABLE_ACTIVITY_ID] == "ID":
+				continue
+			Activity.s_multiAgent[row[0]] = row[1] == "1"

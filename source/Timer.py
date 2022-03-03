@@ -2,6 +2,7 @@ import math
 
 import Common
 import Config
+import scriptcontext as sc
 
 HOUR_IN_DAY		= 24
 MINUTE_IN_HOUR	= 60
@@ -33,6 +34,8 @@ class Timer():
 		return int(self.m_time / (HOUR_IN_DAY * MINUTE_IN_HOUR))
 	
 	def Update(self, dt):
+		if "SimulationSpeed" in sc.sticky:
+			dt *= sc.sticky["SimulationSpeed"]
 		self.m_elapsedAdjuster += dt
 		if self.m_elapsedAdjuster > K_ADJUSTER:
 			self.m_time += 1
@@ -44,6 +47,24 @@ class Timer():
 		return "{:02d}:{:02d}".format(self.GetHour(), self.GetMinute())
 	
 	def Reset(self):
+		self.m_time = MINUTE_IN_HOUR
+	
+	@staticmethod
+	def GetDayForTime(time):
+		return int(time / (HOUR_IN_DAY * MINUTE_IN_HOUR))
+	
+	@staticmethod
+	def GetFormattedHourInDay(time):
+		hour = int(math.floor(time / MINUTE_IN_HOUR) % HOUR_IN_DAY)
+		minute = (time % MINUTE_IN_HOUR)
+		return "{:02d}:{:02d}".format(hour, minute)
+	
+	def ResetTimer(self):
+		self.m_time = 0
+		K_ADJUSTER = TIMEFACTOR / TIMECONVERSION
+		if "SimulationSpeed" in sc.sticky:
+			K_ADJUSTER /= sc.sticky["SimulationSpeed"]
+		self.m_elapsedAdjuster = K_ADJUSTER
 		self.m_time = MINUTE_IN_HOUR
 
 def CreateInstance():

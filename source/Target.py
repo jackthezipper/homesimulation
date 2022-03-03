@@ -1,4 +1,5 @@
 import CommonEnum
+import Common
 import Global
 
 class Target:
@@ -30,6 +31,8 @@ class Target:
 			self.m_autoTrigger[1] = float(self.m_autoTrigger[1]) #min value to trigger
 			self.m_autoTrigger[2] = float(self.m_autoTrigger[2]) #max valur to stop
 			self.m_autoTrigger[3] = float(self.m_autoTrigger[3]) #rate
+		self.m_inTimer = False
+		self.m_isRun = False
 		
 	def setTargetPoint(self,point):
 		self.m_targetPoint = point
@@ -58,23 +61,32 @@ class Target:
 	def CreateCopyForId(self, id):
 		return Target(self.m_floorIndex,self.m_type,self.m_targetPoint,id)
 	
-	def StartUsage(self, activityId, timer = 0, offset = 0, agent = "Auto"):
+	def StartUsage(self, activityId, timer = 0, offset = 0, agent = "Auto", useTimer = False):
+		Global.Logger.LogDebug("Wanton start "+str(self.m_usageStartTime)+" "+str(Global.g_timer.m_time))
 		if self.m_usageStartTime == 0:
 			self.m_usageStartTime = Global.g_timer.m_time - offset
 		self.m_usageTimer = timer
 		
 		self.m_activatedByAct = activityId
 		self.m_activatorAgent = agent
+		self.m_inTimer = useTimer
+		self.m_isRun = True
+		Global.Logger.LogDebug("Start the usage "+self.m_id+" by "+agent+" "+activityId+" at "+str(self.m_usageStartTime)+" off "+str(offset)+" timer "+str(timer)+"\n")
 	
 	def StopUsage(self):
-		usage = [Common.ENERGY_TYPE_ELECTRICITY, self.m_activatorAgent, self.m_activatedByAct, self.m_usageStartTime, Global.g_timer.m_time, self.m_powerCons]
+		if not self.m_isRun:
+			Global.Logger.LogDebug("Setoping without startig. What the matter?\n")
+		Global.Logger.LogDebug("RegisterUsage by stop "+self.m_id+" start "+str(self.m_usageStartTime)+" end "+str(Global.g_timer.m_time)+"\n")
+		self.m_isRun = False
+		usage = [Common.ENERGY_TYPE_ELECTRICITY, self.m_id, self.m_activatorAgent, self.m_activatedByAct, self.m_usageStartTime, Global.g_timer.m_time, self.m_powerCons]
 		Global.g_myHouse.RegisterEnergyUsage(usage)
 		self.m_usageTimer = 0
 		self.m_usageStartTime = 0
+		self.m_inTimer = False
 	
 	def UpdateUsage(self):
-		if self.m_usageTimer != 0:
-			if Global.g_timer.m_time - self.m_usageStartTime > self.m_usageTimer:
+		if self.m_inTimer:
+			if Global.g_timer.m_time - self.m_usageStartTime >= self.m_usageTimer:
 				self.StopUsage()
 		self.UpdateAutoTrigger()
 	
@@ -87,3 +99,9 @@ class Target:
 			if generalRoom != None and generalRoom.m_resource[self.m_autoTrigger[0]][0] < self.m_autoTrigger[1]:
 				onTime = (self.m_autoTrigger[2] - generalRoom.m_resource[self.m_autoTrigger[0]][0]) / self.m_autoTrigger[3]
 				self.StartUsage("Auto", onTime)
+			
+			if generalRoom != None and self.m_inTimer:
+				generalRoom.m_resource[self.m_autoTrigger[0]][0] += self.m_autoTrigger[3]
+		
+		
+		

@@ -17,6 +17,22 @@ resPath			= sourceDirPath+"res\\"+sc.sticky["MapName"]+"\\"
 class Logger:
 	s_debugStr = ""
 	s_debugActive = True
+	
+	s_agentLog = {}
+	
+	@staticmethod
+	def RegisterAgentLog(agentList):
+		for agent in agentList:
+			s_agentLog[agent] = ""
+	
+	@staticmethod
+	def LogAgent(agent, logText):
+		Logger.s_agentLog[agent] += logText
+	
+	# @staticmethod
+	# def ExportAgentLog():
+		# for log in Logger.s_agentLog:
+			
 
 	@staticmethod
 	def LogDebug(debugLog):
