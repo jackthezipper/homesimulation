@@ -426,7 +426,7 @@ class Agent:
 	def TryTrigger(self, activityId):
 		if activityId in self.m_nonIndependentAct:
 			return None
-		if self.m_currentRoom.m_name == "RTG01" or self.m_currentRoom.m_name == "RTG02":
+		if self.m_currentRoom != None and (self.m_currentRoom.m_name == "RTG01" or self.m_currentRoom.m_name == "RTG02"):
 			return None
 		for property in self.m_bioProperty:
 			if (self.m_currentActivity != None and self.m_currentActivity.m_ID == property.m_relatedActivityId and (not (self.m_currentActivity.IsDone() or self.m_currentActivity.m_status == Common.ACT_STATUS_SUSPEND))):
@@ -441,9 +441,9 @@ class Agent:
 	def UpdateAbility(self):
 		energyEffect = self.GetProperty("Energy").GetScore() / ((6 if self.IsAsleep() else 24) * Timer.MINUTE_IN_HOUR)
 		exhaustEffect = self.GetProperty("Exhausted").GetScore() / ((12 if self.IsAsleep() else 6) * Timer.MINUTE_IN_HOUR)
-		# print("abi "+Fmt(self.m_currentAbility)+" "+Fmt(energyEffect)+" "+Fmt(exhaustEffect))
 		self.m_currentAbility += (energyEffect - exhaustEffect) #/ (24 * Timer.MINUTE_IN_HOUR))
-		self.m_currentAbility = min(self.m_currentAbility,8.875)
+		self.m_currentAbility = max(0,min(self.m_currentAbility,8.875))
+		self.Log("Physical ability: Energy effect: "+Fmt(energyEffect)+" - Exhausted effect: "+Fmt(exhaustEffect)+" - Current Ability: "+Fmt(self.m_currentAbility)+"\n")
 	
 	def IsAsleep(self):
 		return (self.m_currentActivity != None) and (self.m_currentActivity.m_ID == "B04" or self.m_currentActivity.m_ID == "TD") and self.m_currentActivity.IsRunning()
@@ -553,7 +553,7 @@ class Agent:
 		
 		moodByTime = self.m_emotionalNormal if (self.m_emotionalTimeEffect == self.m_emotionalNormal) else (self.m_emotionalFactor + self.m_emotionalTimeEffect)
 		self.m_emotionalFactor = moodByTime + self.GetActivityEmotionalEffect()
-		#print("Emotion ActivityJalan:"+str(self.IsLastActivityRunning())+" Normal:"+Fmt(self.m_emotionalNormal)+" TimeEffect:"+Fmt(self.m_emotionalTimeEffect)+" Mood:"+Fmt(moodByTime)+" ActivityEffect:"+Fmt(self.GetActivityEmotionalEffect())+" Total:"+Fmt(self.m_emotionalFactor)+" CCE:"+Fmt(self.m_emotionalTotal) )
+		self.Log("Emotion ActivityJalan:"+str(self.IsLastActivityRunning())+" Normal:"+Fmt(self.m_emotionalNormal)+" TimeEffect:"+Fmt(self.m_emotionalTimeEffect)+" Mood:"+Fmt(moodByTime)+" ActivityEffect:"+Fmt(self.GetActivityEmotionalEffect())+" Total:"+Fmt(self.m_emotionalFactor)+" CCE:"+Fmt(self.m_emotionalTotal)+"\n" )
 		self.m_emotionalTotal = 1 + (self.m_emotionalFactor / (self.m_emotionalNormal * 100))
 	
 	def UpdateActivity(self):
@@ -561,7 +561,7 @@ class Agent:
 		Global.Logger.LogDebug("Current Activity "+self.m_role+" "+("None" if self.m_currentActivity == None else self.m_currentActivity.m_ID)+" lon "+str(len(self.m_activityList))+" viona "+self.m_bioActivityToTrigger+"\n")
 		self.Log("Current Activity "+("None" if self.m_currentActivity == None else self.m_currentActivity.m_ID)+"\n")
 		if self.m_currentActivity == None:
-			self.Log("No activity!!!")
+			self.Log("No activity!!!\n")
 		elif self.m_currentActivity.IsRunning():
 			self.Log("Activity is running\n")
 		else:
