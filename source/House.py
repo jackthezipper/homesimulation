@@ -7,6 +7,7 @@ import Target
 import Global
 import Timer
 import Agent
+import Door
 import Common
 
 import Rhino as rh
@@ -88,7 +89,7 @@ class Room:
 			resList = resStr.split("|")
 			for res in resList:
 				resComp = res.split(";")
-				resource[resComp[0]] = [int(resComp[1]), len(resComp) > 2]
+				resource[resComp[0]] = [int(resComp[1]), Common.RES_NOGENERAL if len(resComp) <= 2 else (Common.RES_GENERAL if resComp[2] == "G" else Common.RES_GENERAL_TYPE2)]
 		return resource
 		
 	def InitLamps(self, lamps):
@@ -160,6 +161,10 @@ class Room:
 				return True, foundItem
 		return False, None
 	
+	def FindItemById(self, id):
+		foundItem = next((roomItem for roomItem in self.m_items if roomItem.m_id == id), None)
+		return foundItem
+	
 	def HasAndAvailable(self, itemType):
 		hasItem, items = self.FindItem(itemType)
 		
@@ -204,7 +209,7 @@ class Room:
 					if turnOn:
 						lampTarget.StartUsage(agent.m_currentActivity.m_ID, agent = agent.m_role)
 					else:
-						lampTarget.StopUsage()
+						lampTarget.StopUsage(agent.m_role)
 				
 				break
 	
@@ -214,13 +219,20 @@ class Room:
 		# Global.Logger.LogDebug("Res "+str(self.m_resource)+"\n")
 		return (resource in self.m_resource.keys()) and (amount <= self.m_resource[resource][0])
 	
-	def IsGeneralForResource(self, resourceType):
+	def GetResourceAmount(self, resource):
+		if resource in self.m_resource:
+			return True, self.m_resource[resource][0]
+		return False, 0
+	
+	def IsGeneralForResource(self, resourceType, type2 = False):
 		# Global.Logger.LogDebug("Check general room "+self.m_name+" res "+resourceType)
 		# Global.Logger.LogDebug("my res "+str(self.m_resource.keys())+"\n")
 		# Global.Logger.LogDebug("is in "+str(resourceType in self.m_resource.keys())+"\n")
 		# if (resourceType in self.m_resource.keys()):
 			# Global.Logger.LogDebug("is gen "+str(self.m_resource[resourceType][1])+"\n")
-		return (resourceType in self.m_resource.keys()) and self.m_resource[resourceType][1]
+		if type2:
+			return (resourceType in self.m_resource.keys()) and (self.m_resource[resourceType][1] == Common.RES_GENERAL_TYPE2)
+		return (resourceType in self.m_resource.keys()) and (self.m_resource[resourceType][1] != Common.RES_NOGENERAL)
 	
 	def ReportCurrentResource(self):
 		Global.Logger.LogDebug("Resource for room "+self.m_name+"\n")
@@ -230,13 +242,27 @@ class Room:
 			for res in self.m_resource.keys():
 				Global.Logger.LogDebug(res+" "+str(self.m_resource[res][0])+"\n")
 	
+	def LogRoom(self):
+		Global.HouseLog("Log for room: "+self.m_name+"\n")
+		Global.HouseLog("Floor Status: "+str(self.m_value)+"\n")
+		index = Global.g_timer.m_time / Timer.MINUTE_IN_HOUR
+		baseLight = self.m_tableLight[index] if len(self.m_tableLight) > 0 else 65
+		baseTemperature = self.m_tableTemperature[index] if len(self.m_tableTemperature) > 0 else 21
+		Global.HouseLog("Light: Base="+str(baseLight)+" LampEffect="+str(self.m_light - baseLight)+" Total="+str(self.m_light)+"\n")
+		Global.HouseLog("Temperature: Base="+str(baseTemperature)+" FanEffect="+str(self.m_temperature - baseTemperature)+" Total="+str(self.m_temperature)+"\n")
+		if self.m_resource != None and len(self.m_resource) > 0:
+			Global.HouseLog("Resource:\n")
+			for res in self.m_resource:
+				Global.HouseLog(res+" "+str(self.m_resource[res][0])+"\n")
+	
 	def UpdateLightAndTemperature(self):
 		index = Global.g_timer.m_time / Timer.MINUTE_IN_HOUR
 		self.m_temperature = self.m_tableTemperature[index] if len(self.m_tableTemperature) > 0 else 21
-		# Global.Logger.LogDebug("Update temperature "+self.m_name+" "+str(self.m_temperature))
-		self.m_light = self.m_tableLight[index] if len(self.m_tableLight) > 0 else 666
+		Global.Logger.LogDebug("Update temperature "+self.m_name+" "+str(self.m_temperature)+"\n")
+		self.m_light = self.m_tableLight[index] if len(self.m_tableLight) > 0 else 65
 		
 		hasLight, active, lightDevice = self.HasAndActive("Lamp")
+		Global.Logger.LogDebug("ulam "+str(lightDevice)+"\n")
 		if hasLight and active:
 			self.m_light += next(trgt for trgt in Agent.Agent.s_possibleTarget if trgt.m_id == lightDevice).m_envEffect[Common.EFFECT_LIGHT]
 		
@@ -277,6 +303,9 @@ class House:
 		self.m_rooms = []
 		self.m_envObj = {}
 		self.m_energyUsage = []
+		self.m_doors = []
+		self.m_log = ""
+		self.m_lastLog = -1
 	
 	def loadHouseEnergy(self):
 		#cFPath = ghenv.Component.OnPingDocument().FilePath
@@ -333,29 +362,31 @@ class House:
 		
 		waterUsage = filter(lambda usage: usage[0] == Common.ENERGY_TYPE_WATER, self.m_energyUsage)
 		outputFilePath = reportPath+"water_report.csv"
-		columnName = ["User", "Activity", "Room", "Time", "Amount"]
+		columnName = ["User", "Activity", "Room", "Day", "Time", "Amount"]
 		with open(outputFilePath, mode='w+') as outputFile:
 			outputWriter = csv.writer(outputFile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
 			outputWriter.writerow(columnName)
 			for usage in waterUsage:
-				row = [usage[1], usage[2], usage[3], Timer.Timer.GetFormattedHourInDay(usage[4]), usage[5]]
+				row = [usage[1], usage[2], usage[3], Timer.Timer.GetDayForTime(usage[4]), Timer.Timer.GetFormattedHourInDay(usage[4]), usage[5]]
 				outputWriter.writerow(row)
 		
 		gasUsage = filter(lambda usage: usage[0] == Common.ENERGY_TYPE_GAS, self.m_energyUsage)
 		outputFilePath = reportPath+"gas_report.csv"
-		columnName = ["User", "Activity", "Time", "Amount"]
+		columnName = ["User", "Activity", "Day", "Time", "Amount"]
 		with open(outputFilePath, mode='w+') as outputFile:
 			outputWriter = csv.writer(outputFile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
 			outputWriter.writerow(columnName)
 			for usage in gasUsage:
-				row = [usage[1], usage[2], Timer.Timer.GetFormattedHourInDay(usage[3]), usage[4]]
+				row = [usage[1], usage[2], Timer.Timer.GetDayForTime(usage[3]), Timer.Timer.GetFormattedHourInDay(usage[3]), usage[4]]
 				outputWriter.writerow(row)
+		
+		self.ExportLog()
 	
 	def ResetEnergyUsage(self):
 		self.m_energyUsage = []
 	
-	def FindGeneralRoomForResource(self, resourceType):
-		roomWithResource = next((room for room in self.m_rooms if room.IsGeneralForResource(resourceType)), None)
+	def FindGeneralRoomForResource(self, resourceType, type2 = False):
+		roomWithResource = next((room for room in self.m_rooms if room.IsGeneralForResource(resourceType, type2)), None)
 		return roomWithResource
 	
 	def ReportResource(self):
@@ -364,12 +395,26 @@ class House:
 		Global.Logger.DumpDebug()
 	
 	def UpdateHouse(self):
-		for room in self.m_rooms:
-			room.UpdateLightAndTemperature()
-		for target in Agent.Agent.s_possibleTarget:
-			if target != None:
-				target.UpdateUsage()
+		if self.m_lastLog != Global.g_timer.m_time:
+			self.m_lastLog = Global.g_timer.m_time
+			for room in self.m_rooms:
+				room.UpdateLightAndTemperature()
+			for target in Agent.Agent.s_possibleTarget:
+				if target != None:
+					target.UpdateUsage()
+			if Global.g_timer.GetMinute() % 5 == 0:
+				Global.HouseLog("-----Time: Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"-----\n")
+				for room in self.m_rooms:
+					room.LogRoom()
 	
 	def StopAllUsage(self):
 		for room in self.m_rooms:
 			room.StopAllUsage()
+	
+	def Log(self, log):
+		self.m_log += log
+	
+	def ExportLog(self):
+		outputFilePath = reportPath+"house_log.txt"
+		with open(outputFilePath, mode='w+') as outputFile:
+			outputFile.write(self.m_log)

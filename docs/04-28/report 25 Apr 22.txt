@@ -1,0 +1,80 @@
+perbaikan setelah rincian perubahan data dari Mas Andri dikirimkan dan diskusi, sebelum agen01-05 dijalankan, karena perlu ada perbaikan data, terutama di bio_ic
+
+agen01
+A33 - Bekerja di luar rumah
+Agen seharusnya melakukan aktivitas tertentu (waktu yang ditentukan) dengan durasi = Durasi - (jam mulai terkini - jam mulai seharusnya)
+sehingga jam berapa pun agen masuk akan pulang di jam yang sama. 
+--> formula baru, sekarang hanya ada durasi tetap, atau tidak tertentu (bisa selesai kapan saja)
+
+
+agen01, agen02, seharusnya tidak ada aktivitas di rumah selama jam kerja selama 5 hari simulasi, aktivitas bekerja di luar rumah belum bisa berjalan dengan baik
+hanya 2 hari dari 7 hari simulasi, ada aktivitas di rumah 
+cek urgensi aktivitas bekerja di luar rumah, seharusnya bisa mengalahkan urgensi aktivitas lainnya
+--> tergantung nilai parameter dalam tabel aktivitas
+
+cek laju kantuk, bio_ic kantuk
+tidur agen tidak teratur, tidak setiap hari tidur malam, cek waktu KB/ KT
+perbaikan waktu bangun dan tidur
+
+tingkat defekasi terkini 0, seharusnya 9.58
+--> penyesuaian nama kolom: Tekanan ke Klep Rektum -> Tingkat Tekanan Terkini , Tingkat Defekasi Terkini -> Efek Defekasi
+--> tingkat tekaan terkini berasal dari hitung2an formula, jadi ic tidak berpengaruh
+
+ada aktivitas defekasi janggal di hari 1 jumlah 521.73, durasi cukup panjang
+--> di file mana? jam berapa?
+
+cek formula defekasi
+
+urinasi, sisa di kemih report 6.5, seharusnya 32.5
+ada di kemih report 338.51, seharusnya 154.5
+agen urinasi < 4 kali sehari, rata2 3 kali sehari, seharusnya 4-5 kali sehari
+
+agen minum paling banyak 4 kali sehari, seharusnya 9 kali
+
+--------------------
+
+agen02
+agen01, agen02, seharusnya tidak ada aktivitas di rumah selama jam kerja selama 5 hari simulasi, aktivitas bekerja di luar rumah belum bisa berjalan dengan baik
+hanya 2 hari dari 7 hari simulasi, ada aktivitas di rumah 
+
+Efek minum agen02 untuk 10 poin masih 150 harusnya 200, cek Effect di activity2.csv
+
+agen02 di h1 tidur siang karena ada KT, tapi tidak ada KB, jadi agen tidak bisa bangun, bisa jadi penyebab fisiologis lain yang kurang pas
+agen02 di h2 tidak tidur malam, nilai kantuk 10, KT, tapi tetap bangun, cek log aktivitas: aktivitas apa yang sedang dilakukan agen, apa agen berada di luar rumah >> agen02 melakukan aktivitas bermain dengan agen03
+di h2 agen02 tidak tidur malam lagi, nilai kantuk 10, di KT masih tidak tidur, cek formula kantuk
+justru di h3, waktu kantuk 10, di waktu KB, agen tidur dan bangun di h5  waktu KB, h5 tidur malam normal di waktu KT, tapi di h6 tidak bangun lagi
+perbaikan waktu kebiasaan bangun dan tidur
+ada kebiasaan tidur siang tapi tidak ada kebiasaan bangun di siang
+
+tingkat defekasi terkini 0, seharusnya 6.67
+cek formula defekasi
+
+urinasi, sisa di kemih 11, seharusnya 55
+ada di kemih report 276.01, seharusnya 99
+agen urinasi < 5 kali, rata2 2 kali sehari, seharusnya 5-6 kali
+
+Mood agen02 dimulai dari 0.570, seharusnya 0.625
+
+agen minum paling banyak 5 kali sehari, seharusnya 8 kali
+
+--------------------
+
+agen03
+Agen03 belum bisa berjalan karena tidak ada yang menyuapi makan
+Bisa karena tidak ada resource Food pada jam tertentu
+Bisa karena tidak ada agen yang melakukan aktivitas Menyuapi agen03 (biasa dilakukan agen05)
+
+perbaikan waktu kebiasaan bangun tidur
+
+tingkat defekasi terkini 0, seharusnya 9.58
+
+urinasi, sisa di kemih 15.5, seharusnya 77.5
+ada di kemih report 213.51, seharusnya 185.5
+cek formula urinasi, karena agen03 tidak BAK sama sekali, padahal ada aktivitas minum
+
+agen minum paling banyak 0 kali sehari, seharusnya 10 kali sehari
+
+agen hanya mandi sekali di sore hari karena agen05 yang memandikan belum masuk simulasi
+
+laju kantuk agen ketika tidur sepertinya terlalu cepat berkurang kantuk, sehingga bangun sebelum dibangunkann agen lain
+cek dan perbaiki laju tidur dan waktu kebiasaan bangun dan tidur, agen cenderung jarang tidur malam

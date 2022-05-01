@@ -61,11 +61,14 @@ class Target:
 	def CreateCopyForId(self, id):
 		return Target(self.m_floorIndex,self.m_type,self.m_targetPoint,id)
 	
-	def StartUsage(self, activityId, timer = 0, offset = 0, agent = "Auto", useTimer = False):
+	def StartUsage(self, activityId, timer = 0, offset = 0, agent = "Auto", useTimer = False, putLog = True):
 		Global.Logger.LogDebug("Wanton start "+str(self.m_usageStartTime)+" "+str(Global.g_timer.m_time))
 		if self.m_usageStartTime == 0:
 			self.m_usageStartTime = Global.g_timer.m_time - offset
 		self.m_usageTimer = timer
+		
+		if putLog:
+			Global.HouseLog("Starting device "+self.m_id+" by "+agent+" Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
 		
 		self.m_activatedByAct = activityId
 		self.m_activatorAgent = agent
@@ -73,7 +76,7 @@ class Target:
 		self.m_isRun = True
 		Global.Logger.LogDebug("Start the usage "+self.m_id+" by "+agent+" "+activityId+" at "+str(self.m_usageStartTime)+" off "+str(offset)+" timer "+str(timer)+"\n")
 	
-	def StopUsage(self):
+	def StopUsage(self, agent="Auto", putLog = True):
 		if not self.m_isRun:
 			Global.Logger.LogDebug("Setoping without startig. What the matter?\n")
 		Global.Logger.LogDebug("RegisterUsage by stop "+self.m_id+" start "+str(self.m_usageStartTime)+" end "+str(Global.g_timer.m_time)+"\n")
@@ -83,6 +86,9 @@ class Target:
 		self.m_usageTimer = 0
 		self.m_usageStartTime = 0
 		self.m_inTimer = False
+		
+		if putLog:
+			Global.HouseLog("Stopping device "+self.m_id+" by "+agent+" Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
 	
 	def UpdateUsage(self):
 		if self.m_inTimer:

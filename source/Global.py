@@ -14,6 +14,7 @@ sourceFilePath	= os.path.dirname(os.path.abspath(__file__))
 sourceDirPath	= sourceFilePath[0:sourceFilePath.rfind('\\')+1]
 resPath			= sourceDirPath+"res\\"+sc.sticky["MapName"]+"\\"
 
+g_timer = Timer.GetInstance()
 class Logger:
 	s_debugStr = ""
 	s_debugActive = True
@@ -47,11 +48,13 @@ class Logger:
 	def DumpDebug():
 		if not Logger.s_debugActive:
 			return
-		dFile = open(resPath+"dmp.txt","a+")
+		dFile = open(resPath+"dmp-"+str(g_timer.GetDay())+".txt","a+")
 		dFile.write(Logger.s_debugStr)
 		dFile.close()
 		Logger.s_debugStr = ""
 
 House = reload(House)
 g_myHouse = House.House()
-g_timer = Timer.GetInstance()
+
+def HouseLog(log):
+	g_myHouse.Log(log)

@@ -1,0 +1,35 @@
+perubahan agen01
+data activity2: 
+1) perbaikan isi kolom property Hunger, Energy
+2) perbaikan untuk isi kolom property dirty aktivitas B01, B02, B03, B04, B05, B06, B07
+
+data bio_ic:
+Hunger:
+Current = 2207.92 menjadi 1698.4
+Rate = 2649.5|24|0.125:0.25:0.1 menjadi 2547.6|24|0.125:0.25:0.1
+Effect = 883.17;441.58 menjadi 849.2;1698.4
+
+Energy:
+Current = 1766.32 menjadi 1698.4
+Rate = 2649.5|24|0.2:0.025 menjadi 2547.6|24|0.2:0.025
+
+Defecate:
+Custom = 441.58;9.58;39.08;0.7355 menjadi 1698.4;9.58;39.08;0.7355
+
+perubahan agen02
+data activity2: 
+1) perbaikan isi kolom property Hunger dan Energy
+2) perbaikan nama aktivitas A179 "Mencuci dengan mesin cuci" menjadi "Mengeringkan pakaian"
+
+data bio_ic:
+Hunger:
+Current = 1258.13 menjadi 1552.67
+Rate = 2516.25|24|0.125:0.25:0.1 menjadi 2329|24|0.125:0.25:0.1
+Effect = 993.85;2484.63 menjadi 776.33;1552.67
+
+Energy:
+Current = 1258.13 menjadi 1164.5
+Rate = 2516.25|24|0.2:0.025 menjadi 2329|24|0.2:0.025
+
+Defecate:
+Custom = 353.37;6.67;27.19;0.7355 menjadi 1552.67;6.67;27.19;0.7355
