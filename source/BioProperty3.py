@@ -152,7 +152,7 @@ class Thirst(BioProperty):
 		self.m_currentScore = self.m_totalScore - self.m_currentEffectScore + self.m_rate[Common.AGENT_ASLEEP if self.m_agent.IsAsleep() else Common.AGENT_AWAKE]
 	
 	def CalculateEffect(self):
-		if self.m_agent.GetProperty("Hunger").m_relatedActivity != None and self.m_agent.GetProperty("Hunger").m_relatedActivity.IsRunning():
+		if self.m_agent.GetProperty("Hunger").m_eatActivity != None and self.m_agent.GetProperty("Hunger").m_eatActivity.IsRunning():
 			return (self.m_effect[Common.EFFECT_HABIT_NONHABIT][Common.EFFECT_NEW_VALUE] if self.m_totalScore > self.m_effect[Common.EFFECT_EAT][Common.EFFECT_NEW_LIMIT] else self.m_effect[Common.EFFECT_EAT][Common.EFFECT_NEW_VALUE]) / self.m_agent.GetProperty("Hunger").m_eatActivity.m_duration
 		
 		index = Common.EFFECT_HABIT_HABIT if self.IsHabit(Global.g_timer.GetHour()) else Common.EFFECT_HABIT_NONHABIT
@@ -375,7 +375,7 @@ class Defecate(BioProperty):
 		# self.m_clepPressure = clepPressure
 		self.m_inIntestine = 0
 		self.m_inColon = 0
-		self.m_rateStomachToIntestine = 0
+		self.m_rateStomachToIntestine = inStomach/(6 * Timer.MINUTE_IN_HOUR)
 		self.m_tick = 0
 		self.m_tickStart = False
 		self.m_inColonEdge = 0
@@ -468,7 +468,7 @@ class Urinate(BioProperty):
 		self.m_eatEffect = 0
 		self.m_drinkEffect = 0
 		self.m_relatedActivityId = "B05"
-		self.m_effect[Common.EFFECT_URINATE_NORMAL][Common.EFFECT_NEW_VALUE] /= self.m_agent.GetActivityById(self.m_relatedActivityId).m_duration
+		self.m_effect[Common.EFFECT_URINATE_NORMAL][Common.EFFECT_NEW_VALUE]# /= self.m_agent.GetActivityById(self.m_relatedActivityId).m_duration
 		#self.m_effect[Common.EFFECT_URINATE_DEFECATE][Common.EFFECT_NEW_VALUE] /= self.m_agent.GetActivityById(self.m_agent.GetProperty("Defecate").m_relatedActivityId).m_duration
 		self.m_point = self.m_inBladder / self.m_effect[Common.EFFECT_URINATE_NORMAL][Common.EFFECT_NEW_LIMIT] * 10
 		self.m_urinateVol = 0

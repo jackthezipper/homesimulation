@@ -419,6 +419,10 @@ class Activity:
 				if not interactAgent.IsAsleep():
 					Global.Logger.LogDebug("canstart agent awake\n")
 					return False
+			
+			if interactAgent.m_followedAgent != None and interactAgent.m_followedAgent.m_role != agent.m_role:
+				Global.Logger.LogDebug("canstart fail, following other agent")
+				return False
 		
 		if self.m_ID in agent.m_nonIndependentAct:
 			Global.Logger.LogDebug("canstart fail is a nonindependent act, should be trigerred by other agent")
@@ -659,7 +663,7 @@ class Activity:
 			elif effect[1] == 9:
 				self.ApplyEffect(agent, agent.m_currentRoom, effect[0], s_savedEffect, True)
 			elif effect[1] == 10:
-				self.ApplyEffect(agent, agent.m_currentRoom, effect[0], (-agent.GetProperty("Thirst").m_currentEffectScore * self.m_duration * 15))
+				self.ApplyEffect(agent, agent.m_currentRoom, effect[0], (-agent.GetProperty("Thirst").m_currentEffectScore * self.m_duration * effect[2]))
 			elif effect[1] == 11:
 				self.ApplyEffect(agent, agent.m_currentRoom, effect[0], effect[2] * self.m_duration * 60)
 			
