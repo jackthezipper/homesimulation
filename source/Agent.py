@@ -163,6 +163,7 @@ class Agent:
 		self.m_activityList = Activity.GenerateActivity(dbFile, matrixFile	)
 		self.m_currentActivity = None
 		self.m_currentRoom = None
+		self.m_activityLog = ""
 		self.LoadBioProperty(Config.IC_FILE_NAME)
 		self.m_bioActivityToTrigger = "" if self.m_currentActivity == None else self.m_currentActivity.m_ID
 		self.m_wasAsleep = True
@@ -215,6 +216,8 @@ class Agent:
 				if row[Common.IC_PROPERTY] == "Current Activity":
 					self.m_currentActivity = self.GetActivityById(row[Common.IC_VALUE])
 					self.m_currentActivity.Start(self.m_role)
+					self.ActivityLog("Starting "+self.m_currentActivity.m_ID+" at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
+					self.SetState(STATE_WAIT)
 					# self.m_currentRoom.m_countAgent += 1
 					continue
 				if row[Common.IC_PROPERTY] == "Ability":
@@ -435,6 +438,9 @@ class Agent:
 				return None
 		
 		self.m_bioActivityToTrigger = activityId
+		activity = self.GetActivityById(activityId)
+		if activity.m_status == Common.ACT_STATUS_SUSPEND or activity.m_isIncidental:
+			return None
 		return self.GetActivityById(activityId)
 	
 	def IsIndependentAgent(self):
@@ -470,6 +476,12 @@ class Agent:
 			return self.pos
 		
 		timeA = int(time.time()*1000)
+		
+		for room in Global.g_myHouse.m_rooms:
+			if room.IsInRoom(self.pos):
+				self.m_currentRoom = room
+				Global.Logger.LogDebug("akoroom "+self.m_role+" "+str(self.pos)+" "+self.m_currentRoom.m_name+"\n")
+				break
 		
 		self.m_elapsedAdjustTimer += dt
 		if self.m_elapsedAdjustTimer >= self.m_timeAdjuster:
@@ -590,6 +602,7 @@ class Agent:
 				isActivityDone = self.m_currentActivity.IsDone()
 				if self.m_currentActivity.m_currentInteractAgent != None and self.m_currentActivity.m_followerActivity != "-":
 					self.m_currentActivity.m_currentInteractAgent.SetFollowing(self, False)
+					self.m_currentActivity.m_currentInteractAgent.m_currentActivity.Stop()
 				self.m_currentActivity.Stop()
 				if not self.m_currentActivity.m_auto and self.m_target!= None and self.m_target.m_powerCons > 0:
 					self.m_target.StopUsage(self.m_role)
@@ -618,6 +631,7 @@ class Agent:
 			if self.m_currentActivity != None and not isActivityDone:
 				if self.m_currentActivity == None or self.m_currentActivity.m_status < Common.ACT_STATUS_RUN:
 					self.SetState(STATE_IDLE)
+					# self.ActivityLog("Idle 9\n")
 				if not self.m_currentActivity.m_auto and self.m_target != None:
 					self.m_target.SetAvailable(True)
 					self.m_target = None
@@ -635,15 +649,18 @@ class Agent:
 			self.m_currentActivity = self.GetActivityById(self.m_bioActivityToTrigger)
 			Global.Logger.LogDebug("goto 5\n")
 			self.m_currentActivity.GoTo()
+			self.ActivityLog("Switch activity to "+self.m_currentActivity.m_ID+" at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
 		incidentalAct = []
 		if self.m_currentActivity != None:
 			isActivityDone = False
 			Global.Logger.LogDebug("danilo "+self.m_role+" "+str(self.m_currentActivity.IsDone())+" "+str(self.m_currentActivity.m_status == Common.ACT_STATUS_SUSPEND)+"\n")
+			Global.Logger.LogDebug("runtime act = "+str(self.m_currentActivity.m_runningTime)+" duration = "+str(self.m_currentActivity.m_duration)+"\n")
 			if self.m_currentActivity.IsDone() or self.m_currentActivity.m_status == Common.ACT_STATUS_SUSPEND:
 				Global.Logger.LogDebug("stop2\n")
 				isActivityDone = self.m_currentActivity.IsDone()
 				if self.m_currentActivity.m_currentInteractAgent != None and self.m_currentActivity.m_followerActivity != "-":
 					self.m_currentActivity.m_currentInteractAgent.SetFollowing(self, False)
+					self.m_currentActivity.m_currentInteractAgent.m_currentActivity.Stop()
 				self.m_currentActivity.Stop()
 				if not self.m_currentActivity.m_auto and self.m_target != None and self.m_target.m_powerCons > 0:
 					self.m_target.StopUsage(self.m_role)
@@ -672,6 +689,7 @@ class Agent:
 							self.m_currentActivity = self.m_pendingActivity
 							Global.Logger.LogDebug("goto d31\n")
 							self.m_currentActivity.GoTo()
+							self.ActivityLog("Switch activity to "+self.m_currentActivity.m_ID+" at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
 						self.m_pendingActivity = None
 				for property in self.m_bioProperty:
 					if property == None:
@@ -752,6 +770,7 @@ class Agent:
 				actDebugStr += " EmoScore:"+Fmt(act.m_emotionalScore)+" Multiplier:"+Fmt(curMultiplier)
 				# if self.m_lastActivity != None:
 					# Global.Logger.LogDebug(str(self.GetActivityById(self.m_lastActivity).m_matrix.keys()))
+				Global.Logger.LogDebug("Calc avatar "+self.m_lastActivity+" "+act.m_ID+"\n")
 				advantage = act.m_planProperty[Common.PLAN_PROPERTY_ADVANTAGE] + (0 if self.m_lastActivity == None else self.GetActivityById(self.m_lastActivity).m_matrix[act.m_ID])
 				act.m_planScore += act.m_planProperty[Common.PLAN_PROPERTY_ADVANTAGE] + (0 if self.m_lastActivity == None else self.GetActivityById(self.m_lastActivity).m_matrix[act.m_ID])
 				rule = (act.m_planProperty[Common.PLAN_PROPERTY_AUTHORITY] * act.m_planProperty[Common.PLAN_PROPERTY_OBEDIENCE] * 0) #dummy value 0; fill it with agent existance at home
@@ -800,11 +819,14 @@ class Agent:
 			
 			if len(actList) > 0:
 				lastActID = self.m_currentActivity.m_ID if self.m_currentActivity != None else "-"
+				Global.Logger.LogDebug("Alast "+lastActID+" "+actList[0].m_activitySet+"\n")
 				if (actList[0].m_activitySet == "-"):
-					Global.Logger.LogDebug("set activity "+self.m_role+" by 3\n")
-					if self.m_currentActivity == None or self.m_currentActivity.m_status < Common.ACT_STATUS_RUN:
-						self.SetState(STATE_IDLE)
-					self.m_currentActivity = actList[0]
+					if self.m_currentActivity == None or lastActID != actList[0].m_ID:
+						Global.Logger.LogDebug("set activity "+self.m_role+" by 3\n")
+						if self.m_currentActivity == None or self.m_currentActivity.m_status < Common.ACT_STATUS_RUN:
+							self.SetState(STATE_IDLE)
+							# self.ActivityLog("Idle 8\n")
+						self.m_currentActivity = actList[0]
 				else:
 					traceAct = actList[0]
 					actSet = actList[0].m_activitySet[:3]
@@ -822,21 +844,34 @@ class Agent:
 						Global.Logger.LogDebug("set activity "+self.m_role+" by 2\n")
 						if self.m_currentActivity == None or self.m_currentActivity.m_status < Common.ACT_STATUS_RUN:
 							self.SetState(STATE_IDLE)
+							# self.ActivityLog("Idle 7\n")
 						self.m_currentActivity = traceAct
 				if lastActID != self.m_currentActivity.m_ID:
 					# if self.GetActivityById(lastActID).m_isIncidental:
 						# self.m_lastActivity = lastActID
 					self.SetState(STATE_WAIT)
 		# Global.Logger.LogDebug("act statt "+self.m_currentActivity.m_ID+" "+str(self.m_currentActivity.m_status)+" "+str(self.m_currentActivity.IsDone())+"\n")
-		if self.m_currentActivity != None  and (not self.m_currentActivity.IsDone()) and (not self.m_currentActivity.IsRunning()) and self.m_state != STATE_MOVE and self.m_state != STATE_MOVE_PA:
+		if self.m_currentActivity != None  and (not self.m_currentActivity.IsDone()) and (not self.m_currentActivity.IsRunning()) and self.m_state != STATE_MOVE and self.m_state != STATE_MOVE_PA and self.m_currentActivity.m_status != Common.ACT_STATUS_GOTO:
 			Global.Logger.LogDebug("goto 4 "+self.m_currentActivity.m_ID+" "+str(self.m_currentActivity.m_status)+"\n")
 			self.m_currentActivity.GoTo()
-			self.CheckFollowingAgent()
-			if self.m_state != STATE_CHECK_PA and self.m_state != STATE_PREMOVE_PA and self.m_state != STATE_MOVE_PA:
-				self.SetState(STATE_CHECK_PA)
-			for act in incidentalAct:
-				if act.m_priority == 1:
-					act.m_remainingIncidentalTime = self.m_currentActivity.m_duration
+			# self.ActivityLog("Cinteract "+self.m_currentActivity.m_ID+" "+str(self.m_currentActivity.m_currentInteractAgent != None)+"\n")
+			# if self.m_currentActivity.m_currentInteractAgent != None:
+				# self.ActivityLog("Follow "+str(self.m_currentActivity.m_currentInteractAgent.m_followedAgent != None)+"\n")
+				# if self.m_currentActivity.m_currentInteractAgent.m_followedAgent != None:
+					# self.ActivityLog("Follow role "+self.m_currentActivity.m_currentInteractAgent.m_followedAgent.m_role+"\n")
+					
+			if self.m_currentActivity.m_currentInteractAgent != None and self.m_currentActivity.m_currentInteractAgent.m_followedAgent != None and self.m_currentActivity.m_currentInteractAgent.m_followedAgent.m_role != self.m_role:
+				self.m_currentActivity.Suspend()
+				self.m_currentActivity.SetToIncidental()
+				self.ActivityLog("Set "+self.m_currentActivity.m_ID+" to incidental due interact agent still interact with other agent at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
+			else:
+				self.ActivityLog("Switch activity to "+self.m_currentActivity.m_ID+" at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
+				self.CheckFollowingAgent()
+				if self.m_state != STATE_CHECK_PA and self.m_state != STATE_PREMOVE_PA and self.m_state != STATE_MOVE_PA and self.m_pendingActivity == None:
+					self.SetState(STATE_CHECK_PA)
+				for act in incidentalAct:
+					if act.m_priority == 1:
+						act.m_remainingIncidentalTime = self.m_currentActivity.m_duration
 		
 		for activity in self.m_activityList:
 			self.m_activityList[activity].Update()
@@ -976,6 +1011,7 @@ class Agent:
 		if self.m_currentActivity.m_status == Common.ACT_STATUS_GOTO and self.m_state != STATE_MOVE and self.m_state != STATE_MOVE_PA:
 			if self.m_following and self.m_followedAgent.m_currentActivity.m_followMovement:
 				self.m_targetRoom = self.m_followedAgent.m_targetRoom
+				self.ActivityLog("Moving to "+self.m_targetRoom.m_name+"\n")
 			elif self.m_followedAgent != None:
 				return
 			else:
@@ -1019,7 +1055,8 @@ class Agent:
 					elif self.m_preState == STATE_MOVE:
 						self.SetState(STATE_MOVE)
 					else:
-						self.SetState(STATE_WAIT)
+						self.SetState(STATE_IDLE)
+						# self.ActivityLog("Idle 6\n")
 				Global.Logger.LogDebug("kapurt cuodd "+str(self.m_state))
 				if self.m_state != STATE_CHECK_PA and self.m_state != STATE_PREMOVE_PA and self.m_state != STATE_MOVE_PA:
 					Global.Logger.LogDebug(self.m_role+" state fintar "+str(self.m_state)+"\n")
@@ -1088,19 +1125,16 @@ class Agent:
 				else:
 					self.m_targetType = TARGET_NONE
 					self.m_currentActivity.Start(self.m_role)
+					self.ActivityLog("Starting "+self.m_currentActivity.m_ID+" at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
 					if not self.m_currentActivity.m_auto and self.m_target != None and self.m_target.m_powerCons > 0:
 						self.m_target.StartUsage(self.m_currentActivity.m_ID, agent = self.m_role)
+					self.SetState(STATE_WAIT)
 				# self.m_currentRoom.m_countAgent += 1
 		# Global.Logger.LogDebug("EndCheckMove\n")
 	
 	#update pergerakan dan posisi agent
 	def UpdateAgentMovement(self, dt):
 		print(self.pos)
-		for room in Global.g_myHouse.m_rooms:
-			if room.IsInRoom(self.pos):
-				self.m_currentRoom = room
-				Global.Logger.LogDebug("akorom "+self.m_role+" "+str(self.pos)+" "+self.m_currentRoom.m_name+"\n")
-				break
 		if self.m_currentActivity != None and self.m_currentActivity.m_status == Common.ACT_STATUS_SUSPEND:
 			Global.Logger.LogDebug("activity agent "+self.m_role+" suspended, no move\n")
 			return
@@ -1113,6 +1147,8 @@ class Agent:
 		if self.m_state != STATE_MOVE and self.m_state != STATE_MOVE_PA:
 			if self.m_state == STATE_PRE_MOVE:
 				self.SetState(STATE_MOVE)
+				if not (self.m_following and self.m_followedAgent.m_currentActivity.m_followMovement):
+					self.ActivityLog("Moving to"+self.m_targetRoom.m_name+"\n")
 			if self.m_state == STATE_PREMOVE_PA:
 				self.SetState(STATE_MOVE_PA)
 			return
@@ -1255,7 +1291,7 @@ class Agent:
 							# self.m_currentActivity.Start()
 							
 						self.m_currentActivity.Start(self.m_role)
-						
+						self.ActivityLog("Starting "+self.m_currentActivity.m_ID+" at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
 						hasEffectOverride = False
 						if self.m_target != None:
 							for effect in self.m_currentActivity.m_effect[self.m_currentActivity.m_targetRoom]:
@@ -1272,6 +1308,11 @@ class Agent:
 					else:
 						self.SetState(STATE_WAIT)
 						return
+		# for room in Global.g_myHouse.m_rooms:
+			# if room.IsInRoom(self.pos):
+				# self.m_currentRoom = room
+				# Global.Logger.LogDebug("akorom "+self.m_role+" "+str(self.pos)+" "+self.m_currentRoom.m_name+"\n")
+				# break
 		Global.Logger.LogDebug(self.m_role+" Target type "+str(self.m_targetType))
 		if(self.m_targetType == TARGET_ROOM):
 			Global.Logger.LogDebug(" target room "+self.m_targetRoom.m_name)
@@ -1375,21 +1416,30 @@ class Agent:
 		if len(self.m_currentActivity.m_requiredResource[self.m_currentActivity.m_targetRoom]) > 0:
 			if not self.m_currentActivity.CheckResource(self.m_targetRoom, self):
 				self.m_currentActivity.NextTargetRoom()
-				if (self.m_currentActivity.GetTargetRoom() == "None"):
-					self.m_currentActivity.Suspend()
-					self.m_currentActivity.SetToIncidental()
-					self.SetUseCoordRoom(False)
-					self.ClearSuspendForNextActivity(self.m_currentActivity.m_ID)
-					Global.Logger.LogDebug("suspend\n")
-				else:
+				if (self.m_currentActivity.GetTargetRoom() != "None"):
+					# self.m_currentActivity.Suspend()
+					# self.m_currentActivity.SetToIncidental()
+					# self.ActivityLog("Set "+self.m_currentActivity.m_ID+" to incidental at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
+					# self.SetUseCoordRoom(False)
+					# self.ClearSuspendForNextActivity(self.m_currentActivity.m_ID)
+					# Global.Logger.LogDebug("suspend\n")
+					# if self.m_currentActivity.m_ID == self.m_bioActivityToTrigger:
+						# self.m_bioActivityToTrigger = ""
+					# return True
+				# else:
 					Global.Logger.LogDebug("goto 1\n")
 					self.m_currentActivity.GoTo()
+					self.ActivityLog("Move to next room "+self.m_currentActivity.GetTargetRoom()+" at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
 					self.CheckFollowingAgent()
-					self.SetState(STATE_WAIT)
+					self.SetState(STATE_IDLE)
+				# self.ActivityLog("Idle 5\n")
 				return False
 		return True
 	
 	def CheckTerms(self, startInRoom):
+		if self.m_currentActivity.m_status == Common.ACT_STATUS_SUSPEND:
+			return True, False, []
+			
 		Global.Logger.LogDebug("ageranta "+str(startInRoom)+"\n")
 		recalculatePath = False
 		cancel, stopPlaces = self.m_currentActivity.CheckTerms(self)
@@ -1399,14 +1449,22 @@ class Agent:
 			if (self.m_currentActivity.GetTargetRoom() == "None"):
 				self.m_currentActivity.Suspend()
 				self.SetUseCoordRoom(False)
+				if not self.m_currentActivity.m_auto and self.m_target != None:
+					self.m_target.SetAvailable(True)
+					self.m_target = None
 				Global.Logger.LogDebug("goto c31\n")
 				self.m_currentActivity.SetToIncidental()
+				self.ActivityLog("Set "+self.m_currentActivity.m_ID+" to incidental at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
 				self.ClearSuspendForNextActivity(self.m_currentActivity.m_ID)
+				if self.m_currentActivity.m_ID == self.m_bioActivityToTrigger:
+					self.m_bioActivityToTrigger = ""
 			else:
 				Global.Logger.LogDebug("goto 3\n")
 				self.m_currentActivity.GoTo()
+				self.ActivityLog("Move to next room "+self.m_currentActivity.GetTargetRoom()+" at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
 				self.CheckFollowingAgent()
-				self.SetState(STATE_WAIT)
+			# self.ActivityLog("Idle 4\n")
+			self.SetState(STATE_IDLE)
 			return True, recalculatePath, []
 		
 		start = self.pos
@@ -1451,14 +1509,18 @@ class Agent:
 			if (self.m_currentActivity.GetTargetRoom() == "None"):
 				self.m_currentActivity.Suspend()
 				self.m_currentActivity.SetToIncidental()
+				self.ActivityLog("Set "+self.m_currentActivity.m_ID+" to incidental at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
 				self.SetUseCoordRoom(False)
 				Global.Logger.LogDebug("goto b31\n")
 				self.ClearSuspendForNextActivity(self.m_currentActivity.m_ID)
+				if self.m_currentActivity.m_ID == self.m_bioActivityToTrigger:
+					self.m_bioActivityToTrigger = ""
 			else:
 				Global.Logger.LogDebug("goto 2\n")
 				self.m_currentActivity.GoTo()
 				self.CheckFollowingAgent()
-				self.SetState(STATE_WAIT)
+			# self.ActivityLog("Idle 3\n")
+			self.SetState(STATE_IDLE)
 			return True, recalculatePath, newPath
 			# path = self.GeneratePath(start,self.m_targetRoom.m_targetCoord)
 		elif recalculatePath:
@@ -1573,6 +1635,9 @@ class Agent:
 	
 	def ForceStartActivity(self, activity):
 		self.SetUseCoordRoom(False)
+		if self.m_currentActivity != None and not self.m_currentActivity.m_auto and self.m_target != None:
+			self.m_target.SetAvailable(True)
+			self.m_target = None
 		if self.m_currentActivity != None:
 			if not self.m_currentActivity.m_auto and self.m_target != None:
 				self.m_target.SetAvailable(True)
@@ -1584,12 +1649,13 @@ class Agent:
 			if activity == property.m_relatedActivityId:
 				property.m_relatedActivity = self.m_currentActivity
 		self.m_currentActivity.GoTo()
+		self.ActivityLog("Switch activity to "+self.m_currentActivity.m_ID+" due "+self.m_followedAgent.m_role+" at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
 		Global.Logger.LogDebug("Forcing start activity "+self.m_role+" "+activity+"\n")
 		Global.Logger.DumpDebug()
 		Global.Logger.LogDebug("Forcing start activityw "+self.m_currentActivity.m_ID+"\n")
 		Global.Logger.DumpDebug()
-		
-		self.SetState(STATE_WAIT)
+		# self.ActivityLog("Idle 2\n")
+		self.SetState(STATE_IDLE)
 	
 	def SetUseCoordRoom(self, use):
 		Global.Logger.LogDebug("cuorum "+self.m_role+" "+str(self.m_useCoordRoom)+" "+str(use)+"\n")
@@ -1635,10 +1701,16 @@ class Agent:
 	def Log(self, logText):
 		self.m_log += logText
 	
+	def ActivityLog(self, logText):
+		self.m_activityLog += logText
+	
 	def ExportLog(self):
 		outputFilePath = reportPath+self.m_role+"_log.txt"
 		with open(outputFilePath, mode='w+') as outputFile:
 			outputFile.write(self.m_log)
+		outputFilePath = reportPath+self.m_role+"_activity_log.txt"
+		with open(outputFilePath, mode='w+') as outputFile:
+			outputFile.write(self.m_activityLog)
 	
 	def IsMultiValid(self, actId):
 		multiValid = True
@@ -1672,12 +1744,17 @@ class Agent:
 								self.SetUseCoordRoom(False)
 								Global.Logger.LogDebug("goto a31\n")
 								self.m_currentActivity.SetToIncidental()
+								self.ActivityLog("Set "+self.m_currentActivity.m_ID+" to incidental at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
 								self.ClearSuspendForNextActivity(self.m_currentActivity.m_ID)
+								if self.m_currentActivity.m_ID == self.m_bioActivityToTrigger:
+									self.m_bioActivityToTrigger = ""
 							else:
 								Global.Logger.LogDebug("goto 31\n")
 								self.m_currentActivity.GoTo()
+								self.ActivityLog("Move to next room "+self.m_currentActivity.GetTargetRoom()+" at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
 								self.CheckFollowingAgent()
-								self.SetState(STATE_WAIT)
+								# self.ActivityLog("Idle 1\n")
+								self.SetState(STATE_IDLE)
 							return False
 						else:
 							self.m_passingDoor = door

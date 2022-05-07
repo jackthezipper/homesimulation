@@ -16,7 +16,7 @@ def GenerateActivity(dbFile, matrixFile):
 	# sourceFilePath	= os.path.dirname(os.path.abspath(__file__))
 	# inputFilePath	= sourceFilePath[0:sourceFilePath.rfind('\\')+1]+"input_file\\"+dbFile
 	activityList = {}
-	
+	Global.Logger.LogDebug("Load matrix "+matrixFile+"\n")
 	with open(dbFile) as csvfile:
 		reader = csv.reader(csvfile)
 		for row in reader:
@@ -129,8 +129,10 @@ def GenerateActivity(dbFile, matrixFile):
 					for id in idList:
 						act.m_matrix[id] = int(row[idx])
 						idx += 1
-				# print("kakaro "+act.m_ID)
-				# print(act.m_matrix)
+					Global.Logger.LogDebug("kakaro "+act.m_ID+"\n")
+					Global.Logger.LogDebug(str(act.m_matrix)+"\n")
+				else:
+					Global.Logger.LogDebug("id not fond "+row[0]+"\n")
 	
 	return activityList
 
@@ -334,6 +336,10 @@ class Activity:
 		self.m_status = Common.ACT_STATUS_RUN
 		self.m_currentInteractAgent = self.GetInteractAgent()
 		
+		if self.m_currentInteractAgent != None and self.m_currentInteractAgent.m_currentActivity != None and self.m_currentInteractAgent.m_currentActivity.m_status != Common.ACT_STATUS_RUN and self.m_currentInteractAgent.m_state != Agent.STATE_MOVE:
+			self.m_currentInteractAgent.m_currentActivity.m_status = Common.ACT_STATUS_RUN
+			self.m_currentInteractAgent.ActivityLog("Starting "+self.m_currentInteractAgent.m_currentActivity.m_ID+" at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
+		
 		# deviceIds = [device.m_id for device in Agent.Agent.s_possibleTarget]
 		for effect in self.m_effect[self.m_targetRoom]:
 			# hasEffectDevice = False
@@ -469,9 +475,9 @@ class Activity:
 	def SetToIncidental(self):
 		Global.Logger.LogDebug("Set act "+self.m_ID+" to incindetsu\n")
 		self.m_targetRoom = 0
-		if not self.m_isBioActivity:
-			self.m_isIncidental = True
-			self.m_remainingIncidentalTime = SUSPEND_TIME[self.m_priority] * Timer.MINUTE_IN_HOUR
+		# if not self.m_isBioActivity:
+		self.m_isIncidental = True
+		self.m_remainingIncidentalTime = SUSPEND_TIME[self.m_priority] * Timer.MINUTE_IN_HOUR
 			#self.m_rangeDuration = ((3 + SUSPEND_TIME[self.m_priority]) * Timer.MINUTE_IN_HOUR) - self.m_duration
 	
 	def GetTargetRoom(self):
@@ -566,7 +572,7 @@ class Activity:
 			toCheck = self.m_urgencyValue.split(";")
 			amount = 0
 			for agt in Agent.Agent.agentList:
-				if (agent.m_role != agent.m_role):
+				if (agt.m_role != agent.m_role):
 					amount += agent.GetProperty(toCheck[0]).GetScore()
 			return float(toCheck[1]) * amount
 		elif self.m_urgency == 4:

@@ -75,6 +75,7 @@ class Room:
 		self.m_tableLight = []
 		self.m_tableTemperature = []
 		self.m_countAgent = 0
+		Global.Logger.LogDebug("init room "+self.m_name+"\n")
 	
 	def SetLightAndTemperatureTable(self, tableLight, tableTemperature):
 		Global.Logger.LogDebug("liksato "+str(tableLight)+"\n")
