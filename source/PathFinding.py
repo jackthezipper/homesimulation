@@ -1,6 +1,7 @@
 import sys
 import Global
 from Rhino.Geometry import Point3d
+from Rhino.Geometry import Rectangle3d
 
 STATE_FREE = 0
 STATE_BLOCKED = STATE_FREE + 1
@@ -51,6 +52,7 @@ class Map():
 	additionalWeight = []
 	liveBlock = []
 	allNode = []
+	actualRect = []
 	
 	def AddMaze(self,top,mz):
 		self.topPos.append(top)
@@ -74,6 +76,13 @@ class Map():
 					for j in range(len(Map.maze[mazeIndex][0])):
 						Map.allNode[mazeIndex][i][j] = Node(None, (i,j))
 						Map.allNode[mazeIndex][i][j].reset()
+	
+	@staticmethod
+	def FindPointInFloor(point):
+		for i in range(len(Map.actualRect)):
+			if Map.actualRect[i].Contains(point):
+				return i
+		return -1
 
 def euclidian(posA,posB):
 	diffX = posA[0] - posB[0]

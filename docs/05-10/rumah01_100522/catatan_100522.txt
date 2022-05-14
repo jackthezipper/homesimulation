@@ -1,0 +1,25 @@
+- Untuk ID aktivitas dalam 1 file activity2.csv sudah tidak ada yang duplikat
+- ID aktivitas dan Prerequisite:
+	- aktivitas bermain agen03 dan agen lain yang bermain dengan agen03 tetap dibedakan. 
+		- agen03 bisa bermain setiap waktu
+		- agen01,02,04,05 memiliki 1 waktu atau lebih untuk bermain dengan agen03
+		- agen03 bisa bermain sendiri tanpa agen inisiator ketika ada waktu kosong dan aktivitas bermain terpilih
+		- aktivitas agen03 A183 Bermain2 dan A52 Bermain3 dijadikan 1 menjadi A155 Bermain
+		- aktivitas agen01,02,04,05 untuk bermain dengan agen03, memiliki ID Prerequisite berbeda, tetapi ID aktivitas A180 Bermain dengan agen03 yang sama
+	- aktivitas makan agen03 dan agen lain yang menyuapi agen03
+		- agen01 dan agen02:
+			- P08 Mencari agen03 makan malam
+			- P43 Membawa agen03 makan
+			- P44 Mengambil makan agen03
+			- A191 Menyuapi agen03
+		- agen05:
+			- P42 Mencari agen03 makan pagi, next P43
+			- P16 Mencari agen03 makan siang, next P43
+			- P43 Membawa agen03 makan, Prerequisite P16;P42
+			- P44 Mengambil makan agen03
+			- A191 Menyuapi agen03
+- Untuk file bio_ic:
+	- nonindependent act untuk masing-masing agen sudah saya cek dan tambahkan aktivitas
+	- revisi untuk waktu kebiasaan bangun | kebiasaan tidur masing-masing agen, kemarin ada waktu kebiasaan yang overlap
+	- IC Defekasi sesuai dengan di Panduan_kal.fisiologis-fisik_contoh_agen02_3004, Current Defecate menjadi Ada di Lambung Terkini yang nilainya sama dengan Current Hunger
+	

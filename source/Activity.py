@@ -330,13 +330,21 @@ class Activity:
 			# self.m_repeatCount = 0
 	
 	def Start(self, agent="Auto", runTime = 0):
+		self.m_currentInteractAgent = None
 		print("Starting activity "+self.m_ID+" - "+self.m_description)
-		Global.Logger.LogDebug("Starting activity "+self.m_ID+" - "+self.m_description)
+		Global.Logger.LogDebug("Starting activity "+agent+" "+self.m_ID+" - "+self.m_description+" at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
 		# self.m_targetRoom = 0
 		self.m_status = Common.ACT_STATUS_RUN
-		self.m_currentInteractAgent = self.GetInteractAgent()
+		actAgent = None
+		if agent != "Auto":
+			actAgent = next((agt for agt in Agent.Agent.agentList if agt.m_role == agent), None)
+			if actAgent != None:
+				if actAgent.m_following:
+					self.m_currentInteractAgent = actAgent.m_followedAgent
+		if self.m_currentInteractAgent == None:
+			self.m_currentInteractAgent = self.GetInteractAgent()
 		
-		if self.m_currentInteractAgent != None and self.m_currentInteractAgent.m_currentActivity != None and self.m_currentInteractAgent.m_currentActivity.m_status != Common.ACT_STATUS_RUN and self.m_currentInteractAgent.m_state != Agent.STATE_MOVE:
+		if actAgent != None and not actAgent.m_following and self.m_currentInteractAgent != None and self.m_followerActivity != "-" and self.m_currentInteractAgent.m_currentActivity != None and self.m_currentInteractAgent.m_currentActivity.m_status != Common.ACT_STATUS_RUN and self.m_currentInteractAgent.m_state != Agent.STATE_MOVE:
 			self.m_currentInteractAgent.m_currentActivity.m_status = Common.ACT_STATUS_RUN
 			self.m_currentInteractAgent.ActivityLog("Starting "+self.m_currentInteractAgent.m_currentActivity.m_ID+" at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
 		
@@ -349,6 +357,7 @@ class Activity:
 			actualDevice = next((device for device in Agent.Agent.s_possibleTarget if device.m_id == effect[0]), None)
 			if actualDevice != None and actualDevice.m_powerCons > 0 and not actualDevice.m_isRun:
 				Global.HouseLog("Starting device "+effect[0]+" by "+agent+" Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
+		Global.Logger.DumpDebug()
 	
 	def IsDone(self):
 		# Global.Logger.LogDebug("check done "+self.m_ID+" "+str(self.m_duration)+" "+str(self.m_runningTime)+" "+str(self.m_forceStop)+"\n")

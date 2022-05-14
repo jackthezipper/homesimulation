@@ -587,6 +587,7 @@ class Agent:
 		if self.m_following:
 			self.m_currentActivity.Update()
 			self.m_bioActivityToTrigger = ""
+			Global.Logger.LogDebug("runtime2 act = "+str(self.m_currentActivity.m_runningTime)+" duration = "+str(self.m_currentActivity.m_duration)+"\n")
 			return
 		
 		inStair = False
@@ -604,6 +605,7 @@ class Agent:
 					self.m_currentActivity.m_currentInteractAgent.SetFollowing(self, False)
 					self.m_currentActivity.m_currentInteractAgent.m_currentActivity.Stop()
 				self.m_currentActivity.Stop()
+				self.ActivityLog("Finish activity Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
 				if not self.m_currentActivity.m_auto and self.m_target!= None and self.m_target.m_powerCons > 0:
 					self.m_target.StopUsage(self.m_role)
 				# self.m_currentRoom.m_countAgent -= 1
@@ -637,6 +639,7 @@ class Agent:
 					self.m_target = None
 				if self.m_bioActivityToTrigger == "B04":
 					self.m_currentActivity.Stop()
+					self.ActivityLog("Finish activity Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
 				else:
 					self.m_pendingActivity = self.m_currentActivity
 					self.m_pendingActivity.Pause()
@@ -644,6 +647,8 @@ class Agent:
 				self.SetUseCoordRoom(False)
 			if isActivityDone:
 				self.SetState(STATE_CHECK_PA)
+			else:
+				self.SetState(STATE_IDLE)
 			
 			Global.Logger.LogDebug("set activity "+self.m_role+" by 7\n")
 			self.m_currentActivity = self.GetActivityById(self.m_bioActivityToTrigger)
@@ -660,8 +665,9 @@ class Agent:
 				isActivityDone = self.m_currentActivity.IsDone()
 				if self.m_currentActivity.m_currentInteractAgent != None and self.m_currentActivity.m_followerActivity != "-":
 					self.m_currentActivity.m_currentInteractAgent.SetFollowing(self, False)
-					self.m_currentActivity.m_currentInteractAgent.m_currentActivity.Stop()
+					# self.m_currentActivity.m_currentInteractAgent.m_currentActivity.Stop()
 				self.m_currentActivity.Stop()
+				self.ActivityLog("Finish activity Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
 				if not self.m_currentActivity.m_auto and self.m_target != None and self.m_target.m_powerCons > 0:
 					self.m_target.StopUsage(self.m_role)
 				# self.m_currentRoom.m_countAgent -= 1
@@ -680,6 +686,7 @@ class Agent:
 					Global.Logger.LogDebug("set activity "+self.m_role+" by 6\n")
 					self.m_currentActivity = self.GetActivityById(self.m_currentActivity.m_next)
 					Global.Logger.LogDebug("Go go nexon ranger "+self.m_currentActivity.m_ID+"\n")
+					Global.Logger.LogDebug("sertatu1 "+self.m_currentActivity.m_ID+" "+str(self.m_currentActivity.m_status)+"\n")
 				else:
 					Global.Logger.LogDebug("set activity "+self.m_role+" by 5\n")
 					self.m_currentActivity = None
@@ -815,50 +822,98 @@ class Agent:
 				else:
 					Global.Logger.LogDebug(debugStr+" OK\n")
 					self.Log(debugStr+" OK\n")
+					
+					lastActID = self.m_currentActivity.m_ID if self.m_currentActivity != None else "-"
+					Global.Logger.LogDebug("Alast "+lastActID+" "+actList[0].m_activitySet+"\n")
+					if (actList[0].m_activitySet == "-"):
+						if self.m_currentActivity == None or lastActID != actList[0].m_ID:
+							Global.Logger.LogDebug("set activity "+self.m_role+" by 3\n")
+							if self.m_currentActivity == None or self.m_currentActivity.m_status < Common.ACT_STATUS_RUN:
+								self.SetState(STATE_IDLE)
+								# self.ActivityLog("Idle 8\n")
+							if self.m_currentActivity != None and not self.m_currentActivity.IsDone():
+								self.m_pendingActivity = self.m_currentActivity
+								self.m_pendingActivity.Pause()
+							self.m_currentActivity = actList[0]
+					else:
+						traceAct = actList[0]
+						actSet = actList[0].m_activitySet[:3]
+						if self.m_currentActivity == None or (not self.m_currentActivity.m_activitySet.startswith(actSet)):
+							if len(traceAct.m_prequisite) > 0:
+								parentAct = self.GetActivityById(traceAct.m_prequisite[0])
+								while (parentAct != None and parentAct.m_activitySet.startswith(actSet)):
+									traceAct = parentAct
+									parentAct = None
+									for pAct in traceAct.m_prequisite:
+										testAct = self.GetActivityById(pAct)
+										if testAct.m_activitySet.startswith(actSet):
+											parentAct = testAct
+											break
+									if parentAct != None and parentAct.m_isBioActivity:
+										break
+								if parentAct != None and parentAct.m_isBioActivity:
+									actList.pop(0)
+									continue
+							Global.Logger.LogDebug("set activity "+self.m_role+" by 2\n")
+							if self.m_currentActivity == None or self.m_currentActivity.m_status < Common.ACT_STATUS_RUN:
+								self.SetState(STATE_IDLE)
+							if self.m_currentActivity != None and not self.m_currentActivity.IsDone():
+								self.m_pendingActivity = self.m_currentActivity
+								# self.ActivityLog("Idle 7\n")
+							self.m_currentActivity = traceAct
+					if lastActID != self.m_currentActivity.m_ID:
+						# if self.GetActivityById(lastActID).m_isIncidental:
+							# self.m_lastActivity = lastActID
+						self.SetState(STATE_WAIT)
+					
 					break
 			
-			if len(actList) > 0:
-				lastActID = self.m_currentActivity.m_ID if self.m_currentActivity != None else "-"
-				Global.Logger.LogDebug("Alast "+lastActID+" "+actList[0].m_activitySet+"\n")
-				if (actList[0].m_activitySet == "-"):
-					if self.m_currentActivity == None or lastActID != actList[0].m_ID:
-						Global.Logger.LogDebug("set activity "+self.m_role+" by 3\n")
-						if self.m_currentActivity == None or self.m_currentActivity.m_status < Common.ACT_STATUS_RUN:
-							self.SetState(STATE_IDLE)
-							# self.ActivityLog("Idle 8\n")
-						self.m_currentActivity = actList[0]
-				else:
-					traceAct = actList[0]
-					actSet = actList[0].m_activitySet[:3]
-					if self.m_currentActivity == None or (not self.m_currentActivity.m_activitySet.startswith(actSet)):
-						if len(traceAct.m_prequisite) > 0:
-							parentAct = self.GetActivityById(traceAct.m_prequisite[0])
-							while (parentAct != None):
-								traceAct = parentAct
-								parentAct = None
-								for pAct in traceAct.m_prequisite:
-									testAct = self.GetActivityById(pAct)
-									if testAct.m_activitySet.startswith(actSet):
-										parentAct = testAct
-										break
-						Global.Logger.LogDebug("set activity "+self.m_role+" by 2\n")
-						if self.m_currentActivity == None or self.m_currentActivity.m_status < Common.ACT_STATUS_RUN:
-							self.SetState(STATE_IDLE)
-							# self.ActivityLog("Idle 7\n")
-						self.m_currentActivity = traceAct
-				if lastActID != self.m_currentActivity.m_ID:
-					# if self.GetActivityById(lastActID).m_isIncidental:
-						# self.m_lastActivity = lastActID
-					self.SetState(STATE_WAIT)
+			# if len(actList) > 0:
+				# lastActID = self.m_currentActivity.m_ID if self.m_currentActivity != None else "-"
+				# Global.Logger.LogDebug("Alast "+lastActID+" "+actList[0].m_activitySet+"\n")
+				# if (actList[0].m_activitySet == "-"):
+					# if self.m_currentActivity == None or lastActID != actList[0].m_ID:
+						# Global.Logger.LogDebug("set activity "+self.m_role+" by 3\n")
+						# if self.m_currentActivity == None or self.m_currentActivity.m_status < Common.ACT_STATUS_RUN:
+							# self.SetState(STATE_IDLE)
+							# # self.ActivityLog("Idle 8\n")
+						# if self.m_currentActivity != None and not self.m_currentActivity.IsDone():
+							# self.m_pendingActivity = self.m_currentActivity
+						# self.m_currentActivity = actList[0]
+				# else:
+					# traceAct = actList[0]
+					# actSet = actList[0].m_activitySet[:3]
+					# if self.m_currentActivity == None or (not self.m_currentActivity.m_activitySet.startswith(actSet)):
+						# if len(traceAct.m_prequisite) > 0:
+							# parentAct = self.GetActivityById(traceAct.m_prequisite[0])
+							# while (parentAct != None and parentAct.m_activitySet.startswith(actSet)):
+								# traceAct = parentAct
+								# parentAct = None
+								# for pAct in traceAct.m_prequisite:
+									# testAct = self.GetActivityById(pAct)
+									# if testAct.m_activitySet.startswith(actSet):
+										# parentAct = testAct
+										# break
+						# Global.Logger.LogDebug("set activity "+self.m_role+" by 2\n")
+						# if self.m_currentActivity == None or self.m_currentActivity.m_status < Common.ACT_STATUS_RUN:
+							# self.SetState(STATE_IDLE)
+						# if self.m_currentActivity != None and not self.m_currentActivity.IsDone():
+							# self.m_pendingActivity = self.m_currentActivity
+							# # self.ActivityLog("Idle 7\n")
+						# self.m_currentActivity = traceAct
+				# if lastActID != self.m_currentActivity.m_ID:
+					# # if self.GetActivityById(lastActID).m_isIncidental:
+						# # self.m_lastActivity = lastActID
+					# self.SetState(STATE_WAIT)
 		# Global.Logger.LogDebug("act statt "+self.m_currentActivity.m_ID+" "+str(self.m_currentActivity.m_status)+" "+str(self.m_currentActivity.IsDone())+"\n")
 		if self.m_currentActivity != None  and (not self.m_currentActivity.IsDone()) and (not self.m_currentActivity.IsRunning()) and self.m_state != STATE_MOVE and self.m_state != STATE_MOVE_PA and self.m_currentActivity.m_status != Common.ACT_STATUS_GOTO:
 			Global.Logger.LogDebug("goto 4 "+self.m_currentActivity.m_ID+" "+str(self.m_currentActivity.m_status)+"\n")
 			self.m_currentActivity.GoTo()
-			# self.ActivityLog("Cinteract "+self.m_currentActivity.m_ID+" "+str(self.m_currentActivity.m_currentInteractAgent != None)+"\n")
-			# if self.m_currentActivity.m_currentInteractAgent != None:
-				# self.ActivityLog("Follow "+str(self.m_currentActivity.m_currentInteractAgent.m_followedAgent != None)+"\n")
-				# if self.m_currentActivity.m_currentInteractAgent.m_followedAgent != None:
-					# self.ActivityLog("Follow role "+self.m_currentActivity.m_currentInteractAgent.m_followedAgent.m_role+"\n")
+			Global.Logger.LogDebug("Cinteract "+self.m_currentActivity.m_ID+" "+str(self.m_currentActivity.m_currentInteractAgent != None)+"\n")
+			if self.m_currentActivity.m_currentInteractAgent != None:
+				Global.Logger.LogDebug("Iraque "+self.m_currentActivity.m_currentInteractAgent.m_role+" follow "+str(self.m_currentActivity.m_currentInteractAgent.m_followedAgent != None)+"\n")
+				if self.m_currentActivity.m_currentInteractAgent.m_followedAgent != None:
+					Global.Logger.LogDebug("Follow role "+self.m_currentActivity.m_currentInteractAgent.m_followedAgent.m_role+"\n")
 					
 			if self.m_currentActivity.m_currentInteractAgent != None and self.m_currentActivity.m_currentInteractAgent.m_followedAgent != None and self.m_currentActivity.m_currentInteractAgent.m_followedAgent.m_role != self.m_role:
 				self.m_currentActivity.Suspend()
@@ -960,6 +1015,17 @@ class Agent:
 		#print self.objectList
 	
 	def GeneratePath(self, start, end, stair = None, exactEnd = False):
+		curFloor = PathFinding.Map.FindPointInFloor(start)
+		nextFloor = PathFinding.Map.FindPointInFloor(end)
+		
+		if curFloor != -1 and nextFloor != -1:
+			if curFloor == nextFloor:
+				stair = None
+			else:
+				self.needStair = True
+				stairIndex = "STAIR_"+str(curFloor)
+				stair = next(entry for entry in Agent.s_entryPointList if entry.target.m_id == stairIndex)
+		
 		if stair != None:
 			end = stair.pos
 			Global.Logger.LogDebug("have stair "+str(stair.pos)+"\n")
@@ -1148,7 +1214,7 @@ class Agent:
 			if self.m_state == STATE_PRE_MOVE:
 				self.SetState(STATE_MOVE)
 				if not (self.m_following and self.m_followedAgent.m_currentActivity.m_followMovement):
-					self.ActivityLog("Moving to"+self.m_targetRoom.m_name+"\n")
+					self.ActivityLog("Moving to "+self.m_targetRoom.m_name+"\n")
 			if self.m_state == STATE_PREMOVE_PA:
 				self.SetState(STATE_MOVE_PA)
 			return
@@ -1319,7 +1385,7 @@ class Agent:
 		Global.Logger.LogDebug("\n")
 		
 		Global.Logger.LogDebug("apira "+str(self.IsArriveInRoom())+" "+str(self.m_shouldUpdate))
-		if self.IsArriveInRoom() and self.m_shouldUpdate:
+		if self.IsArriveInRoom():# and self.m_shouldUpdate:
 			cancel, recalculatePath, newPath = self.CheckTerms(False)
 			if cancel:
 				return
@@ -1630,6 +1696,7 @@ class Agent:
 		return stops
 	
 	def SetFollowing(self, agent, following):
+		Global.Logger.LogDebug("Set following to "+str(following)+" by "+agent.m_role+"\n")
 		self.m_following = following
 		self.m_followedAgent = agent if following else None
 	

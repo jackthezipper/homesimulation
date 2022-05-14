@@ -104,7 +104,7 @@ class Target:
 			generalRoom = Global.g_myHouse.FindGeneralRoomForResource(self.m_autoTrigger[0])
 			if generalRoom != None and generalRoom.m_resource[self.m_autoTrigger[0]][0] < self.m_autoTrigger[1]:
 				onTime = (self.m_autoTrigger[2] - generalRoom.m_resource[self.m_autoTrigger[0]][0]) / self.m_autoTrigger[3]
-				self.StartUsage("Auto", onTime)
+				self.StartUsage("Auto", onTime, useTimer = True)
 			
 			if generalRoom != None and self.m_inTimer:
 				generalRoom.m_resource[self.m_autoTrigger[0]][0] += self.m_autoTrigger[3]

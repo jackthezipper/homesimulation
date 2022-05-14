@@ -373,9 +373,9 @@ class Defecate(BioProperty):
 		self.m_habit = habit
 		self.m_inStomach = inStomach
 		# self.m_clepPressure = clepPressure
-		self.m_inIntestine = 0
 		self.m_inColon = 0
 		self.m_rateStomachToIntestine = inStomach/(6 * Timer.MINUTE_IN_HOUR)
+		self.m_inIntestine = self.m_rateStomachToIntestine / 12
 		self.m_tick = 0
 		self.m_tickStart = False
 		self.m_inColonEdge = 0
@@ -383,7 +383,7 @@ class Defecate(BioProperty):
 		self.m_eatEffect = 0
 		self.m_rateIntestineToColon = 0
 		self.m_agent = agent
-		self.K_COLUMN_NAME = ["DEFEKASI", "Efek Makan", "Ada di Lambung", "Laju Lambung ke Usus Halus", "Ada di Usus Halus", "Laju dari Usus Halus ke Kolon", "Ada di Kolon", "Ada di ujung Kolon", "Laju dari Kolon ke Rektum", "Kebiasaan", "Efek Aktivitas", "Pengaruh Emosi", "Ada di Akhir Kolon Menuju Rektum", "Tekanan ke Klep Rektum", "Tingkat Defekasi Terkini", "BAB atau Tidak", "Konversi mmhg ke poin"]
+		self.K_COLUMN_NAME = ["DEFEKASI", "Efek Makan", "Ada di Lambung", "Laju Lambung ke Usus Halus", "Ada di Usus Halus", "Laju dari Usus Halus ke Kolon", "Ada di Kolon", "Ada di ujung Kolon", "Laju dari Kolon ke Rektum", "Kebiasaan", "Efek Aktivitas", "Pengaruh Emosi", "Ada di Akhir Kolon Menuju Rektum", "Tingkat Tekanan Terkini", "Efek Defekasi", "BAB atau Tidak", "Konversi mmhg ke poin"]
 		self.m_effectRemainingTime = 0
 		self.K_SIX_HOUR = (6 * Timer.MINUTE_IN_HOUR)
 		self.m_prevIntestine = 0
