@@ -26,7 +26,7 @@ class Door:
 		self.m_rectTest = None
 		self.m_openAngle = []#= rotDir * 90
 		for panel in self.m_panels:
-			self.m_openAngle = panel[PANEL_ROT_DIR] * 90
+			self.m_openAngle.append(panel[PANEL_ROT_DIR] * 90)
 		
 		Global.Logger.LogDebug("Create door with bound "+str(frameBB)+"\n")
 	
@@ -36,7 +36,9 @@ class Door:
 			return False
 		
 	def Open(self):
+		Global.Logger.LogDebug("Try open door "+self.m_room+"\n")
 		if self.m_status == DOOR_CLOSE:
+			Global.Logger.LogDebug("Open door "+self.m_room+"\n")
 			sc.doc = rh.RhinoDoc.ActiveDoc
 			for i in range(0, len(self.m_panels)):
 				rs.RotateObject(self.m_panels[i][PANEL_OBJ],self.m_panels[i][PANEL_ROT_CENTER],self.m_openAngle[i],Vector3d.ZAxis)
@@ -44,7 +46,9 @@ class Door:
 			sc.doc = component.ghdoc
 	
 	def Close(self):
+		Global.Logger.LogDebug("Try close door "+self.m_room+"\n")
 		if self.m_status == DOOR_OPEN:
+			Global.Logger.LogDebug("Close door "+self.m_room+"\n")
 			sc.doc = rh.RhinoDoc.ActiveDoc
 			for i in range(0, len(self.m_panels)):
 				rs.RotateObject(self.m_panels[i][PANEL_OBJ],self.m_panels[i][PANEL_ROT_CENTER],-self.m_openAngle[i],Vector3d.ZAxis)

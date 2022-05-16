@@ -1,5 +1,6 @@
 import sys
 import Global
+import Rhino
 from Rhino.Geometry import Point3d
 from Rhino.Geometry import Rectangle3d
 
@@ -80,7 +81,7 @@ class Map():
 	@staticmethod
 	def FindPointInFloor(point):
 		for i in range(len(Map.actualRect)):
-			if Map.actualRect[i].Contains(point):
+			if Map.actualRect[i].Contains(point) == Rhino.Geometry.PointContainment.Inside:
 				return i
 		return -1
 

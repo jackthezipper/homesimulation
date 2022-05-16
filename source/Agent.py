@@ -1820,7 +1820,7 @@ class Agent:
 	
 	def CheckDoor(self):
 		if self.m_passingDoor != None:
-			if not door.m_frameBB.Contains(self.pos):
+			if self.m_passingDoor.m_frameBB.Contains(self.pos) != Rhino.Geometry.PointContainment.Inside:
 				if "R2" in self.m_currentActivity.GetPostActivity():
 					self.m_passingDoor.Close()
 					self.m_passingDoor = None
@@ -1899,16 +1899,18 @@ class Agent:
 		Global.Logger.LogDebug("Check intersect door "+str(start)+" "+str(end)+"\n")
 		line = Line(start, end)
 		for door in Global.g_myHouse.m_doors:
-			Global.Logger.LogDebug("Box check "+str(door.m_frameBB)+"\n")
-			if Rhino.Geometry.Intersect.Intersection.LineBox(line, door.m_frameBB, 0.0):
-				Global.Logger.DumpDebug
+			Global.Logger.LogDebug("Box check "+door.m_room+" "+str(door.m_frameBB)+" "+str(Rhino.Geometry.Intersect.Intersection.CurveCurve(line.ToNurbsCurve(), door.m_frameBB, 0, 0).Count)+"\n")
+			intersect = Rhino.Geometry.Intersect.Intersection.CurveCurve(line.ToNurbsCurve(), door.m_frameBB, 0, 0)
+			if intersect.Count > 0 or door.m_frameBB.Contains(start) == Rhino.Geometry.PointContainment.Inside or door.m_frameBB.Contains(end) == Rhino.Geometry.PointContainment.Inside:
+				Global.Logger.LogDebug("cross the door\n")
+				Global.Logger.DumpDebug()
 				return door
-		Global.Logger.DumpDebug
+		Global.Logger.DumpDebug()
 		return None
 	
 	def CheckOpenDoor(self, door):
 		if self.m_targetRoom != None and door.m_room == self.m_targetRoom.m_name:
-			act = self.m_currentActivity.m_doors[self.m_currentActivity.m_targetRoom]
+			act = self.m_currentActivity.m_doorAct[self.m_currentActivity.m_targetRoom]
 			if door.IsClosed() and act != "-":
 				if act == "CC":
 					self.m_currentActivity.NextTargetRoom()
@@ -1933,6 +1935,8 @@ class Agent:
 					self.m_passingDoor = door
 					door.Open()
 				return True
+			elif not door.IsClosed():
+				self.m_passingDoor = door
 		else:
 			door.Open()
 		return True
