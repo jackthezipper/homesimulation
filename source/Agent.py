@@ -1218,9 +1218,9 @@ class Agent:
 			if self.m_state == STATE_PREMOVE_PA:
 				self.SetState(STATE_MOVE_PA)
 			return
-		doorOk = self.CheckDoor()
-		if not doorOk:
-			return
+		self.CheckDoor()
+		# if not doorOk:
+			# return
 		
 		Global.Logger.LogDebug(self.m_role+" Path : ")
 		for path in self.myPath:
@@ -1297,16 +1297,28 @@ class Agent:
 			
 			#update agent position
 			Global.Logger.LogDebug("presepos 4 "+str(self.pos)+" "+str(self.moveDir)+" "+str(distanceCovered)+ "\n")
-			self.pos = rs.PointAdd(self.pos,Vector3d.Multiply(self.moveDir,distanceCovered))
+			endPos = rs.PointAdd(self.pos,Vector3d.Multiply(self.moveDir,distanceCovered))
+			door = self.CheckIntersectDoor(self.pos, endPos)
+			ok = True
+			if door != None:
+				ok = self.CheckOpenDoor(door)
+			if not ok:
+				return
+			self.pos = endPos
 			Global.Logger.LogDebug("sepos 4 "+str(self.pos)+ "\n")
-			
-			
 		else:
 			#already close with destination
 			remainingDistance = distanceCovered - distance
 			while (remainingDistance > 0) and (self.m_pathIndex < len(self.myPath)):
 				Global.Logger.LogDebug("presepos 3 "+str(self.pos)+" "+str(destination)+ "\n")
-				self.pos = destination
+				endPos = destination
+				door = self.CheckIntersectDoor(self.pos, endPos)
+				ok = True
+				if door != None:
+					ok = self.CheckOpenDoor(door)
+				if not ok:
+					return
+				self.pos = endPos
 				Global.Logger.LogDebug("sepos 3 "+str(self.pos)+ "\n")
 				self.m_pathIndex+=1
 				if self.m_pathIndex < len(self.myPath):
@@ -1315,7 +1327,14 @@ class Agent:
 					distance = self.pos.DistanceTo(destination)
 					if remainingDistance < distance:
 						Global.Logger.LogDebug("presepos 2 "+str(self.pos)+" "+str(self.moveDir)+" "+str(remainingDistance)+ "\n")
-						self.pos = rs.PointAdd(self.pos,Vector3d.Multiply(self.moveDir,remainingDistance))
+						endPos = rs.PointAdd(self.pos,Vector3d.Multiply(self.moveDir,remainingDistance))
+						door = self.CheckIntersectDoor(self.pos, endPos)
+						ok = True
+						if door != None:
+							ok = self.CheckOpenDoor(door)
+						if not ok:
+							return
+						self.pos = endPos
 						Global.Logger.LogDebug("sepos 2 "+str(self.pos)+"\n")
 					remainingDistance = remainingDistance - distance
 				elif self.needStair:
@@ -1338,7 +1357,14 @@ class Agent:
 					distance = self.pos.DistanceTo(destination)
 					if remainingDistance < distance:
 						Global.Logger.LogDebug("presepos 1 "+str(self.pos)+" "+str(self.moveDir)+" "+str(remainingDistance)+ "\n")
-						self.pos = rs.PointAdd(self.pos,Vector3d.Multiply(self.moveDir,remainingDistance))
+						endPos = rs.PointAdd(self.pos,Vector3d.Multiply(self.moveDir,remainingDistance))
+						door = self.CheckIntersectDoor(self.pos, endPos)
+						ok = True
+						if door != None:
+							ok = self.CheckOpenDoor(door)
+						if not ok:
+							return
+						self.pos = endPos
 						Global.Logger.LogDebug("sepos 1 "+str(self.pos)+"\n")
 					remainingDistance = remainingDistance - distance
 				else:
@@ -1798,39 +1824,117 @@ class Agent:
 				if "R2" in self.m_currentActivity.GetPostActivity():
 					self.m_passingDoor.Close()
 					self.m_passingDoor = None
-			return True
+			# return True
+		
+		# if self.m_targetRoom != None and self.m_targetRoom.IsInRoom(self.pos):
+			# for door in Global.g_myHouse.m_doors:
+				# if door.m_room == self.m_targetRoom.m_name:
+					# if self.m_currentActivity != None:
+						# act = self.m_currentActivity.m_doorAct[self.m_currentActivity.m_targetRoom]
+						# if door.IsClosed() and act != "-":
+							# if act == "CC":
+								# self.m_currentActivity.NextTargetRoom()
+								# if (self.m_currentActivity.GetTargetRoom() == "None"):
+									# self.m_currentActivity.Suspend()
+									# self.SetUseCoordRoom(False)
+									# Global.Logger.LogDebug("goto a31\n")
+									# self.m_currentActivity.SetToIncidental()
+									# self.ActivityLog("Set "+self.m_currentActivity.m_ID+" to incidental at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
+									# self.ClearSuspendForNextActivity(self.m_currentActivity.m_ID)
+									# if self.m_currentActivity.m_ID == self.m_bioActivityToTrigger:
+										# self.m_bioActivityToTrigger = ""
+								# else:
+									# Global.Logger.LogDebug("goto 31\n")
+									# self.m_currentActivity.GoTo()
+									# self.ActivityLog("Move to next room "+self.m_currentActivity.GetTargetRoom()+" at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
+									# self.CheckFollowingAgent()
+									# # self.ActivityLog("Idle 1\n")
+									# self.SetState(STATE_IDLE)
+								# return False
+							# else:
+								# self.m_passingDoor = door
+								# door.Open()
+								# return True
+				# elif door.IsClosed():
+					# door.Open()
+					# return True
+				# break
+		# return True
+		
+		# for door in Global.g_myHouse.m_doors:
+			# if door.m_frameBB.Contains(self.pos):
+				# if self.m_targetRoom != None and self.m_targetRoom.m_name == door.m_room and self.m_currentActivity != None:
+					# act = self.m_currentActivity.m_doors[self.m_currentActivity.m_targetRoom]
+					# if door.IsClosed() and act != "-":
+						# if act == "CC":
+							# self.m_currentActivity.NextTargetRoom()
+							# if (self.m_currentActivity.GetTargetRoom() == "None"):
+								# self.m_currentActivity.Suspend()
+								# self.SetUseCoordRoom(False)
+								# Global.Logger.LogDebug("goto a31\n")
+								# self.m_currentActivity.SetToIncidental()
+								# self.ActivityLog("Set "+self.m_currentActivity.m_ID+" to incidental at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
+								# self.ClearSuspendForNextActivity(self.m_currentActivity.m_ID)
+								# if self.m_currentActivity.m_ID == self.m_bioActivityToTrigger:
+									# self.m_bioActivityToTrigger = ""
+							# else:
+								# Global.Logger.LogDebug("goto 31\n")
+								# self.m_currentActivity.GoTo()
+								# self.ActivityLog("Move to next room "+self.m_currentActivity.GetTargetRoom()+" at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
+								# self.CheckFollowingAgent()
+								# # self.ActivityLog("Idle 1\n")
+								# self.SetState(STATE_IDLE)
+							# return False
+						# else:
+							# self.m_passingDoor = door
+							# door.Open()
+					# return True
+				# elif door.IsClosed():
+					# door.Open()
+					# return True
+				# break
+		# return True
+	
+	def CheckIntersectDoor(self, start, end):
+		Global.Logger.LogDebug("Check intersect door "+str(start)+" "+str(end)+"\n")
+		line = Line(start, end)
 		for door in Global.g_myHouse.m_doors:
-			if door.m_frameBB.Contains(self.pos):
-				if self.m_targetRoom != None and self.m_targetRoom.m_name == door.m_room and self.m_currentActivity != None:
-					act = self.m_currentActivity.m_doors[self.m_currentActivity.m_targetRoom]
-					if door.IsClosed() and act != "-":
-						if act == "CC":
-							self.m_currentActivity.NextTargetRoom()
-							if (self.m_currentActivity.GetTargetRoom() == "None"):
-								self.m_currentActivity.Suspend()
-								self.SetUseCoordRoom(False)
-								Global.Logger.LogDebug("goto a31\n")
-								self.m_currentActivity.SetToIncidental()
-								self.ActivityLog("Set "+self.m_currentActivity.m_ID+" to incidental at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
-								self.ClearSuspendForNextActivity(self.m_currentActivity.m_ID)
-								if self.m_currentActivity.m_ID == self.m_bioActivityToTrigger:
-									self.m_bioActivityToTrigger = ""
-							else:
-								Global.Logger.LogDebug("goto 31\n")
-								self.m_currentActivity.GoTo()
-								self.ActivityLog("Move to next room "+self.m_currentActivity.GetTargetRoom()+" at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
-								self.CheckFollowingAgent()
-								# self.ActivityLog("Idle 1\n")
-								self.SetState(STATE_IDLE)
-							return False
-						else:
-							self.m_passingDoor = door
-							door.Open()
-					return True
-				elif door.IsClosed():
+			Global.Logger.LogDebug("Box check "+str(door.m_frameBB)+"\n")
+			if Rhino.Geometry.Intersect.Intersection.LineBox(line, door.m_frameBB, 0.0):
+				Global.Logger.DumpDebug
+				return door
+		Global.Logger.DumpDebug
+		return None
+	
+	def CheckOpenDoor(self, door):
+		if self.m_targetRoom != None and door.m_room == self.m_targetRoom.m_name:
+			act = self.m_currentActivity.m_doors[self.m_currentActivity.m_targetRoom]
+			if door.IsClosed() and act != "-":
+				if act == "CC":
+					self.m_currentActivity.NextTargetRoom()
+					if (self.m_currentActivity.GetTargetRoom() == "None"):
+						self.m_currentActivity.Suspend()
+						self.SetUseCoordRoom(False)
+						Global.Logger.LogDebug("goto a31\n")
+						self.m_currentActivity.SetToIncidental()
+						self.ActivityLog("Set "+self.m_currentActivity.m_ID+" to incidental at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
+						self.ClearSuspendForNextActivity(self.m_currentActivity.m_ID)
+						if self.m_currentActivity.m_ID == self.m_bioActivityToTrigger:
+							self.m_bioActivityToTrigger = ""
+					else:
+						Global.Logger.LogDebug("goto 31\n")
+						self.m_currentActivity.GoTo()
+						self.ActivityLog("Move to next room "+self.m_currentActivity.GetTargetRoom()+" at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
+						self.CheckFollowingAgent()
+						# self.ActivityLog("Idle 1\n")
+						self.SetState(STATE_IDLE)
+					return False
+				else:
+					self.m_passingDoor = door
 					door.Open()
-					return True
-				break
+				return True
+		else:
+			door.Open()
 		return True
 
 	def GetCurrentRoomSocial(self):
