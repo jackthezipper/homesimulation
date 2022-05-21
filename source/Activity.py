@@ -358,6 +358,11 @@ class Activity:
 			if actualDevice != None and actualDevice.m_powerCons > 0 and not actualDevice.m_isRun:
 				Global.HouseLog("Starting device "+effect[0]+" by "+agent+" Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
 		Global.Logger.DumpDebug()
+		
+		agentObj = next((agt for agt in Agent.Agent.agentList if agt.m_role == agent), None)
+		if agentObj != None and agentObj.m_passingDoor != None and "R2" in self.GetPostActivity():
+			agentObj.m_passingDoor.Close()
+			agentObj.m_passingDoor = None
 	
 	def IsDone(self):
 		# Global.Logger.LogDebug("check done "+self.m_ID+" "+str(self.m_duration)+" "+str(self.m_runningTime)+" "+str(self.m_forceStop)+"\n")

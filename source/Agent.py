@@ -183,7 +183,7 @@ class Agent:
 		self.m_useCoordRoom = []
 		self.ConvertStandardToPoint()
 		self.m_bioRecord = []
-		self.m_log = ""
+		self.m_log = []
 		self.m_shouldUpdate = False
 		self.m_passingDoor = None
 		self.m_socialValue = {}
@@ -959,6 +959,7 @@ class Agent:
 	def setBoundArea(self,area):
 		if area != self.boundArea:
 			self.boundArea = area
+			Global.Logger.LogDebug("setbound "+self.m_role+" "+str(area)+"\n")
 			self.curveBoundArea = rs.coercecurve(area)
 			self.diagonalBound = Vector3d.Subtract(Vector3d(self.curveBoundArea.Points[0].Location),Vector3d(self.curveBoundArea.Points[2].Location)).Length
 			
@@ -1050,7 +1051,7 @@ class Agent:
 			#print "nopopak"
 			Global.Logger.LogDebug("no Path"+"\n")
 			Global.Logger.DumpDebug()
-			return
+			return []
 		
 		#path found
 		if self.oldEntryPoint != None and path[0] != self.pos:
@@ -1159,7 +1160,7 @@ class Agent:
 					else:
 						self.myPath = self.GeneratePath(start,targetCoord)
 					
-					if self.myPath == None:
+					if self.myPath == None or len(self.myPath) == 0:
 						Global.Logger.LogDebug("path da nehi, recal with oldie\n")
 						if self.oldEntryPoint != None:
 							start = self.oldEntryPoint.pos
@@ -1218,7 +1219,7 @@ class Agent:
 			if self.m_state == STATE_PREMOVE_PA:
 				self.SetState(STATE_MOVE_PA)
 			return
-		self.CheckDoor()
+		# self.CheckDoor()
 		# if not doorOk:
 			# return
 		
@@ -1792,7 +1793,7 @@ class Agent:
 		self.ExportLog()
 	
 	def Log(self, logText):
-		self.m_log += logText
+		self.m_log.append(logText)
 	
 	def ActivityLog(self, logText):
 		self.m_activityLog += logText
@@ -1800,7 +1801,8 @@ class Agent:
 	def ExportLog(self):
 		outputFilePath = reportPath+self.m_role+"_log.txt"
 		with open(outputFilePath, mode='w+') as outputFile:
-			outputFile.write(self.m_log)
+			for log in self.m_log:
+				outputFile.write(log)
 		outputFilePath = reportPath+self.m_role+"_activity_log.txt"
 		with open(outputFilePath, mode='w+') as outputFile:
 			outputFile.write(self.m_activityLog)
@@ -1899,8 +1901,13 @@ class Agent:
 		Global.Logger.LogDebug("Check intersect door "+str(start)+" "+str(end)+"\n")
 		line = Line(start, end)
 		for door in Global.g_myHouse.m_doors:
-			Global.Logger.LogDebug("Box check "+door.m_room+" "+str(door.m_frameBB)+" "+str(Rhino.Geometry.Intersect.Intersection.CurveCurve(line.ToNurbsCurve(), door.m_frameBB, 0, 0).Count)+"\n")
+			locStr = ""
+			for poin in door.m_frameBB.Points:
+				locStr += (str(poin.Location) + " ")
+			Global.Logger.LogDebug("Box checki "+door.m_room+" "+locStr+" "+str(Rhino.Geometry.Intersect.Intersection.CurveCurve(line.ToNurbsCurve(), door.m_frameBB, 0, 0).Count)+"\n")
 			intersect = Rhino.Geometry.Intersect.Intersection.CurveCurve(line.ToNurbsCurve(), door.m_frameBB, 0, 0)
+			for ii in intersect:
+				Global.Logger.LogDebug("isect "+str(ii)+"\n")
 			if intersect.Count > 0 or door.m_frameBB.Contains(start) == Rhino.Geometry.PointContainment.Inside or door.m_frameBB.Contains(end) == Rhino.Geometry.PointContainment.Inside:
 				Global.Logger.LogDebug("cross the door\n")
 				Global.Logger.DumpDebug()
@@ -1932,11 +1939,13 @@ class Agent:
 						self.SetState(STATE_IDLE)
 					return False
 				else:
+					Global.Logger.LogDebug("Set passing door "+self.m_role+" by act "+self.m_currentActivity.m_ID+" room "+door.m_room+"\n")
 					self.m_passingDoor = door
 					door.Open()
 				return True
 			elif not door.IsClosed():
 				self.m_passingDoor = door
+				Global.Logger.LogDebug("Set passing door not closed "+self.m_role+" by act "+self.m_currentActivity.m_ID+" room "+door.m_room+"\n")
 		else:
 			door.Open()
 		return True

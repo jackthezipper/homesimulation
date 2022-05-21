@@ -16,7 +16,7 @@ resPath			= sourceDirPath+"res\\"+sc.sticky["MapName"]+"\\"
 
 g_timer = Timer.GetInstance()
 class Logger:
-	s_debugStr = ""
+	s_debugStr = []
 	s_debugActive = True
 	
 	s_agentLog = {}
@@ -24,11 +24,11 @@ class Logger:
 	@staticmethod
 	def RegisterAgentLog(agentList):
 		for agent in agentList:
-			s_agentLog[agent] = ""
+			s_agentLog[agent] = []
 	
 	@staticmethod
 	def LogAgent(agent, logText):
-		Logger.s_agentLog[agent] += logText
+		Logger.s_agentLog[agent].append(logText)
 	
 	# @staticmethod
 	# def ExportAgentLog():
@@ -38,20 +38,21 @@ class Logger:
 	@staticmethod
 	def LogDebug(debugLog):
 		if Logger.s_debugActive:
-			Logger.s_debugStr += debugLog
+			Logger.s_debugStr.append(debugLog)
 
 	@staticmethod
 	def ResetDebug():
-		Logger.s_debugStr = ""
+		Logger.s_debugStr = []
 
 	@staticmethod
 	def DumpDebug():
 		if not Logger.s_debugActive:
 			return
 		dFile = open(resPath+"dmp-"+str(g_timer.GetDay())+".txt","a+")
-		dFile.write(Logger.s_debugStr)
+		for debugStr in Logger.s_debugStr:
+			dFile.write(debugStr)
 		dFile.close()
-		Logger.s_debugStr = ""
+		Logger.s_debugStr = []
 
 House = reload(House)
 g_myHouse = House.House()
