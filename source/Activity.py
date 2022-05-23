@@ -360,8 +360,9 @@ class Activity:
 		Global.Logger.DumpDebug()
 		
 		agentObj = next((agt for agt in Agent.Agent.agentList if agt.m_role == agent), None)
-		if agentObj != None and agentObj.m_passingDoor != None and "R2" in self.GetPostActivity():
-			agentObj.m_passingDoor.Close()
+		if agentObj != None and agentObj.m_passingDoor != None:
+			if "R2" in self.GetPostActivity():
+				agentObj.m_passingDoor.Close()
 			agentObj.m_passingDoor = None
 	
 	def IsDone(self):

@@ -436,6 +436,8 @@ class Agent:
 		for property in self.m_bioProperty:
 			if (self.m_currentActivity != None and self.m_currentActivity.m_ID == property.m_relatedActivityId and (not (self.m_currentActivity.IsDone() or self.m_currentActivity.m_status == Common.ACT_STATUS_SUSPEND))):
 				return None
+		if self.m_currentActivity != None and self.m_currentActivity.m_currentInteractAgent != None and self.m_currentActivity.m_followerActivity != "-":
+			return None
 		
 		self.m_bioActivityToTrigger = activityId
 		activity = self.GetActivityById(activityId)
@@ -1015,7 +1017,7 @@ class Agent:
 		#print olist
 		#print self.objectList
 	
-	def GeneratePath(self, start, end, stair = None, exactEnd = False):
+	def GeneratePath(self, start, end, stair = None, exactEnd = False, insertCurPos = True):
 		curFloor = PathFinding.Map.FindPointInFloor(start)
 		nextFloor = PathFinding.Map.FindPointInFloor(end)
 		
@@ -1054,7 +1056,7 @@ class Agent:
 			return []
 		
 		#path found
-		if self.oldEntryPoint != None and path[0] != self.pos:
+		if self.oldEntryPoint != None and path[0] != self.pos and insertCurPos:
 			path.insert(0,self.pos)
 		
 		if self.needStair:
@@ -1590,7 +1592,7 @@ class Agent:
 				if ep.target.m_id == device:
 					self.FindTargetAndEntryPointForObject(ep.target.m_id)
 					self.SetUseCoordRoom(False)
-					path = self.GeneratePath(start,ep.pos)
+					path = self.GeneratePath(start,ep.pos, insertCurPos = not recalculatePath)
 					newPath.extend(path)
 					start = ep.pos
 					recalculatePath = True
@@ -1629,7 +1631,7 @@ class Agent:
 				newPathEnd = self.myPath[-1]
 				if isTarget:
 					newPathEnd = self.myPath[-2]
-				path = self.GeneratePath(newPath[-1],newPathEnd)
+				path = self.GeneratePath(newPath[-1],newPathEnd, insertCurPos = False)
 				newPath.extend(path)
 				if isTarget:
 					newPath.append(self.myPath[-1])
