@@ -1725,6 +1725,8 @@ class Agent:
 		return stops
 	
 	def SetFollowing(self, agent, following):
+		if self.m_followedAgent != None and self.m_followedAgent.m_role != agent.m_role:
+			return
 		Global.Logger.LogDebug("Set following to "+str(following)+" by "+agent.m_role+"\n")
 		self.m_following = following
 		self.m_followedAgent = agent if following else None

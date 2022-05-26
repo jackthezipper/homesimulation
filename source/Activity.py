@@ -330,6 +330,8 @@ class Activity:
 			# self.m_repeatCount = 0
 	
 	def Start(self, agent="Auto", runTime = 0):
+		if self.m_status == Common.ACT_STATUS_RUN:
+			Global.Logger.LogDebug("Call start again---\n")
 		self.m_currentInteractAgent = None
 		print("Starting activity "+self.m_ID+" - "+self.m_description)
 		Global.Logger.LogDebug("Starting activity "+agent+" "+self.m_ID+" - "+self.m_description+" at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
@@ -373,11 +375,12 @@ class Activity:
 		self.m_forceStop = True
 		if not self.m_isBioActivity:
 			self.m_repeatCount +=1
-		self.m_alreadyDoIt = True
+		if self.m_status == Common.ACT_STATUS_RUN:
+			self.m_alreadyDoIt = True
 	
 	def Stop(self):
 		self.m_forceStop = False
-		if self.m_status != Common.ACT_STATUS_SUSPEND:
+		if self.m_status == Common.ACT_STATUS_RUN:
 			if not self.m_isBioActivity:
 				self.m_repeatCount +=1
 			self.m_alreadyDoIt = True
