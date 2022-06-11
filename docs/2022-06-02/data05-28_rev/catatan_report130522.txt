@@ -1,0 +1,34 @@
+13 Mei 22
+agen01
+- ada masalah di kantuk, agen tidak bangun ketika tingkat kantuk rendah dan ada kebiasaan bangun, sehingga di hari ketiga agen tidak bisa bangun
+	=> running terakhir isu tidak muncul, perlu cek ulang apakah benar2 tidak muncul lagi atau bisa terjadi dengan peluang yang kecil
+
+agen02
+- ada masalah di kantuk, h3-h4 waktu tidur malam, kantuk agen tidak mencapai 8 hingga waktu KT habis, sehingga agen tidak tidur malam. 
+- h4 agen terus saja tidur siang hingga bangun di h5
+- ada waktu kebiasaan bangun di 15-17 file bio_ic, tetapi di report belum ada waktu kebiasaan bangun di siang hari, sehingga agen tidak bisa bangun
+	=> KB belum terinput di bio_ic saat report simulasi 13 Mei
+- ada masalah di minum, h3 jam 5:51-18:15 agen melakukan aktivitas minum sejumlah 14640 ml
+	=> agen beraktivitas di luar rumah, nilai kalkulasi di properti fisiologis tidak terupdate; perbaikan hanya di output report saja
+
+agen03
+- ada masalah di makan, h1 jam 8:03 - h2 jam 8:25 agen terus makan sejumlah 34744.84, 1) apa ada bug ketika simulasi 2) apa ada agen yang bergantian menyuapi makan? 3) apa perlu diberi aturan tambahan, apa value di activity_2 agen lainnya perlu diperketat, bisa menyuapi agen makan hanya jika tingkat lapar agen mencapai 8?
+	=> tidak ketemu lagi, mungkin karena perbaikan logika terkait aktivitas dengan interaksi, karena makan pada agen03 termasuk aktivitas dengan interaksi
+- h2 jam 8:31 nilai Constrain efek makan (negatif), apa ada kalkulasi sudah benar, apa mungkin agen bisa mengeluarkan makanan (muntah)?
+	=> terkait dengan nilai lapar terkini agen yang melonjak, sehingga dengan formula constraint sekarang, akan bernilai seperti itu
+- apa mungkin di h2 dan h3 agen (sistem) meregulasi diri sendiri untuk kembali ke keadaan normal (tingkat lapar/kalori normal yang mampu ditampung tubuh)? karena di siang hari ketika kondisi kalori dalam tubuh menjadi normal, agen makan sejumlah normal = 78.78 (hanya untuk mencapai tingkat kalori normal yang diperlukan tubuh)
+- di h4-h6, agen tidak makan, 1) tidak ada agen yang menyuapi? 2) jumlah makanan di rumah? 3) agen sendiri dalam kondisi bangun atau tidur?
+	=> efek berantai dari constraint makan bernilai negatif, mengakibatkan penurunan energi, sehingga agen banyak tidur
+- ada masalah di minum, h1 jam 8:03 - h2 jam 8:27 agen terus minum sejumlah 1532.5
+	=> efek minum terkait makan
+- ada yang memandikan agen di h3 jam 3:41 - 4:04, h4 jam 13:20 - 14:01
+	=> memandikan agen03 tergantung pada skor aktivitas agen yang memandikan; karena semua tergantung skor, maka jika tidak ada aktivitas lain yang bisa dikerjakan, maka bisa saja akivitas memandikan dilakukan, meskipun jamnya berbeda jauh dengan jam ekspektasi mulai aktivitas
+- agen belum bisa urinasi
+	=> salah input saat revisi bio_ic, seharusnya memasukkan mandi (B07) di nonindependentact, tetapi keliru  B05 (BAK)
+- beberapa properti belum berjalan stabil (awal baik, lalu tidak teratur, hari terakhir kembali baik), minum, makan, tidur (cek waktu kebiasaan), urinasi (belum berjalan), defekasi
+
+agen04
+- makan hanya 1 kali sehari, karena kalori tidak banyak berkurang, tidak melakukan aktivitas yang menguras kalori
+- ambang batas bawah perlu diperbesar untuk mendorong agen tetap makan walaupun kalori dalam tubuh masih cukup tinggi
+- agen hanya mandi 1 kali di h0 jam 7:58
+- agen terlalu sering BAB, ada laju yang perlu diperkecil atau ambang batas yang diperbesar untuk mengurangi frekuensi BAB

@@ -1,0 +1,23 @@
+agen01
+bio_ic
+- menggeser rentang kebiasaan bangun 1 jam kedepan 
+activity2
+- P08, P43, P44, A191: InteractAgentStatus -> Hunger;6
+
+agen02
+bio_ic
+- menambah kebiasaan bangun di siang hari, menggeser kebiasaan tidur di siang hari
+activity2
+- P08, P43, P44, A191: InteractAgentStatus -> Hunger;6
+
+agen03
+bio_ic
+- Habit Sleepy -> 00;12-14;21-23
+- Habit Dirty -> 06-09;15-18
+- NonIndependentAct -> B02;B07;P45;A54;P51;A176;A23;A62;A36;P13;P14;P15;P46;P47
+
+agen04
+- Habit Dirty -> 06-09;15-18
+- Perkecil ambang batas lapar, Hunger: Effect -> 1123.45;748.97
+
+IC RawFood -> 30

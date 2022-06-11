@@ -20,6 +20,7 @@ class Logger:
 	s_debugActive = True
 	
 	s_agentLog = {}
+	s_dumpRequest = 0
 	
 	@staticmethod
 	def RegisterAgentLog(agentList):
@@ -45,14 +46,16 @@ class Logger:
 		Logger.s_debugStr = []
 
 	@staticmethod
-	def DumpDebug():
-		if not Logger.s_debugActive:
+	def DumpDebug(req = 1):
+		Logger.s_dumpRequest += req
+		if not Logger.s_debugActive or Logger.s_dumpRequest < 10:
 			return
 		dFile = open(resPath+"dmp-"+str(g_timer.GetDay())+".txt","a+")
 		for debugStr in Logger.s_debugStr:
 			dFile.write(debugStr)
 		dFile.close()
 		Logger.s_debugStr = []
+		Logger.s_dumpRequest = 0
 
 House = reload(House)
 g_myHouse = House.House()

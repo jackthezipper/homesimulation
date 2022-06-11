@@ -33,6 +33,9 @@ class Timer():
 	def GetDay(self):
 		return int(self.m_time / (HOUR_IN_DAY * MINUTE_IN_HOUR))
 	
+	def GetWeek(self):
+		return int(self.m_time / (HOUR_IN_DAY * MINUTE_IN_HOUR * 7))
+	
 	def Update(self, dt):
 		if "SimulationSpeed" in sc.sticky:
 			dt *= sc.sticky["SimulationSpeed"]

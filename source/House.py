@@ -305,8 +305,9 @@ class House:
 		self.m_envObj = {}
 		self.m_energyUsage = []
 		self.m_doors = []
-		self.m_log = ""
+		self.m_log = []
 		self.m_lastLog = -1
+		self.m_weekLog = -1
 	
 	def loadHouseEnergy(self):
 		#cFPath = ghenv.Component.OnPingDocument().FilePath
@@ -413,9 +414,14 @@ class House:
 			room.StopAllUsage()
 	
 	def Log(self, log):
-		self.m_log += log
+		if self.m_weekLog != Global.g_timer.GetWeek():
+			self.m_log.append([])
+			self.m_weekLog = Global.g_timer.GetWeek()
+		self.m_log[self.m_weekLog].append(log)
 	
 	def ExportLog(self):
-		outputFilePath = reportPath+"house_log.txt"
-		with open(outputFilePath, mode='w+') as outputFile:
-			outputFile.write(self.m_log)
+		for (i,weeklog) in enumerate(self.m_log):
+			outputFilePath = reportPath+"house_log_week_"+str(i)+".txt"
+			with open(outputFilePath, mode='w+') as outputFile:
+				for log in weeklog:
+					outputFile.write(log)

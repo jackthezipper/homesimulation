@@ -1,0 +1,39 @@
+agen05:
+- A71:	~ Effect "KP04:1:0.0255" dihapus, sudah syarat temperatur, otomatis terkalkulasi
+- A73:	~ Device "Fan" dihapus, sudah ada syarat temperatur
+		~ Effect "KP04:1:0.0255" dihapus, sudah syarat temperatur, otomatis terkalkulasi
+- A75:	~ Device "Fan" dihapus, sudah ada syarat temperatur
+		~ Effect "KP01:1:0.0147" dihapus, sudah syarat temperatur, otomatis terkalkulasi
+- B02:	~ Device "Fan" dihapus, sudah ada syarat temperatur
+		~ Effect "KP01:1:0.0147" dihapus, sudah syarat temperatur, otomatis terkalkulasi
+- B04:	~ Device "Fan" dihapus, sudah ada syarat temperatur
+		~ Effect "KP01:1:0.0147" dihapus, sudah syarat temperatur, otomatis terkalkulasi
+agen04:
+- A01:	~ Device "Fan" dihapus, sudah ada syarat temperatur
+		~ Effect "KP01:1:0.0147" dihapus, sudah syarat temperatur, otomatis terkalkulasi
+- A47:	~ Syarat temperatur ditambahkan agar efek untuk kipas angin terkalkulasi otomatis
+		~ Effect "KP04:1:0.0255" dihapus
+- A169:	~ Device "Fan" dihapus, sudah ada syarat temperatur
+		~ Effect "KP01:1:0.0147" dihapus, sudah syarat temperatur, otomatis terkalkulasi
+- A78:	~ Device "Fan" dihapus, sudah ada syarat temperatur
+		~ Effect "KP01:1:0.0147" & "KP04:1:0.0255" dihapus, sudah syarat temperatur, otomatis terkalkulasi
+- A67:	~ Device "Fan" dihapus, sudah ada syarat temperatur
+		~ Effect "KP01:1:0.0147" & "KP04:1:0.0255" dihapus, sudah syarat temperatur, otomatis terkalkulasi
+- A142:	~ Device "Fan" dihapus, sudah ada syarat temperatur
+		~ Effect "KP01:1:0.0147" & "KP04:1:0.0255" dihapus, sudah syarat temperatur, otomatis terkalkulasi
+- A50:	~ Device "Fan" dihapus, sudah ada syarat temperatur
+		~ Effect "KP01:1:0.0147" & "KP04:1:0.0255" dihapus, sudah syarat temperatur, otomatis terkalkulasi
+- A141:	~ Device "Fan" dihapus, sudah ada syarat temperatur
+		~ Effect "KP01:1:0.0147" dihapus, sudah syarat temperatur, otomatis terkalkulasi
+- A170:	~ Device "Fan" dihapus, sudah ada syarat temperatur
+		~ Effect "KP01:1:0.0147" dihapus, sudah syarat temperatur, otomatis terkalkulasi
+- A75:	~ Device "Fan" dihapus, sudah ada syarat temperatur
+		~ Effect "KP01:1:0.0147" dihapus, sudah syarat temperatur, otomatis terkalkulasi
+- B04:	~ Device "Fan" dihapus, sudah ada syarat temperatur
+		~ Effect "KP01:1:0.0147" dihapus, sudah syarat temperatur, otomatis terkalkulasi
+- A57:	~ Device "Lamp" ditambahkan
+		~ Effect "LA01:1:0.007" dihapus
+		~ Auto di set 0
+		~ Note:	sebelum perubahan, maka yang terjadi pada aktivitas ini adalah lampu hanya akan menyala selam 3 menit sesuai durasi, kemudian mati saat agen berganti aktivitas
+				setelah perubahan, maka agen akan menuju device "Lamp" untuk menyalakan lampu, tanpa "Auto" dan "PostActivity" maka lampu akan tetap menyala meskipun agen berganti aktivitas
+				apabila ingin menggunakan "Auto", agar lampu bisa mati sendiri, maka durasi aktivitas perlu diganti yaitu selama lampu ingin menyala (misal 6 jam)

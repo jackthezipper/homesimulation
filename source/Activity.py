@@ -283,13 +283,14 @@ class Activity:
 				singleRoomPA = activities.split(";")
 			self.m_postActivity.append(singleRoomPA)
 		
-		self.m_interrupt = params[Common.TABLE_ACTIVITY_INTERRUPT].split(";")
-		self.m_interrupt = [(value == "1") for value in self.m_interrupt]
+		interuptStr = params[Common.TABLE_ACTIVITY_INTERRUPT].split(";")
+		self.m_interrupt = [(value == "1") for value in interuptStr]
 		self.m_followerActivity = params[Common.TABLE_ACTIVITY_FOLLOWER_ACTIVITY]
 		self.m_followMovement = params[Common.TABLE_ACTIVITY_FOLLOW_MOVEMENT] == "1"
 		self.m_urgency = int(params[Common.TABLE_ACTIVITY_URGENCY_TYPE])
 		self.m_urgencyValue = params[Common.TABLE_ACTIVITY_URGENCY_VALUE]
 		self.m_lastRunningTime = 0
+		self.m_lastUpdateTime = Global.g_timer.m_time
 	
 	def GetPostActivity(self):
 		Global.Logger.LogDebug("Gapoktan "+str(self.m_postActivity)+" "+str(self.m_targetRoom)+"\n")
@@ -303,12 +304,13 @@ class Activity:
 		return self.m_emotionalEffect[EFFECT_RUN if self.m_status == Common.ACT_STATUS_RUN else EFFECT_SUSPEND]
 	
 	def Update(self):
+		deltaUpdate = Global.g_timer.m_time - self.m_lastUpdateTime
 		if self.IsRunning():
 			# print(self.m_ID+" udd me")
-			self.m_runningTime += 1
+			self.m_runningTime += deltaUpdate
 		if self.m_isIncidental:
 			if self.m_remainingIncidentalTime > 0:
-				self.m_remainingIncidentalTime -= 1
+				self.m_remainingIncidentalTime -= deltaUpdate
 			# if self.m_rangeDuration > 0:
 				# self.m_rangeDuration -= 1
 			else:
@@ -326,6 +328,7 @@ class Activity:
 			self.m_alreadyDoItYesterday = self.m_alreadyDoIt
 			self.m_alreadyDoIt = False
 			Global.Logger.LogDebug("dodit yesterde "+self.m_ID+" "+str(self.m_alreadyDoItYesterday)+"\n")
+		self.m_lastUpdateTime = Global.g_timer.m_time
 		# if ((Timer.GetInstance().GetHour() - self.m_startTime) % Timer.HOUR_IN_DAY) > 3:
 			# self.m_repeatCount = 0
 	
@@ -445,7 +448,11 @@ class Activity:
 					return False
 			
 			if interactAgent.m_followedAgent != None and interactAgent.m_followedAgent.m_role != agent.m_role:
-				Global.Logger.LogDebug("canstart fail, following other agent")
+				Global.Logger.LogDebug("canstart fail, following other agent\n")
+				return False
+			
+			if interactAgent.m_currentRoom.m_name == "RTG01" or interactAgent.m_currentRoom.m_name == "RTG02":
+				Global.Logger.LogDebug("canstart fail, interact agent at stair\n")
 				return False
 		
 		if self.m_ID in agent.m_nonIndependentAct:

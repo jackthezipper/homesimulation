@@ -93,9 +93,14 @@ class Hunger(BioProperty):
 		self.m_currentScore = self.m_energyStorage + self.m_totalScore + self.m_constraintEffectScore - self.m_currentRate
 	
 	def PostUpdateActivityCalculation(self):
+		if self.m_agent.m_currentActivity!= None and self.m_agent.m_currentActivity.m_outdoor:
+			self.m_constraintEffectScore = 0
+			self.m_pointEffect = 0
+			self.m_mlUrinate = 0
+			return
 		# Global.Logger.LogDebug("eat activity "+str(self.m_eatActivity.IsRunning())+"\n")
 		self.m_activityEffect = self.m_agent.m_weight * self.m_agent.GetActivityEffect(self.m_type)
-		self.m_totalScore = max(0,(self.m_currentScore - (self.m_currentRate * self.m_agent.GetEmotionalFactor()) + self.m_activityEffect))
+		self.m_totalScore = max(0,(self.m_currentScore - (self.m_currentRate * self.m_agent.GetEmotionalFactor()) - self.m_activityEffect))
 		self.CalculateEffect()
 		self.m_pointHunger = Common.clamp(10 * (self.m_totalScore - self.m_threshold[Common.HUNGER_LIMIT_DOWN]) / (self.m_rate[Common.RATE_BASE] - self.m_threshold[Common.HUNGER_LIMIT_DOWN]),0,10)
 		self.m_pointEffect = self.m_constraintEffectScore / self.m_rate[Common.RATE_BASE] * 10
@@ -168,6 +173,10 @@ class Thirst(BioProperty):
 		return 0
 	
 	def PostUpdateActivityCalculation(self):
+		if self.m_agent.m_currentActivity!= None and self.m_agent.m_currentActivity.m_outdoor:
+			self.m_mlUrinate = 0
+			self.m_currentEffectScore = 0
+			return
 		self.m_totalScore = Common.clamp((self.m_currentScore + (self.m_rate[Common.AGENT_ASLEEP if self.m_agent.IsAsleep() else Common.AGENT_AWAKE] * self.m_agent.GetEmotionalFactor()) + self.m_agent.GetActivityEffect(self.m_type)),0,10)
 		self.m_mlUrinate = 15 * self.m_currentEffectScore
 		self.m_currentEffectScore = self.CalculateEffect()
@@ -218,6 +227,9 @@ class Dirty(BioProperty):
 			self.m_currentEffectScore = 0
 	
 	def PostUpdateActivityCalculation(self):
+		if self.m_agent.m_currentActivity!= None and self.m_agent.m_currentActivity.m_outdoor:
+			self.m_currentEffectScore = 0
+			return
 		self.CalculateEffect()
 		
 		self.m_constraint = self.m_totalScore + self.m_currentEffectScore
@@ -348,6 +360,8 @@ class Sleepy(BioProperty):
 		return self.m_habit[index][time]
 		
 	def PostUpdateActivityCalculation(self):
+		if self.m_agent.m_currentActivity!= None and self.m_agent.m_currentActivity.m_outdoor:
+			return
 		Global.Logger.LogDebug("Post update "+Global.g_timer.GetFormattedHour()+" "+str(self.m_relatedActivity != None)+" "+str(self.m_constraint)+" "+str(self.IsHabit(Common.AGENT_AWAKE,Global.g_timer.GetHour()))+"\n")
 		self.PrintProperty()
 		if self.m_relatedActivity != None and ((self.m_constraint <= 0) or (self.IsHabit(Common.AGENT_AWAKE,Global.g_timer.GetHour()) and self.m_constraint <= 2)):
@@ -440,6 +454,8 @@ class Defecate(BioProperty):
 		return self.m_scorePoint
 		
 	def PostUpdateActivityCalculation(self):
+		if self.m_agent.m_currentActivity!= None and self.m_agent.m_currentActivity.m_outdoor:
+			return
 		if (not self.m_agent.IsAsleep()):
 			if (self.m_relatedActivity == None) and (self.m_score > (23.955 if self.IsHabit(Global.g_timer.GetHour()) else 28.747)):
 				self.TryTriggerRelatedActivity()
@@ -489,6 +505,8 @@ class Urinate(BioProperty):
 			# self.m_effectStarted = True
 			# self.m_effectRemainingTime = self.m_duration
 	def PostUpdateActivityCalculation(self):
+		if self.m_agent.m_currentActivity!= None and self.m_agent.m_currentActivity.m_outdoor:
+			return
 		if self.m_relatedActivity != None and self.m_relatedActivity.IsRunning() and self.m_urinateVol == 0:
 			self.m_urinateVol = (self.m_inBladder - self.m_effect[Common.EFFECT_URINATE_NORMAL][Common.EFFECT_NEW_VALUE]) / self.m_relatedActivity.m_duration
 		

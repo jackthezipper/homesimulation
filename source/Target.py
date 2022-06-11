@@ -96,7 +96,8 @@ class Target:
 				self.StopUsage()
 		self.UpdateAutoTrigger()
 	
-	def SetAvailable(self, available):
+	def SetAvailable(self, available, by = "Auto"):
+		Global.Logger.LogDebug("Set devuce "+self.m_id+" to "+str(available)+" by "+by+"\n")
 		self.m_available = available
 	
 	def UpdateAutoTrigger(self):
