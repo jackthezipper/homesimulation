@@ -49,6 +49,9 @@ class Timer():
 	def GetFormattedHour(self):
 		return "{:02d}:{:02d}".format(self.GetHour(), self.GetMinute())
 	
+	def GetFullFormattedTime(self):
+		return "Day {} at {:02d}:{:02d}".format(self.GetDay(), self.GetHour(), self.GetMinute())
+	
 	def Reset(self):
 		self.m_time = MINUTE_IN_HOUR
 	

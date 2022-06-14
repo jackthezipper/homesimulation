@@ -82,26 +82,6 @@ class Agent:
 	hasErr = False
 	agentList = []
 	s_scaleSpeed = 8.0
-	# s_debugStr = ""
-	# s_debugActive = True
-	
-	# @staticmethod
-	# def LogDebug(debugLog):
-		# if Agent.s_debugActive:
-			# Agent.s_debugStr += debugLog
-	
-	# @staticmethod
-	# def ResetDebug():
-		# Agent.s_debugStr = ""
-	
-	# @staticmethod
-	# def DumpDebug():
-		# if not Agent.s_debugActive:
-			# return
-		# dFile = open(resPath+"dmp.txt","a+")
-		# dFile.write(Agent.s_debugStr)
-		# dFile.close()
-		# Agent.s_debugStr = ""
 	
 	def __init__(self,position,m_targetPoint,index,role = "ayah",state = STATE_IDLE):
 		self.pos = position
@@ -191,6 +171,8 @@ class Agent:
 		self.m_passingDoor = None
 		self.m_socialValue = {}
 		self.m_pauseMovement = False
+		self.m_activityTableLog = []
+		self.m_shouldLogActivityTable = False
 	
 	def SetActivity(self, activity):
 		self.m_currentActivity = activity
@@ -211,10 +193,14 @@ class Agent:
 			self.m_activityList[act].m_bioStandard[7] /= (urinateBase / 10)
 	
 	def LoadBioProperty(self, filename):
+		Global.Logger.LogDebug("load bio "+self.m_role+"\n")
 		for room in Global.g_myHouse.m_rooms:
 			if room.IsInRoom(self.pos):
 				self.m_currentRoom = room
+				Global.Logger.LogDebug("serumpa "+room.m_name+"\n")
 				break
+		Global.Logger.LogDebug("serupet\n")
+		Global.Logger.DumpDebug(10)
 		sourceFilePath	= os.path.dirname(os.path.abspath(__file__))
 		inputFilePath = resPath+self.m_role+"\\"+filename
 		# inputFilePath	= sourceFilePath[0:sourceFilePath.rfind('\\')+1]+"input_file\\"+filename
@@ -525,16 +511,14 @@ class Agent:
 				
 				propertyRecord.extend(property.ProcessOutput())
 			
+			self.AddFisioToActTableLog()
+			
 			if self.m_weekBioRecord != Global.g_timer.GetWeek():
 				self.m_weekBioRecord = Global.g_timer.GetWeek()
 				self.m_bioRecord.append([])
 			self.m_bioRecord[self.m_weekBioRecord].append(propertyRecord)
 		
 		timeB = int(time.time()*1000)
-		# self.UpdateBioStatus(dt)
-		# self.UpdateESStatus(dt)
-		# self.UpdateActivityOrder()
-		# self.UpdateAgentActivity(dt)
 		self.UpdateAgentMovement(dt)
 		timeC = int(time.time()*1000)
 		
@@ -543,6 +527,7 @@ class Agent:
 		Global.Logger.LogDebug("\n agent pos "+self.m_role+" "+str(self.pos)+"\n")
 		Global.Logger.DumpDebug()
 		self.m_shouldUpdate = False
+		self.m_shouldLogActivityTable = False
 		return self.pos
 	
 	def IsLastActivityRunning(self):
@@ -618,16 +603,11 @@ class Agent:
 					self.m_currentActivity.m_currentInteractAgent.SetFollowing(self, False)
 					self.m_currentActivity.m_currentInteractAgent.m_currentActivity.Stop()
 					if self.m_currentActivity.m_currentInteractAgent.m_target!= None and self.m_currentActivity.m_currentInteractAgent.m_target.m_powerCons > 0:
-						self.m_target.StopUsage(self.m_role)
+						self.m_currentActivity.m_currentInteractAgent.m_target.StopUsage(self.m_role)
 				self.m_currentActivity.Stop()
 				self.ActivityLog("Finish activity Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
-				if not self.m_currentActivity.m_auto and self.m_target!= None and self.m_target.m_powerCons > 0:
-					self.m_target.StopUsage(self.m_role)
-				# self.m_currentRoom.m_countAgent -= 1
+				self.CleanUpTarget()
 				self.SetUseCoordRoom(False)
-				if self.m_target != None:
-					self.m_target.SetAvailable(True, self.m_role)
-					self.m_target = None
 				if isActivityDone:
 					self.m_currentActivity.CalculateEffects(self)
 				self.ClearSuspendForNextActivity(self.m_currentActivity.m_ID)
@@ -649,11 +629,7 @@ class Agent:
 				if self.m_currentActivity == None or self.m_currentActivity.m_status < Common.ACT_STATUS_RUN:
 					self.SetState(STATE_IDLE)
 					# self.ActivityLog("Idle 9\n")
-				if self.m_target != None:
-					if not self.m_currentActivity.m_auto and self.m_target.m_powerCons > 0:
-						self.m_target.StopUsage(self.m_role)
-					self.m_target.SetAvailable(True, self.m_role)
-					self.m_target = None
+				self.CleanUpTarget()
 				if self.m_bioActivityToTrigger == "B04":
 					self.m_currentActivity.Stop()
 					self.ActivityLog("Finish activity Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
@@ -670,7 +646,7 @@ class Agent:
 			Global.Logger.LogDebug("set activity "+self.m_role+" by 7\n")
 			self.SetActivity(self.GetActivityById(self.m_bioActivityToTrigger))
 			Global.Logger.LogDebug("goto 5\n")
-			self.m_currentActivity.GoTo()
+			self.m_currentActivity.GoTo(self)
 			self.ActivityLog("Switch activity to "+self.m_currentActivity.m_ID+" at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
 		incidentalAct = []
 		if self.m_currentActivity != None:
@@ -712,7 +688,7 @@ class Agent:
 							Global.Logger.LogDebug("set activity "+self.m_role+" by 4\n")
 							self.SetActivity(self.m_pendingActivity)
 							Global.Logger.LogDebug("goto d31\n")
-							self.m_currentActivity.GoTo()
+							self.m_currentActivity.GoTo(self)
 							self.ActivityLog("Switch activity to "+self.m_currentActivity.m_ID+" at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
 						self.m_pendingActivity = None
 				for property in self.m_bioProperty:
@@ -797,22 +773,24 @@ class Agent:
 				Global.Logger.LogDebug("Calc avatar "+self.m_lastActivity+" "+act.m_ID+"\n")
 				advantage = act.m_planProperty[Common.PLAN_PROPERTY_ADVANTAGE] + (0 if self.m_lastActivity == None else self.GetActivityById(self.m_lastActivity).m_matrix[act.m_ID])
 				act.m_planScore += act.m_planProperty[Common.PLAN_PROPERTY_ADVANTAGE] + (0 if self.m_lastActivity == None else self.GetActivityById(self.m_lastActivity).m_matrix[act.m_ID])
-				rule = (act.m_planProperty[Common.PLAN_PROPERTY_AUTHORITY] * act.m_planProperty[Common.PLAN_PROPERTY_OBEDIENCE] * 0) #dummy value 0; fill it with agent existance at home
+				rule = (act.m_planProperty[Common.PLAN_PROPERTY_AUTHORITY] * act.m_planProperty[Common.PLAN_PROPERTY_OBEDIENCE])# * 0) #dummy value 0; fill it with agent existance at home
 				act.m_planScore += (act.m_planProperty[Common.PLAN_PROPERTY_AUTHORITY] * act.m_planProperty[Common.PLAN_PROPERTY_OBEDIENCE]) #dummy value 0; fill it with agent existance at home
 				need = act.m_planProperty[Common.PLAN_PROPERTY_URGENCY]
 				envUrgency = act.CalculateEnvUrgency(self)
-				act.m_planScore += (act.m_planProperty[Common.PLAN_PROPERTY_URGENCY] + envUrgency)
+				
+				urgency = act.m_planProperty[Common.PLAN_PROPERTY_URGENCY]
+				urgency += (10 - self.GetProperty("Dirty").GetScore())
+				for agent in Agent.agentList:
+					if agent.m_role != self.m_role:
+						urgency += (agent.GetProperty("Hunger").GetScore() + agent.GetProperty("Thirst").GetScore())
+				urgency += envUrgency
+				
+				act.m_planScore += urgency#(act.m_planProperty[Common.PLAN_PROPERTY_URGENCY] + envUrgency)
 				act.m_planScore /= 4
 				
-				actDebugStr += " Wish: "+Fmt(wish)+" Advantage: "+Fmt(advantage)+" Rule: "+Fmt(rule)+" Need: "+Fmt(need)+" PlanScore: "+Fmt(act.m_planScore)+" EnvironmentUrgency: "+Fmt(envUrgency)
+				actDebugStr += " Wish: "+Fmt(wish)+" Advantage: "+Fmt(advantage)+" Rule: "+Fmt(rule)+" Need: "+Fmt(need)+" Urgency: "+Fmt(urgency)+" PlanScore: "+Fmt(act.m_planScore)+" EnvironmentUrgency: "+Fmt(envUrgency)
 				
 				act.m_score += act.m_timeScore + act.m_planScore
-				
-				if act.m_ID == "A61":
-					act.m_score *= 5
-				elif act.m_ID == "A45":
-					act.m_score *= 10
-				
 				actDebugStr += " TotalScore:"+Fmt(act.m_score)+"\n"
 				
 				# act.m_score *= curMultiplier
@@ -928,7 +906,7 @@ class Agent:
 		# Global.Logger.LogDebug("act statt "+self.m_currentActivity.m_ID+" "+str(self.m_currentActivity.m_status)+" "+str(self.m_currentActivity.IsDone())+"\n")
 		if self.m_currentActivity != None  and (not self.m_currentActivity.IsDone()) and (not self.m_currentActivity.IsRunning()) and self.m_state != STATE_MOVE and self.m_state != STATE_MOVE_PA and self.m_currentActivity.m_status != Common.ACT_STATUS_GOTO:
 			Global.Logger.LogDebug("goto 4 "+self.m_currentActivity.m_ID+" "+str(self.m_currentActivity.m_status)+"\n")
-			self.m_currentActivity.GoTo()
+			self.m_currentActivity.GoTo(self)
 			Global.Logger.LogDebug("Cinteract "+self.m_currentActivity.m_ID+" "+str(self.m_currentActivity.m_currentInteractAgent != None)+"\n")
 			if self.m_currentActivity.m_currentInteractAgent != None:
 				Global.Logger.LogDebug("Iraque "+self.m_currentActivity.m_currentInteractAgent.m_role+" follow "+str(self.m_currentActivity.m_currentInteractAgent.m_followedAgent != None)+"\n")
@@ -958,6 +936,19 @@ class Agent:
 		self.moveDir.Unitize()
 		
 	def AssignToClosestTarget(self):
+		# check room coord
+		Global.Logger.LogDebug("asclos "+self.m_role+"\n")
+		Global.Logger.DumpDebug(10)
+		distanceMinRoom = float(sys.maxint)
+		indexRoomCoord = -1
+		for i in range(0,len(self.m_currentRoom.m_targetCoord)):
+			if not self.m_currentRoom.m_targetCoord[i][1]:
+				targetCoord = self.m_currentRoom.GetTargetCoord(i)
+				curDistance = self.pos.DistanceTo(targetCoord)
+				if curDistance < distanceMinRoom:
+					curDistance = distanceMinRoom
+					indexRoomCoord = i
+		#check target point
 		distanceMin = float(sys.maxint)
 		targetIndex = 0
 		for (i,target) in enumerate(Agent.s_possibleTarget):
@@ -965,15 +956,22 @@ class Agent:
 			if curDistance < distanceMin:
 				distanceMin = curDistance
 				targetIndex = i
-#		print Agent.s_possibleTarget[targetIndex]
-#		print Agent.s_possibleTarget[targetIndex].m_targetPoint
-		epList = []
-		for (i,ep) in enumerate(Agent.s_entryPointList):
-			if ep.target == Agent.s_possibleTarget[targetIndex]:
-				epList.append(ep)
-		self.setTarget(Agent.s_possibleTarget[targetIndex])
-		self.entryPoint = epList[0]
-		self.m_myFloorIndex = self.m_target.m_floorIndex
+		
+		if distanceMinRoom < distanceMin:
+			self.m_roomCoordIndex = indexRoomCoord
+			targetCoord = self.m_targetRoom.GetTargetCoord(self.m_roomCoordIndex)
+			self.SetUseCoordRoom(True)
+			self.entryPoint = EntryPoint.EntryPoint(targetCoord,self.m_targetRoom.m_floorIndex)
+			self.entryPoint.target = Target.Target(self.m_targetRoom.m_floorIndex,CommonEnum.RF_NONE, "-", targetCoord,"TMP_CENTER")
+			self.m_myFloorIndex = PathFinding.Map.FindPointInFloor(self.pos)
+		else:
+			epList = []
+			for (i,ep) in enumerate(Agent.s_entryPointList):
+				if ep.target == Agent.s_possibleTarget[targetIndex]:
+					epList.append(ep)
+			self.setTarget(Agent.s_possibleTarget[targetIndex])
+			self.entryPoint = epList[0]
+			self.m_myFloorIndex = self.m_target.m_floorIndex
 		self.oldEntryPoint = self.entryPoint
 		
 	def setBoundArea(self,area):
@@ -1098,6 +1096,7 @@ class Agent:
 		if self.m_currentActivity.m_status == Common.ACT_STATUS_GOTO and self.m_state != STATE_MOVE and self.m_state != STATE_MOVE_PA:
 			if self.m_following and self.m_followedAgent.m_currentActivity.m_followMovement:
 				self.m_targetRoom = self.m_followedAgent.m_targetRoom
+				self.PutActTableLogValue(self.m_targetRoom.m_name, Common.ACT_TABLE_LOG_MOVE_TO, force = True)
 				self.ActivityLog("Moving to "+self.m_targetRoom.m_name+"\n")
 			elif self.m_followedAgent != None:
 				return
@@ -1108,6 +1107,7 @@ class Agent:
 					interactAgent = self.m_currentActivity.GetInteractAgent()#next((agent for agent in Agent.agentList if (agent.m_role == self.m_currentActivity.m_interactAgent)), None)
 					if interactAgent != None:
 						self.m_targetRoom = interactAgent.m_currentRoom
+						self.PutActTableLogValue(self.m_targetRoom.m_name, Common.ACT_TABLE_LOG_MOVE_TO, force = True)
 						interactAgent.m_pauseMovement = True
 						Global.Logger.LogDebug("Interact agen room "+self.m_targetRoom.m_name)
 					else:
@@ -1117,6 +1117,7 @@ class Agent:
 					# Global.Logger.DumpDebug()
 					#print "rumina "+roomName
 					self.m_targetRoom = next((room for room in Global.g_myHouse.m_rooms if room.m_name == roomName),None)
+					self.PutActTableLogValue(self.m_targetRoom.m_name, Common.ACT_TABLE_LOG_MOVE_TO, force = True)
 					Global.Logger.LogDebug("Normal room "+self.m_targetRoom.m_name)
 			self.m_targetType = TARGET_ROOM
 			Global.Logger.LogDebug("kapurt cadf "+str(self.m_targetRoom.IsInRoom(self.pos)))
@@ -1560,7 +1561,7 @@ class Agent:
 					# return True
 				# else:
 					Global.Logger.LogDebug("goto 1\n")
-					self.m_currentActivity.GoTo()
+					self.m_currentActivity.GoTo(self)
 					self.ActivityLog("Move to next room "+self.m_currentActivity.GetTargetRoom()+" at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
 					self.CheckFollowingAgent()
 					self.SetState(STATE_IDLE)
@@ -1592,7 +1593,7 @@ class Agent:
 					self.m_bioActivityToTrigger = ""
 			else:
 				Global.Logger.LogDebug("goto 3\n")
-				self.m_currentActivity.GoTo()
+				self.m_currentActivity.GoTo(self)
 				self.ActivityLog("Move to next room "+self.m_currentActivity.GetTargetRoom()+" at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
 				self.CheckFollowingAgent()
 			# self.ActivityLog("Idle 4\n")
@@ -1649,7 +1650,7 @@ class Agent:
 					self.m_bioActivityToTrigger = ""
 			else:
 				Global.Logger.LogDebug("goto 2\n")
-				self.m_currentActivity.GoTo()
+				self.m_currentActivity.GoTo(self)
 				self.CheckFollowingAgent()
 			# self.ActivityLog("Idle 3\n")
 			self.SetState(STATE_IDLE)
@@ -1774,18 +1775,14 @@ class Agent:
 	def ForceStartActivity(self, activity):
 		self.SetUseCoordRoom(False)
 		if self.m_currentActivity != None:
-			if self.m_target != None:
-				if not self.m_currentActivity.m_auto and self.m_target.m_powerCons > 0:
-					self.m_target.StopUsage(self.m_role)
-				self.m_target.SetAvailable(True, self.m_role)
-				self.m_target = None
+			self.CleanUpTarget()
 			self.m_currentActivity.Stop()
 		Global.Logger.LogDebug("set activity "+self.m_role+" by 1\n")
 		self.SetActivity(self.GetActivityById(activity))
 		for property in self.m_bioProperty:
 			if activity == property.m_relatedActivityId:
 				property.m_relatedActivity = self.m_currentActivity
-		self.m_currentActivity.GoTo()
+		self.m_currentActivity.GoTo(self)
 		self.ActivityLog("Switch activity to "+self.m_currentActivity.m_ID+" due "+self.m_followedAgent.m_role+" at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
 		Global.Logger.LogDebug("Forcing start activity "+self.m_role+" "+activity+"\n")
 		Global.Logger.DumpDebug()
@@ -1793,6 +1790,13 @@ class Agent:
 		Global.Logger.DumpDebug()
 		# self.ActivityLog("Idle 2\n")
 		self.SetState(STATE_IDLE)
+	
+	def CleanUpTarget(self):
+		if self.m_target != None:
+			if not self.m_currentActivity.m_auto and self.m_target.m_powerCons > 0:
+				self.m_target.StopUsage(self.m_role)
+			self.m_target.SetAvailable(True, self.m_role)
+			self.m_target = None
 	
 	def SetUseCoordRoom(self, use):
 		Global.Logger.LogDebug("cuorum "+self.m_role+" "+str(self.m_useCoordRoom)+" "+str(use)+"\n")
@@ -1835,6 +1839,7 @@ class Agent:
 					outputWriter.writerow(record)
 		
 		self.ExportLog()
+		self.ExportActivityTableLog()
 	
 	def Log(self, logText):
 		if self.m_weekLog != Global.g_timer.GetWeek():
@@ -1861,6 +1866,228 @@ class Agent:
 					outputFile.write(log)
 		Global.Logger.DumpDebug(10)
 	
+	def ExportActivityTableLog(self):
+		outputFilePath = reportPath+self.m_role+"_activity_table.csv"
+		
+		columnName1 = [""] * 10
+		columnName1.append("Activity Calculation")
+		columnName1.extend([""]*20)
+		columnName1.append("house & resources")
+		columnName1.extend([""]*24)
+		columnName1.append("fis_report")
+		
+		columnName2 = [("agen pelaku: "+self.m_role)]
+		columnName2.extend([""]*9)
+		columnName2.append("Wish")
+		columnName2.extend([""]*2)
+		columnName2.append("Advantage")
+		columnName2.extend([""]*2)
+		columnName2.append("Aturan")
+		columnName2.extend([""]*2)
+		columnName2.append("Urgency")
+		columnName2.extend([""]*12)
+		columnName2.append("Temperature")
+		columnName2.extend([""]*2)
+		columnName2.append("Light")
+		columnName2.extend([""]*2)
+		columnName2.append("Resources")
+		columnName2.extend([""]*4)
+		columnName2.append("Water")
+		columnName2.append("")
+		columnName2.append("Electricity1")
+		columnName2.extend([""]*2)
+		columnName2.append("Electricity2")
+		columnName2.extend([""]*2)
+		columnName2.append("Gas")
+		columnName2.extend([""]*2)
+		columnName2.append("Emotion")
+		columnName2.append("")
+		columnName2.append("Makan")
+		columnName2.extend([""]*11)
+		columnName2.append("Kotor")
+		columnName2.extend([""]*9)
+		columnName2.append("Minum")
+		columnName2.extend([""]*9)
+		columnName2.append("Energi")
+		columnName2.extend([""]*9)
+		columnName2.append("Kelelahan")
+		columnName2.extend([""]*7)
+		columnName2.append("Kantuk")
+		columnName2.extend([""]*10)
+		columnName2.append("Defekasi")
+		columnName2.extend([""]*17)
+		columnName2.append("Urinasi")
+		columnName2.extend([""]*11)
+		
+		columnName3 = [""] * 20
+		columnName3.append("current agen")
+		columnName3.append("")
+		for agt in Agent.agentList:
+			if agt.m_role == self.m_role:
+				continue
+			columnName3.append(agt.m_role)
+			columnName3.append("")
+		
+		columnName4 = [
+			"Time",
+			"Score",
+			"Move to",
+			"Incidental",
+			"IncidentalTime",
+			"Switch activity to ",
+			"AgenIncidental",
+			"TimeRange",
+			"Current Activity",
+			"AgenInisiator",
+			"Total",
+			"SN",
+			"Pengali Emosi",
+			"Total",
+			"SN",
+			"Nilai Matriks",
+			"Total",
+			"Authority",
+			"Obedience",
+			"Total",
+			"SN Urgensi",
+			"Kebersihan",
+			"Lapar",
+			"Haus",
+			"Lapar",
+			"Haus",
+			"Lapar",
+			"Haus",
+			"Lapar",
+			"Haus",
+			"Kotor",
+			"FloorStatus",
+			"Base",
+			"FanEffect",
+			"Total",
+			"Base",
+			"LampEffect",
+			"Total",
+			"RawFood",
+			"DrinkWater",
+			"DirtyUtensil",
+			"Food",
+			"Trash",
+			"Amount1",
+			"Amount2",
+			"Device",
+			"Duration",
+			"PowerConsumption",
+			"Device",
+			"Duration",
+			"PowerConsumption",
+			"Duration",
+			"Amount",
+			"Current Ability",
+			"Total",
+			"CCE",
+			"Energy Storage",
+			"Tingkat Lapar Terkini",
+			"Laju Lapar",
+			"Efek Aktivitas",
+			"Pengaruh Emosi",
+			"Total Lapar 1 jam berikutnya",
+			"Kebiasaan",
+			"Constraint Efek Makan",
+			"Konversi Kalori ke Poin",
+			"Konversi Poin ke mL(URINASI)",
+			"Standar",
+			"Total Effect (mL)",
+			"Tingkat Kotor Terkini",
+			"Laju Kotor",
+			"Efek Aktivitas",
+			"Pengaruh Emosi",
+			"Total kotor 1 jam berikutnya",
+			"Kebiasaan Mandi",
+			"Efek Mandi",
+			"Constraint",
+			"Standar",
+			"Total Effect",
+			"Tingkat Haus Terkini",
+			"Laju Haus",
+			"Efek Aktivitas",
+			"Pengaruh Emosi",
+			"Total Haus 1 jam berikutnya",
+			"Kebiasaan",
+			"Efek Minum",
+			"Konversi poin ke mL (URINASI)",
+			"Standar",
+			"Total Effect (mL)",
+			"Energy Storage",
+			"Tingkat Energi Terkini",
+			"Laju Energi",
+			"Efek Aktivitas",
+			"Pengaruh Emosi",
+			"Kalkulasi krn Efek Akt. dan Emosi",
+			"Kalkulasi krn Efek Makan",
+			"Total Energi 1 jam berikutnya",
+			"Konversi Kalori ke Poin",
+			"Standar",
+			"Tingkat Kelelahan Terkini",
+			"Laju Kelelahan",
+			"Efek Aktivitas",
+			"Pengaruh Emosi",
+			"Kalkulasi krn Efek Akt. dan Emosi",
+			"Kalkulasi efek khusus",
+			"Total Kelelahan 1 jam berikutnya",
+			"Standar",
+			"Tingkat Kantuk Terkini",
+			"Laju Kantuk ",
+			"Efek Aktivitas",
+			"Pengaruh Emosi",
+			"Kalkulasi krn Efek Akt. dan Emosi",
+			"Kalkulasi efek khusus",
+			"Total Kantuk 1 jam berikutnya",
+			"Kebiasaan Tidur/Bangun",
+			"Constraint",
+			"Tidur/Bangun",
+			"Standar",
+			"Efek Makan",
+			"Ada di Lambung",
+			"Laju Lambung ke Usus Halus",
+			"Ada di Usus Halus",
+			"Laju dari Usus Halus ke Kolon",
+			"Ada di Kolon",
+			"Ada di ujung Kolon",
+			"Laju dari Kolon ke Rektum",
+			"Kebiasaan",
+			"Efek Aktivitas",
+			"Pengaruh Emosi",
+			"Ada di Akhir Kolon Menuju Rektum",
+			"Tingkat Tekanan Terkini",
+			"Efek Defekasi",
+			"BAB atau Tidak",
+			"Konversi mmhg ke poin",
+			"Standar",
+			"Total Effect (mmhg)",
+			"Efek Minum 20% sampai di kemih (mL)",
+			"Efek Makan 5% sampai di kemih (mL)",
+			"Total Body Water",
+			"Laju Kemih ",
+			"Efek Aktivitas",
+			"Pengaruh Emosi",
+			"Ada di Kemih",
+			"Volume Urine sekali BAK",
+			"Sisa di Kemih",
+			"Konversi mL ke Poin",
+			"Standar",
+			"Total Effect (mL)",
+		]
+		
+		with open(outputFilePath, mode='w+') as outputFile:
+			outputWriter = csv.writer(outputFile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
+			outputWriter.writerow(columnName1)
+			outputWriter.writerow(columnName2)
+			outputWriter.writerow(columnName3)
+			outputWriter.writerow(columnName4)
+			for record in self.m_activityTableLog:
+				outputWriter.writerow(record)
+		
+	
 	def IsMultiValid(self, actId):
 		multiValid = True
 		if actId in Activity.Activity.s_multiAgent:
@@ -1880,76 +2107,6 @@ class Agent:
 				if "R2" in self.m_currentActivity.GetPostActivity():
 					self.m_passingDoor.Close()
 					self.m_passingDoor = None
-			# return True
-		
-		# if self.m_targetRoom != None and self.m_targetRoom.IsInRoom(self.pos):
-			# for door in Global.g_myHouse.m_doors:
-				# if door.m_room == self.m_targetRoom.m_name:
-					# if self.m_currentActivity != None:
-						# act = self.m_currentActivity.m_doorAct[self.m_currentActivity.m_targetRoom]
-						# if door.IsClosed() and act != "-":
-							# if act == "CC":
-								# self.m_currentActivity.NextTargetRoom()
-								# if (self.m_currentActivity.GetTargetRoom() == "None"):
-									# self.m_currentActivity.Suspend()
-									# self.SetUseCoordRoom(False)
-									# Global.Logger.LogDebug("goto a31\n")
-									# self.m_currentActivity.SetToIncidental()
-									# self.ActivityLog("Set "+self.m_currentActivity.m_ID+" to incidental at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
-									# self.ClearSuspendForNextActivity(self.m_currentActivity.m_ID)
-									# if self.m_currentActivity.m_ID == self.m_bioActivityToTrigger:
-										# self.m_bioActivityToTrigger = ""
-								# else:
-									# Global.Logger.LogDebug("goto 31\n")
-									# self.m_currentActivity.GoTo()
-									# self.ActivityLog("Move to next room "+self.m_currentActivity.GetTargetRoom()+" at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
-									# self.CheckFollowingAgent()
-									# # self.ActivityLog("Idle 1\n")
-									# self.SetState(STATE_IDLE)
-								# return False
-							# else:
-								# self.m_passingDoor = door
-								# door.Open()
-								# return True
-				# elif door.IsClosed():
-					# door.Open()
-					# return True
-				# break
-		# return True
-		
-		# for door in Global.g_myHouse.m_doors:
-			# if door.m_frameBB.Contains(self.pos):
-				# if self.m_targetRoom != None and self.m_targetRoom.m_name == door.m_room and self.m_currentActivity != None:
-					# act = self.m_currentActivity.m_doors[self.m_currentActivity.m_targetRoom]
-					# if door.IsClosed() and act != "-":
-						# if act == "CC":
-							# self.m_currentActivity.NextTargetRoom()
-							# if (self.m_currentActivity.GetTargetRoom() == "None"):
-								# self.m_currentActivity.Suspend()
-								# self.SetUseCoordRoom(False)
-								# Global.Logger.LogDebug("goto a31\n")
-								# self.m_currentActivity.SetToIncidental()
-								# self.ActivityLog("Set "+self.m_currentActivity.m_ID+" to incidental at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
-								# self.ClearSuspendForNextActivity(self.m_currentActivity.m_ID)
-								# if self.m_currentActivity.m_ID == self.m_bioActivityToTrigger:
-									# self.m_bioActivityToTrigger = ""
-							# else:
-								# Global.Logger.LogDebug("goto 31\n")
-								# self.m_currentActivity.GoTo()
-								# self.ActivityLog("Move to next room "+self.m_currentActivity.GetTargetRoom()+" at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
-								# self.CheckFollowingAgent()
-								# # self.ActivityLog("Idle 1\n")
-								# self.SetState(STATE_IDLE)
-							# return False
-						# else:
-							# self.m_passingDoor = door
-							# door.Open()
-					# return True
-				# elif door.IsClosed():
-					# door.Open()
-					# return True
-				# break
-		# return True
 	
 	def CheckIntersectDoor(self, start, end):
 		Global.Logger.LogDebug("Check intersect door "+str(start)+" "+str(end)+"\n")
@@ -1986,7 +2143,7 @@ class Agent:
 							self.m_bioActivityToTrigger = ""
 					else:
 						Global.Logger.LogDebug("goto 31\n")
-						self.m_currentActivity.GoTo()
+						self.m_currentActivity.GoTo(self)
 						self.ActivityLog("Move to next room "+self.m_currentActivity.GetTargetRoom()+" at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
 						self.CheckFollowingAgent()
 						# self.ActivityLog("Idle 1\n")
@@ -2014,6 +2171,60 @@ class Agent:
 		val /= len(Agent.agentList)
 		return val
 		
+	def AddActivityTableEntry(self, key):
+		self.m_activityTableLog.append([""] * Common.ACT_TABLE_LOG_TOTAL)
+		self.m_activityTableLog[-1][0] = key
+		self.m_shouldLogActivityTable = True
+	
+	def PutActTableLogValue(self, value, pos, force = False, id = -1):
+		if not self.m_shouldLogActivityTable and not force:
+			return
+		self.m_activityTableLog[id][pos] = value
+	
+	def AddFisioToActTableLog(self):
+		if not self.m_shouldLogActivityTable:
+			return
+		act = self.GetActivityById(self.m_activityTableLog[-1][Common.ACT_TABLE_LOG_SWITCH_TO])
+		propertyCalc = self.GetProperty("Hunger").GetCalcParam()
+		if not act.m_isBioActivity:
+			propertyCalc.extend([Fmt(act.m_bioStandard[0]), Fmt(act.m_bioStandard[0] - self.m_bioProperty[0].GetScore())])
+		self.m_activityTableLog[-1][Common.ACT_TABLE_LOG_FIS_HUNGER_START : Common.ACT_TABLE_LOG_FIS_HUNGER_START + len(propertyCalc)] = propertyCalc
+		
+		propertyCalc = self.GetProperty("Dirty").GetCalcParam()
+		if not act.m_isBioActivity:
+			propertyCalc.extend([Fmt(act.m_bioStandard[1]), Fmt(act.m_bioStandard[1] - self.m_bioProperty[1].GetScore())])
+		self.m_activityTableLog[-1][Common.ACT_TABLE_LOG_FIS_DIRTY_START : Common.ACT_TABLE_LOG_FIS_DIRTY_START + len(propertyCalc)] = propertyCalc
+		
+		propertyCalc = self.GetProperty("Thirst").GetCalcParam()
+		if not act.m_isBioActivity:
+			propertyCalc.extend([Fmt(act.m_bioStandard[2]), Fmt(act.m_bioStandard[2] - self.m_bioProperty[2].GetScore())])
+		self.m_activityTableLog[-1][Common.ACT_TABLE_LOG_FIS_THIRST_START : Common.ACT_TABLE_LOG_FIS_THIRST_START + len(propertyCalc)] = propertyCalc
+		
+		propertyCalc = self.GetProperty("Energy").GetCalcParam()
+		if not act.m_isBioActivity:
+			propertyCalc.extend([Fmt(act.m_bioStandard[3])])
+		self.m_activityTableLog[-1][Common.ACT_TABLE_LOG_FIS_ENERGY_START : Common.ACT_TABLE_LOG_FIS_ENERGY_START + len(propertyCalc)] = propertyCalc
+		
+		propertyCalc = self.GetProperty("Exhausted").GetCalcParam()
+		if not act.m_isBioActivity:
+			propertyCalc.extend([Fmt(act.m_bioStandard[4])])
+		self.m_activityTableLog[-1][Common.ACT_TABLE_LOG_FIS_EXHAUSTED_START : Common.ACT_TABLE_LOG_FIS_EXHAUSTED_START + len(propertyCalc)] = propertyCalc
+		
+		propertyCalc = self.GetProperty("Sleepy").GetCalcParam()
+		if not act.m_isBioActivity:
+			propertyCalc.extend([Fmt(act.m_bioStandard[5])])
+		self.m_activityTableLog[-1][Common.ACT_TABLE_LOG_FIS_SLEEPY_START : Common.ACT_TABLE_LOG_FIS_SLEEPY_START + len(propertyCalc)] = propertyCalc
+		
+		propertyCalc = self.GetProperty("Defecate").GetCalcParam()
+		if not act.m_isBioActivity:
+			propertyCalc.extend([Fmt(act.m_bioStandard[6]), Fmt(act.m_bioStandard[6] - self.m_bioProperty[6].GetScore())])
+		self.m_activityTableLog[-1][Common.ACT_TABLE_LOG_FIS_DEFECATE_START : Common.ACT_TABLE_LOG_FIS_DEFECATE_START + len(propertyCalc)] = propertyCalc
+		
+		propertyCalc = self.GetProperty("Urinate").GetCalcParam()
+		if not act.m_isBioActivity:
+			propertyCalc.extend([Fmt(act.m_bioStandard[7]), Fmt(act.m_bioStandard[7] - self.m_bioProperty[7].GetScore())])
+		self.m_activityTableLog[-1][Common.ACT_TABLE_LOG_FIS_URINATE_START : Common.ACT_TABLE_LOG_FIS_URINATE_START + len(propertyCalc)] = propertyCalc
+		
 #-----------------------------------------------------------------------------------------------------------------------------------------
 def LoadSocialization():
 	Global.Logger.LogDebug("Load social\n")
@@ -2032,13 +2243,9 @@ def LoadSocialization():
 			socialValue = {}
 			for i in range(0, len(roles)):
 				socialValue[roles[i]] = float(row[i + 1])
-			Global.Logger.LogDebug("Socava "+curRole +" "+str(socialValue)+"\n")
 			for agent in Agent.agentList:
-				Global.Logger.LogDebug("cekira "+agent.m_role+" "+curRole+"\n")
 				if agent.m_role == curRole:
 					agent.m_socialValue = socialValue
-					Global.Logger.LogDebug("Mestaika "+agent.m_role +" "+str(agent.m_socialValue)+"\n")
-	Global.Logger.LogDebug("Demonia\n")
 	Global.Logger.DumpDebug()
 
 def TranslateToGridPos(pos,mazeIndex):

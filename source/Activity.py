@@ -291,6 +291,8 @@ class Activity:
 		self.m_urgencyValue = params[Common.TABLE_ACTIVITY_URGENCY_VALUE]
 		self.m_lastRunningTime = 0
 		self.m_lastUpdateTime = Global.g_timer.m_time
+		
+		self.m_activityKey = ""
 	
 	def GetPostActivity(self):
 		Global.Logger.LogDebug("Gapoktan "+str(self.m_postActivity)+" "+str(self.m_targetRoom)+"\n")
@@ -399,9 +401,14 @@ class Activity:
 	def GetDescription(self):
 		return self.m_description
 	
-	def GoTo(self):
+	def GoTo(self, agent = None):
+		self.m_activityKey = self.m_ID+"-"+str(Global.g_timer.m_time)
 		self.m_status = Common.ACT_STATUS_GOTO
 		self.m_currentInteractAgent = self.GetInteractAgent()
+		if agent != None and self.m_targetRoom == 0:
+			agent.AddActivityTableEntry(self.m_activityKey)
+			agent.PutActTableLogValue(self.m_ID, Common.ACT_TABLE_LOG_SWITCH_TO)
+			agent.PutActTableLogValue(Global.g_timer.GetFullFormattedTime(), Common.ACT_TABLE_LOG_TIME)
 	
 	def Suspend(self):
 		self.m_status = Common.ACT_STATUS_SUSPEND

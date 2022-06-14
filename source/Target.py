@@ -79,6 +79,7 @@ class Target:
 	def StopUsage(self, agent="Auto", putLog = True):
 		if not self.m_isRun:
 			Global.Logger.LogDebug("Setoping without startig. What the matter?\n")
+			return
 		Global.Logger.LogDebug("RegisterUsage by stop "+self.m_id+" start "+str(self.m_usageStartTime)+" end "+str(Global.g_timer.m_time)+"\n")
 		self.m_isRun = False
 		usage = [Common.ENERGY_TYPE_ELECTRICITY, self.m_id, self.m_activatorAgent, self.m_activatedByAct, self.m_usageStartTime, Global.g_timer.m_time, self.m_powerCons]
