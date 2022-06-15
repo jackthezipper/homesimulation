@@ -199,6 +199,7 @@ class Agent:
 		for room in Global.g_myHouse.m_rooms:
 			if room.IsInRoom(self.pos):
 				self.m_currentRoom = room
+				self.m_targetRoom = self.m_currentRoom
 				Global.Logger.LogDebug("serumpa "+room.m_name+"\n")
 				break
 		Global.Logger.LogDebug("serupet\n")
@@ -2213,6 +2214,12 @@ class Agent:
 			return
 		self.m_activityTableLog[id][pos] = value
 	
+	def FindActTableLogIdx(self, key):
+		for i in range(0, len(self.m_activityTableLog)):
+			if self.m_activityTableLog[i][0] == key:
+				return i
+		return -1
+	
 	def AddFisioToActTableLog(self):
 		if not self.m_shouldLogActivityTable:
 			return
@@ -2266,6 +2273,7 @@ class Agent:
 			scoreToAdd = next((score for score in self.m_actScore if score[0] == self.m_currentActivity.m_ID), None)
 			if scoreToAdd != None:
 				self.m_activityTableLog[-1][Common.ACT_TABLE_LOG_WISH_TOTAL : Common.ACT_TABLE_LOG_HR_FLOORSTATUS] = scoreToAdd[1:]
+				self.PutActTableLogValue(str(self.m_currentActivity.m_score), Common.ACT_TABLE_LOG_SCORE)
 		if self.m_targetRoom != None:
 			lightInfo = self.m_targetRoom.GetLightInfo()
 			for i in range(0, len(lightInfo)):

@@ -172,8 +172,9 @@ class Activity:
 			self.m_requiredResource.append(roomResList)
 
 		self.m_effect = []
+		# Global.Logger.LogDebug("parsu "+str(len(params))+"\n")
 		# Global.Logger.LogDebug("porapi "+str(params)+"\n")
-		# Global.Logger.DumpDebug()
+		# Global.Logger.DumpDebug(10)
 		effectList = params[Common.TABLE_ACTIVITY_EFFECT].split("|")
 		# Global.Logger.LogDebug("elis "+str(effectList)+"\n")
 		# Global.Logger.DumpDebug()
@@ -209,6 +210,8 @@ class Activity:
 		
 		self.m_activityKey = ""
 		self.m_agent = agent
+		self.m_waterLog = []
+		self.m_elecLog = []
 	
 	def GetPostActivity(self):
 		Global.Logger.LogDebug("Gapoktan "+str(self.m_postActivity)+" "+str(self.m_targetRoom)+"\n")
@@ -319,6 +322,8 @@ class Activity:
 	
 	def GoTo(self, agent = None):
 		self.m_activityKey = self.m_ID+"-"+str(Global.g_timer.m_time)
+		self.m_waterLog = []
+		self.m_elecLog = []
 		self.m_status = Common.ACT_STATUS_GOTO
 		self.m_currentInteractAgent = self.GetInteractAgent()
 		if agent != None and self.m_targetRoom == 0:
@@ -562,6 +567,11 @@ class Activity:
 			self.CalculateEffect(agent, effect)
 	
 	def CalculateEffect(self, agent, effect):
+		resLog = [0] * 5
+		resType = ["RawFood", "DrinkWater", "DirtyUtensils", "Food", "Trash"]
+		for i in range(0,5):
+			if resType[i] in agent.m_currentRoom.m_resource:
+				resLog[i] = agent.m_currentRoom.m_resource[resType[i]][0]
 		if effect[0] == "Room":
 			# room = next((rom for rom in Global.g_myHouse.m_rooms if rom.m_name == self.m_rooms[self.m_targetRoom]), None)
 			if agent.m_currentRoom != None:
@@ -590,6 +600,15 @@ class Activity:
 						powerUsage = object.m_powerCons
 					energyUsage = [Common.ENERGY_TYPE_ELECTRICITY, object.m_id, agent.m_role, self.m_ID, Global.g_timer.m_time - self.m_lastRunningTime, Global.g_timer.m_time, powerUsage]
 					Global.g_myHouse.RegisterEnergyUsage(energyUsage)
+					idx = len(self.m_elecLog)
+					if len(self.m_elecLog) == 0 or not object.m_id in self.m_elecLog:
+						self.m_elecLog.append(object.m_id)
+					else:
+						idx = 0 if self.m_elecLog[0] == object.m_id else 1
+					agent.PutActTableLogValue(object.m_id, Common.ACT_TABLE_LOG_HR_ELECTRICITY_START + idx*3, force = True)
+					agent.PutActTableLogValue(str(self.m_lastRunningTime), Common.ACT_TABLE_LOG_HR_ELECTRICITY_START + idx*3 + 1, force = True)
+					agent.PutActTableLogValue(str(powerUsage * self.m_lastRunningTime), Common.ACT_TABLE_LOG_HR_ELECTRICITY_START + idx*3 + 2, force = True)
+						
 					Global.Logger.LogDebug("RegisterUsage by effect "+object.m_id+" larunta "+str(self.m_lastRunningTime)+" end "+str(Global.g_timer.m_time)+"\n")
 					Global.HouseLog("Stopping device "+object.m_id+" by "+agent.m_role+" Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
 				# if agent.m_currentRoom.CheckResource(effect[0], usage):
@@ -629,6 +648,12 @@ class Activity:
 			if effect[1] != 1:
 				room = agent.m_currentRoom if effect in agent.m_currentRoom.m_resource.keys() else Global.g_myHouse.FindGeneralRoomForResource(effect[0])
 				self.m_prevResValue = 0 if room == None else room.m_resource[effect[0]][0]
+		
+		for i in range(0,5):
+			if resType[i] in agent.m_currentRoom.m_resource:
+				resLog[i] = agent.m_currentRoom.m_resource[resType[i]][0] - resLog[i]
+				if resLog[i] != 0:
+					agent.PutActTableLogValue(str(resLog[i]), Common.ACT_TABLE_LOG_HR_RESOURCES_START + i, force = True)
 	
 	def CheckResource(self, room, agent):
 		ok = True
@@ -678,8 +703,12 @@ class Activity:
 		if (effectType == "Water" or effectType == "Gas") and autoRoom:
 			if effectType == "Water":
 				usage = [Common.ENERGY_TYPE_WATER, agent.m_role, self.m_ID, room.m_name, Global.g_timer.m_time, amount]
+				agent.PutActTableLogValue(amount, Common.ACT_TABLE_LOG_HR_WATER_START + len(self.m_waterLog), force = True)
+				self.m_waterLog.append(amount)
 			else:
 				usage = [Common.ENERGY_TYPE_GAS, agent.m_role, self.m_ID, Global.g_timer.m_time, amount]
+				agent.PutActTableLogValue(self.m_duration, Common.ACT_TABLE_LOG_HR_GAS_START, force = True)
+				agent.PutActTableLogValue(amount, Common.ACT_TABLE_LOG_HR_GAS_START + 1, force = True)
 			Global.g_myHouse.RegisterEnergyUsage(usage)
 	
 	def GetInteractAgent(self):
