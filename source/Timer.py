@@ -21,17 +21,23 @@ class Timer():
 		self.m_elapsedAdjuster = K_ADJUSTER
 		self.m_time = MINUTE_IN_HOUR
 	
-	def GetHour(self):
-		return int(math.floor(self.m_time / MINUTE_IN_HOUR) % HOUR_IN_DAY)
+	def GetHour(self, time = -1):
+		if time == -1:
+			time = self.m_time
+		return int(math.floor(time / MINUTE_IN_HOUR) % HOUR_IN_DAY)
 	
 	def GetHourForTime(self,time):
 		return int(math.floor(time / MINUTE_IN_HOUR) % HOUR_IN_DAY)
 	
-	def GetMinute(self):
-		return (self.m_time % MINUTE_IN_HOUR)
+	def GetMinute(self, time = -1):
+		if time == -1:
+			time = self.m_time
+		return (time % MINUTE_IN_HOUR)
 	
-	def GetDay(self):
-		return int(self.m_time / (HOUR_IN_DAY * MINUTE_IN_HOUR))
+	def GetDay(self, time = -1):
+		if time == -1:
+			time = self.m_time
+		return int(time / (HOUR_IN_DAY * MINUTE_IN_HOUR))
 	
 	def GetWeek(self):
 		return int(self.m_time / (HOUR_IN_DAY * MINUTE_IN_HOUR * 7))
@@ -46,11 +52,16 @@ class Timer():
 	
 	def GetTodayTime(self):
 		return int(self.m_time % (HOUR_IN_DAY * MINUTE_IN_HOUR))
-	def GetFormattedHour(self):
-		return "{:02d}:{:02d}".format(self.GetHour(), self.GetMinute())
 	
-	def GetFullFormattedTime(self):
-		return "Day {} at {:02d}:{:02d}".format(self.GetDay(), self.GetHour(), self.GetMinute())
+	def GetFormattedHour(self, time = -1):
+		if time == -1:
+			time = self.m_time
+		return "{:02d}:{:02d}".format(self.GetHour(time), self.GetMinute(time))
+	
+	def GetFullFormattedTime(self, time = -1):
+		if time == -1:
+			time = self.m_time
+		return "Day {} at {:02d}:{:02d}".format(self.GetDay(time), self.GetHour(time), self.GetMinute(time))
 	
 	def Reset(self):
 		self.m_time = MINUTE_IN_HOUR

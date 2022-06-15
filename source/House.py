@@ -243,6 +243,16 @@ class Room:
 			for res in self.m_resource.keys():
 				Global.Logger.LogDebug(res+" "+str(self.m_resource[res][0])+"\n")
 	
+	def GetLightInfo(self):
+		index = Global.g_timer.m_time / Timer.MINUTE_IN_HOUR
+		baseLight = self.m_tableLight[index] if len(self.m_tableLight) > 0 else 65
+		return [baseLight, (self.m_light - baseLight), self.m_light]
+	
+	def GetTemperatureInfo(self):
+		index = Global.g_timer.m_time / Timer.MINUTE_IN_HOUR
+		baseTemperature = self.m_tableTemperature[index] if len(self.m_tableTemperature) > 0 else 21
+		return [baseTemperature, (self.m_temperature - baseTemperature), self.m_temperature]
+	
 	def LogRoom(self):
 		Global.HouseLog("Log for room: "+self.m_name+"\n")
 		Global.HouseLog("Floor Status: "+str(self.m_value)+"\n")

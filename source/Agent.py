@@ -84,6 +84,10 @@ class Agent:
 	s_scaleSpeed = 8.0
 	
 	def __init__(self,position,m_targetPoint,index,role = "ayah",state = STATE_IDLE):
+		self.m_activityTableLog = []
+		self.m_shouldLogActivityTable = False
+		self.m_prevFrameActivity = ""
+		self.m_actScore = []
 		self.pos = position
 		self.m_targetPoint = m_targetPoint
 		self.entryPoint = None
@@ -140,7 +144,7 @@ class Agent:
 		self.m_currentAbility = 0
 		dbFile = resPath+self.m_role+"\\"+Config.ACTIVITY_DB_FILE
 		matrixFile = resPath+self.m_role+"\\"+Config.ACTIVITY_MATRIX_FILE
-		self.m_activityList = Activity.GenerateActivity(dbFile, matrixFile	)
+		self.m_activityList = Activity.GenerateActivity(dbFile, matrixFile, self)
 		self.m_currentActivity = None
 		self.m_currentRoom = None
 		self.m_activityLog = []
@@ -171,8 +175,6 @@ class Agent:
 		self.m_passingDoor = None
 		self.m_socialValue = {}
 		self.m_pauseMovement = False
-		self.m_activityTableLog = []
-		self.m_shouldLogActivityTable = False
 	
 	def SetActivity(self, activity):
 		self.m_currentActivity = activity
@@ -212,6 +214,9 @@ class Agent:
 					self.m_currentActivity.Start(self.m_role)
 					self.ActivityLog("Starting "+self.m_currentActivity.m_ID+" at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
 					self.SetState(STATE_WAIT)
+					self.AddActivityTableEntry(self.m_currentActivity.m_ID+str(Global.g_timer.m_time))
+					self.PutActTableLogValue(self.m_currentActivity.m_ID, Common.ACT_TABLE_LOG_SWITCH_TO)
+					self.PutActTableLogValue(Global.g_timer.GetFullFormattedTime(), Common.ACT_TABLE_LOG_TIME)
 					# self.m_currentRoom.m_countAgent += 1
 					continue
 				if row[Common.IC_PROPERTY] == "Ability":
@@ -512,6 +517,7 @@ class Agent:
 				propertyRecord.extend(property.ProcessOutput())
 			
 			self.AddFisioToActTableLog()
+			self.AddMiscToActTableLog()
 			
 			if self.m_weekBioRecord != Global.g_timer.GetWeek():
 				self.m_weekBioRecord = Global.g_timer.GetWeek()
@@ -573,6 +579,9 @@ class Agent:
 	
 	def UpdateActivity(self):
 		# print("update act "+self.m_bioActivityToTrigger+" cur "+("None" if self.m_currentActivity == None else self.m_currentActivity.m_ID))
+		if self.m_currentActivity != None:
+			self.m_prevFrameActivity = self.m_currentActivity.m_ID
+		self.m_actScore = []
 		Global.Logger.LogDebug("Current Activity "+self.m_role+" "+("None" if self.m_currentActivity == None else self.m_currentActivity.m_ID)+" lon "+str(len(self.m_activityList))+" viona "+self.m_bioActivityToTrigger+"\n")
 		self.Log("Current Activity "+("None" if self.m_currentActivity == None else self.m_currentActivity.m_ID)+"\n")
 		if self.m_currentActivity == None:
@@ -755,13 +764,18 @@ class Agent:
 			self.Log("Activity Emotional Multiplication:\n")
 			lastEmoScore = 0
 			curMultiplier = 1
+			self.m_actScore = []
 			for act in actList:
+				score = [act.m_ID]
 				# act.m_score += (act.m_emotionalScore + act.m_planScore)
 				if lastEmoScore != 0:
 					if act.m_emotionalScore < lastEmoScore:
 						curMultiplier -= 0.1
 						curMultiplier = max(curMultiplier,0)
 				wish = act.m_planProperty[Common.PLAN_PROPERTY_WISH] * curMultiplier
+				score.append(str(wish))
+				score.append(str(act.m_planProperty[Common.PLAN_PROPERTY_WISH]))
+				score.append(str(curMultiplier))
 				act.m_planScore = act.m_planProperty[Common.PLAN_PROPERTY_WISH] * curMultiplier
 				# Global.Logger.LogDebug("lasto "+(self.m_lastActivity if self.m_lastActivity != None else "Neona")+"\n")
 				# if self.m_lastActivity != None:
@@ -772,18 +786,34 @@ class Agent:
 					# Global.Logger.LogDebug(str(self.GetActivityById(self.m_lastActivity).m_matrix.keys()))
 				Global.Logger.LogDebug("Calc avatar "+self.m_lastActivity+" "+act.m_ID+"\n")
 				advantage = act.m_planProperty[Common.PLAN_PROPERTY_ADVANTAGE] + (0 if self.m_lastActivity == None else self.GetActivityById(self.m_lastActivity).m_matrix[act.m_ID])
+				score.append(str(advantage))
+				score.append(str(act.m_planProperty[Common.PLAN_PROPERTY_ADVANTAGE]))
+				score.append(str(0 if self.m_lastActivity == None else self.GetActivityById(self.m_lastActivity).m_matrix[act.m_ID]))
 				act.m_planScore += act.m_planProperty[Common.PLAN_PROPERTY_ADVANTAGE] + (0 if self.m_lastActivity == None else self.GetActivityById(self.m_lastActivity).m_matrix[act.m_ID])
 				rule = (act.m_planProperty[Common.PLAN_PROPERTY_AUTHORITY] * act.m_planProperty[Common.PLAN_PROPERTY_OBEDIENCE])# * 0) #dummy value 0; fill it with agent existance at home
+				score.append(str(rule))
+				score.append(str(act.m_planProperty[Common.PLAN_PROPERTY_AUTHORITY]))
+				score.append(str(act.m_planProperty[Common.PLAN_PROPERTY_OBEDIENCE]))
 				act.m_planScore += (act.m_planProperty[Common.PLAN_PROPERTY_AUTHORITY] * act.m_planProperty[Common.PLAN_PROPERTY_OBEDIENCE]) #dummy value 0; fill it with agent existance at home
 				need = act.m_planProperty[Common.PLAN_PROPERTY_URGENCY]
 				envUrgency = act.CalculateEnvUrgency(self)
 				
+				urgencyIdx = len(score)
+				score.append("")
 				urgency = act.m_planProperty[Common.PLAN_PROPERTY_URGENCY]
 				urgency += (10 - self.GetProperty("Dirty").GetScore())
-				for agent in Agent.agentList:
-					if agent.m_role != self.m_role:
-						urgency += (agent.GetProperty("Hunger").GetScore() + agent.GetProperty("Thirst").GetScore())
+				score.append(str(act.m_planProperty[Common.PLAN_PROPERTY_URGENCY]))
+				score.append(str(10 - self.GetProperty("Dirty").GetScore()))
+				qualAgt = [agent for agent in Agent.agentList if agent.m_role != self.m_role]
+				for agent in qualAgt:
+					urgency += (agent.GetProperty("Hunger").GetScore() + agent.GetProperty("Thirst").GetScore())
+					score.append(str(agent.GetProperty("Hunger").GetScore()))
+					score.append(str(agent.GetProperty("Thirst").GetScore()))
+				if len(qualAgt) > 0:
+					urgency += qualAgt[-1].GetProperty("Dirty").GetScore()
+					score.append(str(qualAgt[-1].GetProperty("Dirty").GetScore()))
 				urgency += envUrgency
+				score[urgencyIdx] = str(urgency)
 				
 				act.m_planScore += urgency#(act.m_planProperty[Common.PLAN_PROPERTY_URGENCY] + envUrgency)
 				act.m_planScore /= 4
@@ -797,6 +827,7 @@ class Agent:
 				lastEmoScore = act.m_emotionalScore
 				Global.Logger.LogDebug(actDebugStr)
 				self.Log(actDebugStr)
+				self.m_actScore.append(score)
 			
 			actList.sort(key = lambda x: x.m_score,reverse = True)
 			
@@ -917,6 +948,7 @@ class Agent:
 				self.m_currentActivity.Suspend()
 				self.m_currentActivity.SetToIncidental()
 				self.ActivityLog("Set "+self.m_currentActivity.m_ID+" to incidental due interact agent still interact with other agent at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
+				self.PutActTableLogValue(self.m_currentActivity.m_currentInteractAgent.m_role, Common.ACT_TABLE_LOG_AGENT_INCIDENTAL, force = True)
 			else:
 				self.ActivityLog("Switch activity to "+self.m_currentActivity.m_ID+" at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
 				self.CheckFollowingAgent()
@@ -2085,7 +2117,7 @@ class Agent:
 			outputWriter.writerow(columnName3)
 			outputWriter.writerow(columnName4)
 			for record in self.m_activityTableLog:
-				outputWriter.writerow(record)
+				outputWriter.writerow(record[1:])
 		
 	
 	def IsMultiValid(self, actId):
@@ -2224,6 +2256,27 @@ class Agent:
 		if not act.m_isBioActivity:
 			propertyCalc.extend([Fmt(act.m_bioStandard[7]), Fmt(act.m_bioStandard[7] - self.m_bioProperty[7].GetScore())])
 		self.m_activityTableLog[-1][Common.ACT_TABLE_LOG_FIS_URINATE_START : Common.ACT_TABLE_LOG_FIS_URINATE_START + len(propertyCalc)] = propertyCalc
+	
+	def AddMiscToActTableLog(self):
+		self.PutActTableLogValue(self.m_prevFrameActivity, Common.ACT_TABLE_LOG_CURRENT_ACT)
+		if self.m_followedAgent != None:
+			self.PutActTableLogValue(self.m_followedAgent.m_role, Common.ACT_TABLE_LOG_INITIATOR)
+		if self.m_currentActivity != None:
+			self.PutActTableLogValue(Global.g_timer.GetFormattedHour(self.m_currentActivity.m_startTime), Common.ACT_TABLE_LOG_TIMERANGE)
+			scoreToAdd = next((score for score in self.m_actScore if score[0] == self.m_currentActivity.m_ID), None)
+			if scoreToAdd != None:
+				self.m_activityTableLog[-1][Common.ACT_TABLE_LOG_WISH_TOTAL : Common.ACT_TABLE_LOG_HR_FLOORSTATUS] = scoreToAdd[1:]
+		if self.m_targetRoom != None:
+			lightInfo = self.m_targetRoom.GetLightInfo()
+			for i in range(0, len(lightInfo)):
+				self.PutActTableLogValue(str(lightInfo[i]), Common.ACT_TABLE_LOG_HR_LIGHT_START + i)
+			tempInfo = self.m_targetRoom.GetTemperatureInfo()
+			for i in range(0, len(tempInfo)):
+				self.PutActTableLogValue(str(tempInfo[i]), Common.ACT_TABLE_LOG_HR_TEMP_START + i)
+		self.PutActTableLogValue(str(self.m_emotionalFactor), Common.ACT_TABLE_LOG_EMO_TOTAL)
+		self.PutActTableLogValue(str(self.m_emotionalTotal), Common.ACT_TABLE_LOG_EMO_CCE)
+		self.PutActTableLogValue(str(self.m_currentAbility), Common.ACT_TABLE_LOG_ABILITY)
+		
 		
 #-----------------------------------------------------------------------------------------------------------------------------------------
 def LoadSocialization():

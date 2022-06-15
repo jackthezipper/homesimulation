@@ -12,7 +12,7 @@ import Global
 import Agent
 Agent = reload(Agent)
 
-def GenerateActivity(dbFile, matrixFile):
+def GenerateActivity(dbFile, matrixFile, agent):
 	# sourceFilePath	= os.path.dirname(os.path.abspath(__file__))
 	# inputFilePath	= sourceFilePath[0:sourceFilePath.rfind('\\')+1]+"input_file\\"+dbFile
 	activityList = {}
@@ -23,92 +23,7 @@ def GenerateActivity(dbFile, matrixFile):
 			if row[Common.TABLE_ACTIVITY_ID] == "ID":
 				continue
 			activityID = row[Common.TABLE_ACTIVITY_ID]
-			# # Global.Logger.LogDebug("loading activity "+activityID+"\n");
-			# bioEffectRun = []
-			# # bioEffectSuspend = []
-			# bioStandard = []
-			# for i in range(Common.TABLE_ACTIVITY_BIO_EFFECT_START, Common.TABLE_ACTIVITY_EMO_EFFECT):
-				# effStr = row[i].split(";")
-				# bioEffectRun.append(float(effStr[Common.ACT_EFFECT_RUN]))
-				# # bioEffectSuspend.append(float(effStr[Common.ACT_EFFECT_SUSPEND]))
-				# bioStandard.append(float(effStr[Common.ACT_EFFECT_STD]))
-			
-			# emoEffect = row[Common.TABLE_ACTIVITY_EMO_EFFECT].split(";")
-			# # Global.Logger.LogDebug("loading activity bio eff "+str(bioEffectRun)+"\n")
-			# # Global.Logger.LogDebug("loading activity emo eff "+emoEffect[Common.ACT_EFFECT_RUN]+"\n")
-			
-			# duration = -1
-			# if(row[Common.TABLE_ACTIVITY_DURATION]) != "-":
-				# match = re.match(r'(\d+):(\d+)',row[Common.TABLE_ACTIVITY_DURATION])
-				# duration = int(match.group(1))*Timer.MINUTE_IN_HOUR + int(match.group(2))
-			# # Global.Logger.LogDebug("loading activity dur "+row[Common.TABLE_ACTIVITY_DURATION]+"\n")
-			
-			# startTime = -1
-			# match = re.match(r'(\d+):(\d+)', row[Common.TABLE_ACTIVITY_START])
-			# if match != None:
-				# startTime = int(match.group(1))*Timer.MINUTE_IN_HOUR + int(match.group(2))
-			
-			# # Global.Logger.LogDebug("loading activity biostd "+str(bioStandard)+"\n");
-			
-			# if (row[Common.TABLE_ACTIVITY_ROOM] == "-"):
-				# rooms = []
-			# else:
-				# rooms = row[Common.TABLE_ACTIVITY_ROOM].split("|")
-			
-			# planProperty = []
-			# for i in range(Common.TABLE_ACTIVITY_PLAN_START, Common.TABLE_ACTIVITY_ROUTINE):
-				# planProperty.append(0.0 if row[i] == "" else float(row[i]))
-			
-			# routine = []
-			# match = re.match(r'(\d+)\|(.+)',row[Common.TABLE_ACTIVITY_ROUTINE])
-			# if match != None:
-				# # print(row[Common.TABLE_ACTIVITY_ROUTINE])
-				# routine.append(int(match.group(1)))
-				# # print(match.group(1))
-				# rTimeStr = match.group(2).split(";")
-				# rTime = []
-				# for tstr in rTimeStr:
-					# rTime.append(int(tstr))
-				# routine.append(rTime)
-			
-			# prequisite = []
-			# if row[Common.TABLE_ACTIVITY_PREQUISITE] != "-":
-				# prequisite = row[Common.TABLE_ACTIVITY_PREQUISITE].split(";")
-			
-			# if (row[Common.TABLE_ACTIVITY_ELIMINATE_ACTIVITY] == "-"):
-				# eliminate = []
-			# else:
-				# eliminate = row[Common.TABLE_ACTIVITY_ELIMINATE_ACTIVITY].split(";")
-			
-			# status = row[Common.TABLE_ACTIVITY_STATUS].split("|")
-			# light = row[Common.TABLE_ACTIVITY_LIGHTTHRESHOLD].split("|")
-			# temperature = row[Common.TABLE_ACTIVITY_TEMPERATURE].split("|")
-			
-			# terms = [light, status, temperature]
-			
-			# tRes = row[Common.TABLE_ACTIVITY_RESOURCE].split("|")
-			
-			# resource = []
-			# for res in tRes:
-				# resource.append(res.split(";"))
-			
-			# # print(row[Common.TABLE_ACTIVITY_AUTO] +"-"+row[Common.TABLE_ACTIVITY_REPEAT]+"-"+row[Common.TABLE_ACTIVITY_PRIORITY])
-			# effectList = row[Common.TABLE_ACTIVITY_EFFECT].split("|")
-			# effect = []
-			# for efL in effectList:
-				# if efL == "-":
-					# effectPerRoomList = []
-				# else:
-					# effectPerRoomList = efL.split(";")
-				# roomEf = []
-				# for ef in effectPerRoomList:
-					# efSingle = ef.split(":")
-					# roomEf.append(efSingle)
-				# effect.append(roomEf)
-			
-			# activity = Activity(row[Common.TABLE_ACTIVITY_ID], row[Common.TABLE_ACTIVITY_DESC], int(row[Common.TABLE_ACTIVITY_AUTO]), duration, int(row[Common.TABLE_ACTIVITY_REPEAT]), (row[Common.TABLE_ACTIVITY_BIOACTIVITY] == "1"), [bioEffectRun, bioEffectSuspend], [float(emoEffect[Common.ACT_EFFECT_RUN]), float(emoEffect[Common.EMO_EFFECT_SUSPEND])], startTime, int(row[Common.TABLE_ACTIVITY_PRIORITY]), bioStandard, float(emoEffect[Common.ACT_EFFECT_STD]), float(row[Common.TABLE_ACTIVITY_PHY_STD]), planProperty, rooms, routine, prequisite, row[Common.TABLE_ACTIVITY_INTERACT_AGENT], (int(row[Common.TABLE_ACTIVITY_OUTDOOR]) == 1), terms, row[Common.TABLE_ACTIVITY_DEVICE].split("|"), row[Common.TABLE_ACTIVITY_NEXT_ACTIVITY], eliminate, row[Common.TABLE_ACTIVITY_SET], resource, effect)
-			# activity = Activity(row[Common.TABLE_ACTIVITY_ID], row[Common.TABLE_ACTIVITY_DESC], int(row[Common.TABLE_ACTIVITY_AUTO]), duration, int(row[Common.TABLE_ACTIVITY_REPEAT]), (row[Common.TABLE_ACTIVITY_BIOACTIVITY] == "1"), [bioEffectRun], [float(emoEffect[Common.ACT_EFFECT_RUN]), float(emoEffect[Common.EMO_EFFECT_SUSPEND])], startTime, int(row[Common.TABLE_ACTIVITY_PRIORITY]), bioStandard, float(emoEffect[Common.ACT_EFFECT_STD]), float(row[Common.TABLE_ACTIVITY_PHY_STD]), planProperty, rooms, routine, prequisite, row[Common.TABLE_ACTIVITY_INTERACT_AGENT], (int(row[Common.TABLE_ACTIVITY_OUTDOOR]) == 1), terms, row[Common.TABLE_ACTIVITY_DEVICE].split("|"), row[Common.TABLE_ACTIVITY_NEXT_ACTIVITY], eliminate, row[Common.TABLE_ACTIVITY_SET], resource, effect)
-			activity = Activity(row)#[Common.TABLE_ACTIVITY_ID], row[Common.TABLE_ACTIVITY_DESC], int(row[Common.TABLE_ACTIVITY_AUTO]), duration, int(row[Common.TABLE_ACTIVITY_REPEAT]), (row[Common.TABLE_ACTIVITY_BIOACTIVITY] == "1"), [bioEffectRun], [float(emoEffect[Common.ACT_EFFECT_RUN]), float(emoEffect[Common.EMO_EFFECT_SUSPEND])], startTime, int(row[Common.TABLE_ACTIVITY_PRIORITY]), bioStandard, float(emoEffect[Common.ACT_EFFECT_STD]), float(row[Common.TABLE_ACTIVITY_PHY_STD]), planProperty, rooms, routine, prequisite, row[Common.TABLE_ACTIVITY_INTERACT_AGENT], (int(row[Common.TABLE_ACTIVITY_OUTDOOR]) == 1), terms, row[Common.TABLE_ACTIVITY_DEVICE].split("|"), row[Common.TABLE_ACTIVITY_NEXT_ACTIVITY], eliminate, row[Common.TABLE_ACTIVITY_SET], resource, effect)
+			activity = Activity(row, agent)
 			activityList[activityID] = activity
 	
 	with open(matrixFile) as csvfile:
@@ -145,7 +60,7 @@ class Activity:
 	s_multiAgent = {}
 	s_pendingEffect = []
 	# def __init__(self, ID, description, auto, duration, maxRepeat, isBioActivity, bioEffect, emotionalEffect, startTime, priority, bioStandard, emotionalStandard, phyStandard, planProperty, rooms, routine, prequisite, interactAgent, outdoor, terms, device, next, eliminate, activitySet, resource, effect):
-	def __init__(self, params):
+	def __init__(self, params, agent):
 		self.m_ID = params[Common.TABLE_ACTIVITY_ID]
 		self.m_auto = int(params[Common.TABLE_ACTIVITY_AUTO]) == 1
 		# Global.Logger.LogDebug("init activity "+self.m_ID)
@@ -293,6 +208,7 @@ class Activity:
 		self.m_lastUpdateTime = Global.g_timer.m_time
 		
 		self.m_activityKey = ""
+		self.m_agent = agent
 	
 	def GetPostActivity(self):
 		Global.Logger.LogDebug("Gapoktan "+str(self.m_postActivity)+" "+str(self.m_targetRoom)+"\n")
@@ -511,6 +427,8 @@ class Activity:
 		self.m_isIncidental = True
 		self.m_remainingIncidentalTime = SUSPEND_TIME[self.m_priority] * Timer.MINUTE_IN_HOUR
 			#self.m_rangeDuration = ((3 + SUSPEND_TIME[self.m_priority]) * Timer.MINUTE_IN_HOUR) - self.m_duration
+		self.m_agent.PutActTableLogValue(Global.g_timer.GetFullFormattedTime(), Common.ACT_TABLE_LOG_INCIDENTAL, force = True)
+		self.m_agent.PutActTableLogValue(Global.g_timer.GetFullFormattedTime(Global.g_timer.m_time + self.m_remainingIncidentalTime), Common.ACT_TABLE_LOG_INCIDENTALTIME, force = True)
 	
 	def GetTargetRoom(self):
 		Global.Logger.LogDebug("grataro gato da rum "+self.m_ID+" "+str(self.m_targetRoom)+" "+str(self.m_rooms)+"\n")
@@ -649,9 +567,12 @@ class Activity:
 			if agent.m_currentRoom != None:
 				if effect[1] == 0:
 					agent.m_currentRoom.m_value += effect[2]
+					agent.PutActTableLogValue(str(effect[2]), Common.ACT_TABLE_LOG_HR_FLOORSTATUS, force = True)
 				elif effect[1] == 3:
 					agent.m_currentRoom.m_value += (effect[2] * agent.m_currentRoom.m_value)
+					agent.PutActTableLogValue(str(effect[2] * agent.m_currentRoom.m_value), Common.ACT_TABLE_LOG_HR_FLOORSTATUS, force = True)
 				elif effect[1] == 5:
+					agent.PutActTableLogValue(str(effect[2] - agent.m_currentRoom.m_value), Common.ACT_TABLE_LOG_HR_FLOORSTATUS, force = True)
 					agent.m_currentRoom.m_value = effect[2]
 		else:
 			effectValue = 0
