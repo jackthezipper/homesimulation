@@ -524,6 +524,7 @@ class Agent:
 				self.m_weekBioRecord = Global.g_timer.GetWeek()
 				self.m_bioRecord.append([])
 			self.m_bioRecord[self.m_weekBioRecord].append(propertyRecord)
+			self.m_shouldLogActivityTable = False
 		
 		timeB = int(time.time()*1000)
 		self.UpdateAgentMovement(dt)
@@ -534,7 +535,6 @@ class Agent:
 		Global.Logger.LogDebug("\n agent pos "+self.m_role+" "+str(self.pos)+"\n")
 		Global.Logger.DumpDebug()
 		self.m_shouldUpdate = False
-		self.m_shouldLogActivityTable = False
 		return self.pos
 	
 	def IsLastActivityRunning(self):
@@ -863,6 +863,8 @@ class Agent:
 								self.m_pendingActivity.Pause()
 								if self.m_target != None:
 									self.m_target.SetAvailable(True, self.m_role)
+									if not self.m_pendingActivity.m_auto and self.m_target.m_powerCons > 0:
+										self.m_target.StopUsage(self.m_role)
 									self.m_target = None
 							self.SetActivity(actList[0])
 					else:

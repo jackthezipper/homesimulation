@@ -419,6 +419,15 @@ class House:
 				for room in self.m_rooms:
 					room.LogRoom()
 	
+	def GetLastUsage(self, type):
+		usageData = filter(lambda usage: usage[0] == type, self.m_energyUsage)
+		if type == ENERGY_TYPE_ELECTRICITY:
+		elif type == ENERGY_TYPE_WATER:
+		elif type == ENERGY_TYPE_GAS:
+			data = usageData[-1]
+			return [data[4], data[1], "-", data[2]]
+		return []
+	
 	def StopAllUsage(self):
 		for room in self.m_rooms:
 			room.StopAllUsage()
