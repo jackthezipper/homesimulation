@@ -421,11 +421,25 @@ class House:
 	
 	def GetLastUsage(self, type):
 		usageData = filter(lambda usage: usage[0] == type, self.m_energyUsage)
+		totalUsage = 0
 		if type == ENERGY_TYPE_ELECTRICITY:
+			for uData in usageData:
+				duration = uData[5] - uData[4]
+				totalUsage += duration*uData[6]/60
+			deviceData = filter(lambda usage: not usage[1].startswith("LA") and not usage[1].startswith("KP"), usageData)
+			data = deviceData[-1]
+			duration = data[5] - data[4]
+			return [(duration, duration*data[6]/60), data[2], data[1], data[3], totalUsage]
 		elif type == ENERGY_TYPE_WATER:
-		elif type == ENERGY_TYPE_GAS:
+			for uData in usageData:
+				totalUsage += uData[5]
 			data = usageData[-1]
-			return [data[4], data[1], "-", data[2]]
+			return [data[5], data[1], "-", data[2], totalUsage]
+		elif type == ENERGY_TYPE_GAS:
+			for uData in usageData:
+				totalUsage += uData[4]
+			data = usageData[-1]
+			return [data[4], data[1], "-", data[2], totalUsage]
 		return []
 	
 	def StopAllUsage(self):
