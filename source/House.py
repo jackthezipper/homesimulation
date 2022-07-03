@@ -363,13 +363,13 @@ class House:
 		self.StopAllUsage()
 		electricityUsage = filter(lambda usage: usage[0] == Common.ENERGY_TYPE_ELECTRICITY, self.m_energyUsage)
 		outputFilePath = reportPath+"electricity_report.csv"
-		columnName = ["DeviceID","User", "Activity", "DayStart", "HourStart","Duration(Minute)","PowerConsumption"]
+		columnName = ["DeviceID","ActivatorAgent","DeactivatorAgent", "Activity", "DayStart", "HourStart","Duration(Minute)","PowerConsumption"]
 		with open(outputFilePath, mode='w+') as outputFile:
 			outputWriter = csv.writer(outputFile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
 			outputWriter.writerow(columnName)
 			for usage in electricityUsage:
-				duration = usage[5]-usage[4]
-				row = [usage[1], usage[2], usage[3], Timer.Timer.GetDayForTime(usage[4]), Timer.Timer.GetFormattedHourInDay(usage[4]), duration, duration*usage[6]/60]
+				duration = usage[6]-usage[5]
+				row = [usage[1], usage[2], usage[3], usage[4], Timer.Timer.GetDayForTime(usage[5]), Timer.Timer.GetFormattedHourInDay(usage[5]), duration, duration*usage[7]/60]
 				outputWriter.writerow(row)
 		
 		waterUsage = filter(lambda usage: usage[0] == Common.ENERGY_TYPE_WATER, self.m_energyUsage)
@@ -426,14 +426,14 @@ class House:
 		totalUsage = 0
 		if type == Common.ENERGY_TYPE_ELECTRICITY:
 			for uData in usageData:
-				duration = uData[5] - uData[4]
-				totalUsage += duration*uData[6]/60
+				duration = uData[6] - uData[5]
+				totalUsage += duration*uData[7]/60
 			deviceData = filter(lambda usage: not usage[1].startswith("LA") and not usage[1].startswith("KP"), usageData)
 			if len(deviceData) == 0:
 				return ["-", "-", "-", "-", 0]
 			data = deviceData[-1]
-			duration = data[5] - data[4]
-			return [(duration, duration*data[6]/60), data[2], data[1], data[3], totalUsage]
+			duration = data[6] - data[5]
+			return [duration*data[7]/60, data[2], data[1], data[4], totalUsage]
 		elif type == Common.ENERGY_TYPE_WATER:
 			for uData in usageData:
 				totalUsage += uData[5]

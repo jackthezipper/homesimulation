@@ -147,6 +147,7 @@ class Agent:
 		self.m_activityList = Activity.GenerateActivity(dbFile, matrixFile, self)
 		self.m_currentActivity = None
 		self.m_currentRoom = None
+		self.m_prevRoom = None
 		self.m_activityLog = []
 		self.m_weekActivityLog = -1
 		self.LoadBioProperty(Config.IC_FILE_NAME)
@@ -481,6 +482,8 @@ class Agent:
 		
 		for room in Global.g_myHouse.m_rooms:
 			if room.IsInRoom(self.pos):
+				if  self.m_currentRoom != None and (self.m_prevRoom == None or self.m_prevRoom.m_name != self.m_currentRoom.m_name):
+					self.m_prevRoom = self.m_currentRoom
 				self.m_currentRoom = room
 				Global.Logger.LogDebug("akoroom "+self.m_role+" "+str(self.pos)+" "+self.m_currentRoom.m_name+"\n")
 				break
@@ -1087,13 +1090,13 @@ class Agent:
 			Global.Logger.LogDebug("no stair\n")
 		
 		path = []
-		if start == end:
+		pStart = TranslateToGridPos(start,self.m_myFloorIndex)
+		pEnd = TranslateToGridPos(end,self.m_myFloorIndex)
+		if pStart == pEnd:
 			path.append(start)
-			path.append(start)
+			path.append(end)
 			Global.Logger.LogDebug("start end saming\n")
 		else:
-			pStart = TranslateToGridPos(start,self.m_myFloorIndex)
-			pEnd = TranslateToGridPos(end,self.m_myFloorIndex)
 			Global.Logger.LogDebug(self.m_role+" pos start "+str(pStart)+" "+str(start))
 			Global.Logger.LogDebug(self.m_role+" pos end "+str(pEnd)+" "+str(end))
 			Global.Logger.DumpDebug()
@@ -1217,6 +1220,7 @@ class Agent:
 					# self.m_roomCoordIndex = self.m_targetRoom.GetAvailableCoord()
 					targetCoord = self.m_targetRoom.GetTargetCoord(self.m_roomCoordIndex)
 					self.SetUseCoordRoom(True)
+					oldPath = self.myPath
 					if self.needStair:
 						stairIndex = "STAIR_"+str(self.m_myFloorIndex)
 						stairEntry = next(entry for entry in Agent.s_entryPointList if entry.target.m_id == stairIndex)
@@ -1225,8 +1229,22 @@ class Agent:
 						self.myPath = self.GeneratePath(start,targetCoord)
 					
 					if self.myPath == None or len(self.myPath) == 0:
-						Global.Logger.LogDebug("path da nehi, recal with oldie\n")
-						if self.oldEntryPoint != None:
+						Global.Logger.LogDebug("path da nehi, recal next dest\n")
+						if oldPath != None and len(oldPath) > 0:
+							if self.m_pathIndex < len(oldPath):
+								start = oldPath[self.m_pathIndex]
+								self.myPath = self.GeneratePath(start,targetCoord)
+								if self.myPath == None or len(self.myPath) == 0:
+									Global.Logger.LogDebug("path da nehi, recal prev dest\n")
+									start = oldPath[self.m_pathIndex - 1]
+									self.myPath = self.GeneratePath(start,targetCoord)
+							else:
+								start = oldPath[self.m_pathIndex - 2]
+								self.myPath = self.GeneratePath(start,targetCoord)
+								
+						
+						if (self.myPath == None or len(self.myPath) == 0) and self.oldEntryPoint != None:
+							Global.Logger.LogDebug("path da nehi, recal oldie\n")
 							start = self.oldEntryPoint.pos
 							if self.needStair:
 								stairIndex = "STAIR_"+str(self.m_myFloorIndex)
@@ -1295,6 +1313,25 @@ class Agent:
 		# self.CheckDoor()
 		# if not doorOk:
 			# return
+		
+		if self.m_prevRoom != None and self.m_currentRoom != None and (self.m_prevRoom.m_name != self.m_currentRoom.m_name) and self.m_currentRoom != self.m_targetRoom:
+			if self.m_currentRoom.m_light < 65:
+			# if self.m_currentRoom.GetLightInfo()[0] < 65:
+				lamps = self.m_currentRoom.GetLampToTurn(True)
+				stops = []
+				for lampId in lamps:
+					objLamp = next((entry for entry in Agent.s_entryPointList if entry.target.m_id == lampId), None)
+					if objLamp != None:
+						stops.append(objLamp.pos)
+						self.m_currentRoom.SetLampTurn(self, lampId, True)
+			elif self.m_currentRoom.GetLightInfo()[0] > 65:
+				lamps = self.m_currentRoom.GetLampToTurn(False)
+				stops = []
+				for lampId in lamps:
+					objLamp = next((entry for entry in Agent.s_entryPointList if entry.target.m_id == lampId), None)
+					if objLamp != None:
+						stops.append(objLamp.pos)
+						self.m_currentRoom.SetLampTurn(self, lampId, True)
 		
 		Global.Logger.LogDebug(self.m_role+" Path : ")
 		for path in self.myPath:
@@ -1605,6 +1642,7 @@ class Agent:
 		return True
 	
 	def CheckTerms(self, startInRoom):
+		oldPath = self.myPath
 		if self.m_currentActivity.m_status == Common.ACT_STATUS_SUSPEND:
 			return True, False, []
 			
@@ -1636,8 +1674,9 @@ class Agent:
 			return True, recalculatePath, []
 		
 		start = self.pos
-		if startInRoom and self.pos != self.entryPoint.pos:
-			start = self.entryPoint.pos
+		# if startInRoom and self.pos != self.entryPoint.pos:
+			# start = self.entryPoint.pos
+		first = True
 		Global.Logger.LogDebug("Sophian "+str(self.pos)+"\n")
 		newPath = []
 		if len(stopPlaces) > 0:
@@ -1649,6 +1688,15 @@ class Agent:
 						elif ep.target.m_type == "Fan":
 							ep.target.StartUsage(self.m_currentActivity.m_ID, agent = self.m_role)
 						path = self.GeneratePath(start,ep.pos, exactEnd=True)
+						if first and (path == None or len(path) == 0) and (oldPath != None and len(oldPath) > 0):
+							first = False
+							if self.m_pathIndex < len(oldPath):
+								path = self.GeneratePath(oldPath[self.m_pathIndex],ep.pos, exactEnd=True)
+								if (path == None or len(path) == 0):
+									path = self.GeneratePath(oldPath[self.m_pathIndex - 1],ep.pos, exactEnd=True)
+							else:
+								path = self.GeneratePath(oldPath[self.m_pathIndex - 2],ep.pos, exactEnd=True)
+								
 						Global.Logger.LogDebug("Extending path for device "+stops+" "+str(path)+"\n")
 						newPath.extend(path)
 						start = ep.pos
@@ -1666,6 +1714,17 @@ class Agent:
 					self.FindTargetAndEntryPointForObject(ep.target.m_id)
 					self.SetUseCoordRoom(False)
 					path = self.GeneratePath(start,ep.pos, insertCurPos = not recalculatePath)
+					if first and (path == None or len(path) == 0) and (oldPath != None and len(oldPath) > 0):
+						first = False
+						Global.Logger.LogDebug("ompak "+str(oldPath)+" dex "+str(self.m_pathIndex)+"\n")
+						Global.Logger.DumpDebug(10)
+						if self.m_pathIndex < len(oldPath):
+							path = self.GeneratePath(oldPath[self.m_pathIndex],ep.pos, insertCurPos = not recalculatePath)
+							if (path == None or len(path) == 0):
+								path = self.GeneratePath(oldPath[self.m_pathIndex - 1],ep.pos, insertCurPos = not recalculatePath)
+						else:
+							path = self.GeneratePath(oldPath[self.m_pathIndex - 2],ep.pos, insertCurPos = not recalculatePath)
+						
 					newPath.extend(path)
 					start = ep.pos
 					recalculatePath = True

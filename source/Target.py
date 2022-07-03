@@ -22,6 +22,7 @@ class Target:
 		self.m_usageStartTime = 0
 		self.m_activatedByAct = "Auto"
 		self.m_activatorAgent = "Auto"
+		self.m_isRun = False
 		if active:
 			self.StartUsage("Auto")
 		listEnvEffect = [] if envEffect == "-" else envEffect.split(";")
@@ -33,7 +34,6 @@ class Target:
 			self.m_autoTrigger[2] = float(self.m_autoTrigger[2]) #max valur to stop
 			self.m_autoTrigger[3] = float(self.m_autoTrigger[3]) #rate
 		self.m_inTimer = False
-		self.m_isRun = False
 		self.m_actKey = ""
 		
 	def setTargetPoint(self,point):
@@ -90,7 +90,7 @@ class Target:
 			return
 		Global.Logger.LogDebug("RegisterUsage by stop "+self.m_id+" start "+str(self.m_usageStartTime)+" end "+str(Global.g_timer.m_time)+"\n")
 		self.m_isRun = False
-		usage = [Common.ENERGY_TYPE_ELECTRICITY, self.m_id, self.m_activatorAgent, self.m_activatedByAct, self.m_usageStartTime, Global.g_timer.m_time, self.m_powerCons]
+		usage = [Common.ENERGY_TYPE_ELECTRICITY, self.m_id, self.m_activatorAgent, agent, self.m_activatedByAct, self.m_usageStartTime, Global.g_timer.m_time, self.m_powerCons]
 		Global.g_myHouse.RegisterEnergyUsage(usage)
 		
 		if putLog:

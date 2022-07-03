@@ -598,7 +598,7 @@ class Activity:
 					powerUsage = effect[2]
 					if powerUsage == 0:
 						powerUsage = object.m_powerCons
-					energyUsage = [Common.ENERGY_TYPE_ELECTRICITY, object.m_id, agent.m_role, self.m_ID, Global.g_timer.m_time - self.m_lastRunningTime, Global.g_timer.m_time, powerUsage]
+					energyUsage = [Common.ENERGY_TYPE_ELECTRICITY, object.m_id, agent.m_role, agent.m_role, self.m_ID, Global.g_timer.m_time - self.m_lastRunningTime, Global.g_timer.m_time, powerUsage]
 					Global.g_myHouse.RegisterEnergyUsage(energyUsage)
 					idx = len(self.m_elecLog)
 					if len(self.m_elecLog) == 0 or not object.m_id in self.m_elecLog:
