@@ -128,31 +128,22 @@ def astarv3(start, end,ignoreIndex,mazeIndex,liveBlocker = False):
 	for i in range(len(Map.maze[mazeIndex])):
 		for j in range(len(Map.maze[mazeIndex][0])):
 			Map.allNode[mazeIndex][i][j].reset()
-	# allHailNode = [[None for i in range(len(Map.maze[0]))] for j in range(len(Map.maze))]
-	# for i in range(len(Map.maze)):
-		# for j in range(len(Map.maze[0])):
-			# allHailNode[i][j] = Node(None, (i,j))
-	# Create start and end node
-	# start_node = allHailNode[start[0]][start[1]]
 	Global.Logger.LogDebug("start "+str(start)+" end "+str(end)+"\n")
 	
 	start_node = Map.allNode[mazeIndex][start[0]][start[1]]
 	start_node.makeSelfReference()
 	start_node.g = start_node.h = start_node.f = 0
-	# end_node = allHailNode[end[0]][end[1]]
 	end_node = Map.allNode[mazeIndex][end[0]][end[1]]
 	end_node.g = end_node.h = end_node.f = 0
 	
 	# Initialize both open and closed list
 	open_list = []
-	# closed_list = []
 	
 	# Add the start node
 	open_list.append(start_node)
 	start_node.isOpen = True
 	
 	# Loop until you find the end
-	# iter = 0
 	debugStr = ""
 	neighborPos = [(0, -1), (0, 1), (-1, 0), (1, 0)]
 	nodeCheck = None
@@ -164,25 +155,16 @@ def astarv3(start, end,ignoreIndex,mazeIndex,liveBlocker = False):
 		current_node.isOpen = False
 		current_node.isClosed = True
 		if current_node.equals(end_node):
-			# dFile = open(resPath+"dmp.txt","a+")
-			# dFile.write(debugStr)
-			# dFile.write("path found")
-			# dFile.close()
 			return reconstructPathv2(current_node,ignoreIndex,mazeIndex,liveBlocker)
 			break
 	
-		# debugStr += "Checking node at pos "+str(current_node.position[0])+" "+str(current_node.position[1])+"\n"
 		for new_position in neighborPos:
 			coord = (current_node.position[0]+new_position[0],current_node.position[1]+new_position[1])
-			# debugStr += "Checking child at "+str(coord[0])+" "+str(coord[1])
 			if (coord[0] < 0) or (coord[1] < 0) or (coord[0] >= len(Map.maze[mazeIndex])) or (coord[1] >= len(Map.maze[mazeIndex][0])):
-				# debugStr += " out of bond\n"
 				continue
 			if (Map.maze[mazeIndex][coord[0]][coord[1]] == STATE_BLOCKED):
-				# debugStr += " wall\n"
 				continue
 			if (Map.maze[mazeIndex][coord[0]][coord[1]] == STATE_ENTRY and (coord[0] != end_node.position[0] or coord[1] != end_node.position[1])):
-				# debugStr += " entry for other\n"
 				continue
 			
 			liveBlockerWeight = 0
@@ -203,7 +185,6 @@ def astarv3(start, end,ignoreIndex,mazeIndex,liveBlocker = False):
 				if overlapWithOther:
 					continue
 			nodeCheck = Map.allNode[mazeIndex][coord[0]][coord[1]]
-			# debugStr += " : status = "+("open" if nodeCheck.isOpen else ("close" if nodeCheck.isClosed else "unknown"))
 			if not (nodeCheck.isClosed):
 				isOldNode = nodeCheck.isOpen
 				if not isOldNode:
@@ -212,16 +193,9 @@ def astarv3(start, end,ignoreIndex,mazeIndex,liveBlocker = False):
 				if newG < nodeCheck.g:
 					nodeCheck.g = newG
 					nodeCheck.parent = current_node
-					# debugStr += " set G to "+str(newG)
 				nodeCheck.f = nodeCheck.g + euclidian(nodeCheck.position,end)
 				if not isOldNode:
 					InsertNode(nodeCheck,open_list)
-					# debugStr += " new node, insert to openlist"
-			# debugStr+="\n"
-	# dFile = open(resPath+"dmp.txt","a+")
-	# dFile.write(debugStr)
-	# dFile.write("no path found")
-	# dFile.close()
 	return None
 
 def InsertNode(node,list):
@@ -309,7 +283,6 @@ def lineInSightv2(startX,startY,endX,endY,ignoreIndex,mazeIndex,liveBlocker = Fa
 		for i in range(1,diffY):
 			checkX = startY + i*dirY
 			checkY = startX + (diffX*i/diffY*dirX)
-			# print "amazo "+str(mazeIndex)+" "+str(checkY)+" "+str(checkX)
 			if (Map.maze[mazeIndex][checkY][checkX] == STATE_BLOCKED) or ((Map.additionalWeight[mazeIndex][checkY][checkX] > 10)):
 				return False
 			if liveBlocker:

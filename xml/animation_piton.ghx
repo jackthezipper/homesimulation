@@ -828,7 +828,6 @@ class SelectTemplateDialog(forms.Dialog[bool]):
         self.Close(True)
         
     def UpdateAttribute(self,sender,e):
-        print "asooooooooooooooooo"
         #forms.DynamicLayout.Remove(
         layout = forms.DynamicLayout()
         layout.Spacing = drawing.Size(5, 5)
@@ -864,7 +863,6 @@ class SelectTemplateDialog(forms.Dialog[bool]):
         self.layoutActivity.AddSpace()
         
         layout.AddRow(self.layoutChoice,self.layoutAttribute,self.layoutActivity)
-        print "assddd22"
         print self.layout.Size
         #self.Size.Height += 28
         print self.Size
@@ -881,10 +879,6 @@ class SelectTemplateDialog(forms.Dialog[bool]):
         layout.AddRow(None,buttonLayout)
         self.Content = layout
         self.layout = layout
-        #self.Invalidate(False)
-        #self.Initialize()
-        #print "opeeeekkkk "+str(self.rGroup.SelectedIndex)
-        #self.layoutAttribute.
 
 class AttributeDialog(forms.Dialog[bool]):
 
@@ -1093,12 +1087,9 @@ class MyComponent(component):
         if firstObject:
             if self.selectedObject != firstObject:
                 userData = rs.GetUserText(firstObject)
-                print "usera"
-                print userData
                 hasTemplateData = False
                 if len(userData) &gt; 0:
                     hasTemplateData = ("ObjectType" in userData)
-                #print hasTempla
                 if hasTemplateData:
                     dialog = AttributeDialog(keepObject)
                 elif ("LiveAgent" in userData):
@@ -2149,7 +2140,6 @@ class MyComponent(component):
                 agentInfo.UpdateForm()
                 self.myAgentInfo.append(agentInfo)
         #ferom = forms.Form()
-        print("golad "+str(len(self.myAgentInfo)))
         self.formCreated = True
         
     def UpdateForm(self,agent):
@@ -2217,7 +2207,6 @@ class MyComponent(component):
         for (i,agt) in enumerate(x):
             if agt != None:
                agt.objectList = objectInView[i]
-        print("karet "+str(self.formCreated))
         if not self.formCreated:
             self.InitForm(x)
         
@@ -2231,7 +2220,6 @@ class MyComponent(component):
         # return outputs if you have them; here I try it for you:
         timeRS1 = int(time.time() * 1000)
         print str(timeRS1 - sc.sticky["StartFrame"])
-        print("goladoo "+str(len(self.myAgentInfo)))
         return None
 </item>
                     <item name="Description" type_name="gh_string" type_code="10">GhPython provides a Python script component</item>
@@ -3365,7 +3353,6 @@ class MyComponent(component):
                 print rs.BlockInstanceName(ctt.Id)
                 
         sc.doc = ghdoc
-            #print "nitemiaaa"
         # return outputs if you have them; here I try it for you:
         return None
 </item>
@@ -3694,7 +3681,6 @@ class AgentActivator(forms.Form):
         self.m_layout.AddRow(self.DefaultButton)
         self.m_layout.AddSpace()
         self.Content = self.m_layout
-        print "ketik "+str(len(self.m_ticks))
 
 class MyComponent(component):
     def __init__(self):
@@ -3720,15 +3706,12 @@ class MyComponent(component):
         if len(self.m_activeAgent) != len(Locations):
             self.m_hasSetup = False
         import rhinoscriptsyntax as rs
-        print "omake "+str(Reset)+" "+str(self.m_hasSetup)
         if  (not Reset) and (not self.m_hasSetup):# and (not self.m_klow) :
             self.m_dialoh = AgentActivator()
             self.m_dialoh.m_names = []
             for loc in Locations:
                 role = rs.GetUserText(loc,"Role")
                 self.m_dialoh.m_names.append(role)
-            for rul in self.m_dialoh.m_names:
-                print rul
             self.m_dialoh.AdjustAgentCount(len(Locations))
             self.m_activeAgent = [False for i in range(0,len(Locations))]
             print "ajusting "+str(len(Locations))
@@ -3736,14 +3719,12 @@ class MyComponent(component):
             self.m_hasSetup = True
             self.m_klow = True
             halfSize = 0.2
-            print "ketot "+str(len(self.m_dialoh.m_ticks))
             for pLoc in Locations:
                 if pLoc != None:
                     loc = pLoc.PointGeometry.Location
                     surface = NurbsSurface.CreateFromCorners(Point3d(loc.X - halfSize,loc.Y-halfSize,0),Point3d(loc.X+halfSize,loc.Y-halfSize,0),Point3d(loc.X+halfSize,loc.Y+halfSize,0),Point3d(loc.X - halfSize,loc.Y+halfSize,0))
                     self.m_surfaces.append(surface)
         elif Reset:
-            print "respati"
             self.m_hasSetup = False
             self.m_count += 1
             if self.m_klow:
@@ -4968,12 +4949,10 @@ class MyComponent(component):
         print("nomura "+str("NumberOfDays" in sc.sticky)+" "+str(Global.g_timer.m_time))
         print("run frame "+str(self.m_frameCount))
         if "NumberOfDays" in sc.sticky:
-            print("daimu "+str(Global.g_timer.GetDay())+" "+str(sc.sticky["NumberOfDays"]))
+            print("day "+str(Global.g_timer.GetDay())+" "+str(sc.sticky["NumberOfDays"]))
         if "NumberOfDays" in sc.sticky and Global.g_timer.GetDay() == sc.sticky["NumberOfDays"]:
             Global.g_myHouse.ExportEnergyUsageReport()
             sc.sticky["AgentActivationDone"] = False
-            Global.Logger.LogDebug("fakboi")
-            Global.Logger.DumpDebug()
             for agent in self.myAgent:
                 agent.WriteBioReport()
             self.ProfileTime("EndReport")
@@ -4984,7 +4963,6 @@ class MyComponent(component):
         print str(timeRS2 - timeRS1)
         self.m_frameEndCount += 1
         Global.Logger.LogDebug("End frame "+str(self.m_frameEndCount)+"\n")
-        print("agasu "+str(len(self.myAgent)))
         self.ProfileTime("EndFrame")
         return self.myAgent,a,angle,vectorDir,floorList,objectInView
         
@@ -6029,7 +6007,7 @@ class MyComponent(component):
         self.LoadLightAndTemperatureTable()
         Global.Logger.DumpDebug()
     def InitializeGrid(self,area,idx):
-        print "intinialisazuuuu "+str(idx)
+        print "InitializeGrid "+str(idx)
         import rhinoscriptsyntax as rs
         self.GenerateNeighborCheck()
         
@@ -6126,7 +6104,7 @@ class MyComponent(component):
                     continue
                     
                 if oi.GetType() == rh.DocObjects.InstanceObject:
-                    Global.Logger.LogDebug("opite "+str(oi.Geometry.GetType())+"\n")
+                    Global.Logger.LogDebug("geo type "+str(oi.Geometry.GetType())+"\n")
                     bbox = oi.Geometry.GetBoundingBox(rh.Geometry.Plane.WorldXY)
                     sc.doc = rh.RhinoDoc.ActiveDoc
                     new = rs.CopyObject(oi.Id)
@@ -6174,8 +6152,8 @@ class MyComponent(component):
                     sc.doc=ghdoc
             
             self.GenerateRooms(objectList,idx)
-            Global.Logger.LogDebug("dorami\n"+str(doorFrame)+"\n")
-            Global.Logger.LogDebug("dopami\n"+str(doorPanel)+"\n")
+            Global.Logger.LogDebug("doorframe\n"+str(doorFrame)+"\n")
+            Global.Logger.LogDebug("doorpanel\n"+str(doorPanel)+"\n")
             for doorFrameId in doorFrame.keys():
                 if doorFrameId in doorPanel.keys():
                     frameBoundingBox = rh.Geometry.BoundingBox.Union(doorFrame[doorFrameId][0].Geometry.GetBoundingBox(True),doorFrame[doorFrameId][1].Geometry.GetBoundingBox(True))
@@ -6272,7 +6250,6 @@ class MyComponent(component):
         #Rhino.DocObjects.ObjectType.InstanceReference
         #homeFurniture = [object for object in objectList if (object.ObjectType != rh.DocObjects.ObjectType.Point and object.Attributes.LayerIndex == furnitureIndex)]
         homeFurniture = [object for object in objectList if (object.ObjectType == rh.DocObjects.ObjectType.InstanceReference and object.Attributes.LayerIndex == furnitureIndex)]
-        print "homik "+str(len(homeFurniture))
         #honca = 
         homeObjects = []
         homeGroupList = []
@@ -6341,7 +6318,7 @@ class MyComponent(component):
         Global.Logger.DumpDebug()
         
     def LoadLightAndTemperatureTable(self):
-        Global.Logger.LogDebug("Load tempest\n")
+        Global.Logger.LogDebug("Load temperature\n")
         tableLight = {}
         tableTemperature = {}
         
@@ -6376,7 +6353,7 @@ class MyComponent(component):
                     for i in range(2,len(row)):
                         tableTemperature[columnTable[i-2]].append(float(row[i]))
         
-        Global.Logger.LogDebug("daki table "+str(tableLight.keys())+"\n")
+        Global.Logger.LogDebug("table light "+str(tableLight.keys())+"\n")
         for room in self.m_rooms:
             if room.m_name in tableLight.keys():
                 room.SetLightAndTemperatureTable(tableLight[room.m_name], tableTemperature[room.m_name])
@@ -6432,7 +6409,6 @@ class MyComponent(component):
         return rotationCenter, direction
         
     def RunScript(self, area,counter,reset, mapName):
-        print "asaw"
         self.m_mapName = mapName
         #self.LoadLightAndTemperatureTable()
         gridArea = None
@@ -6474,17 +6450,16 @@ class MyComponent(component):
         if not self.gridInitialized:
             self.m_mapName = mapName
             self.m_rooms = []
-            Global.Logger.LogDebug("initsukopet\n")
+            Global.Logger.LogDebug("init\n")
             PathFinding.Map.actualRect = []
             for (idx,floor) in enumerate(area):
-                Global.Logger.LogDebug("initsukopet "+str(idx)+" "+str(floor)+"\n")
+                Global.Logger.LogDebug("init "+str(idx)+" "+str(floor)+"\n")
                 self.InitializeGrid(floor,idx)
                 curveFloor = rs.coercecurve(floor)
                 PathFinding.Map.actualRect.append(curveFloor)
             PathFinding.Map.InitNode()
             for target in self.possibleTarget:
-                Global.Logger.LogDebug( "torogenta "+str(target.m_targetPoint)+" "+str(target.m_floorIndex) +"\n")
-            Global.Logger.LogDebug("yahukimo")
+                Global.Logger.LogDebug( "target floor "+str(target.m_targetPoint)+" "+str(target.m_floorIndex) +"\n")
             Global.Logger.DumpDebug()
             sc.sticky["PossibleTarget"] = self.possibleTarget
             sc.sticky["EntryPoint"] = self.entryPoint
@@ -6497,18 +6472,6 @@ class MyComponent(component):
         additionalWeight = self.additionalWeight
         
         
-        #print "maze"
-        #for i in range(len(self.grids[0][0])):
-            #s = ""
-            #for j in range(len(self.grids[0])):
-                #s+=(str(self.grids[0][j][len(self.grids[0][0]) - i -1])+" ")
-            #print s
-        #print "weight"
-        #for i in range(len(self.grids[0])):
-            #s = ""
-            #for j in range(len(self.grids)):
-                #s+=(str(int(self.additionalWeight[j][len(self.additionalWeight[0]) - i -1]/10))+" ")
-            #print s
     
         #Global.g_myHouse.m_rooms = self.m_rooms
         

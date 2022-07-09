@@ -64,7 +64,7 @@ class Target:
 		return Target(self.m_floorIndex,self.m_type,self.m_targetPoint,id)
 	
 	def StartUsage(self, activityId, timer = 0, offset = 0, agent = "Auto", useTimer = False, putLog = True):
-		Global.Logger.LogDebug("Wanton start "+str(self.m_usageStartTime)+" "+str(Global.g_timer.m_time))
+		Global.Logger.LogDebug("Start usage "+str(self.m_usageStartTime)+" "+str(Global.g_timer.m_time))
 		if self.m_usageStartTime == 0:
 			self.m_usageStartTime = Global.g_timer.m_time - offset
 		self.m_usageTimer = timer
@@ -86,7 +86,7 @@ class Target:
 	
 	def StopUsage(self, agent="Auto", putLog = True):
 		if not self.m_isRun:
-			Global.Logger.LogDebug("Setoping "+self.m_id+" without startig. What the matter?\n")
+			Global.Logger.LogDebug("Stoping "+self.m_id+" without starting.\n")
 			return
 		Global.Logger.LogDebug("RegisterUsage by stop "+self.m_id+" start "+str(self.m_usageStartTime)+" end "+str(Global.g_timer.m_time)+"\n")
 		self.m_isRun = False
@@ -124,7 +124,7 @@ class Target:
 		self.UpdateAutoTrigger()
 	
 	def SetAvailable(self, available, by = "Auto"):
-		Global.Logger.LogDebug("Set devuce "+self.m_id+" to "+str(available)+" by "+by+"\n")
+		Global.Logger.LogDebug("Set device "+self.m_id+" to "+str(available)+" by "+by+"\n")
 		self.m_available = available
 	
 	def UpdateAutoTrigger(self):

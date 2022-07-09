@@ -67,7 +67,7 @@ class ActivityTerm():
 		roomIdx = -1
 		for idx,roomFactor in enumerate(self.m_roomFactor):
 			if room.m_name != self.m_roomPrio[idx]:
-				Global.Logger.LogDebug("rumdif #"+room.m_name+"# !"+self.m_roomPrio[idx]+"!\n")
+				Global.Logger.LogDebug("Room prio #"+room.m_name+"# !"+self.m_roomPrio[idx]+"!\n")
 				Global.Logger.DumpDebug()
 				continue
 			roomIdx = idx

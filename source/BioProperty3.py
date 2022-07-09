@@ -103,7 +103,6 @@ class Hunger(BioProperty):
 			self.m_pointEffect = 0
 			self.m_mlUrinate = 0
 			return
-		# Global.Logger.LogDebug("eat activity "+str(self.m_eatActivity.IsRunning())+"\n")
 		self.m_activityEffect = self.m_agent.m_weight * self.m_agent.GetActivityEffect(self.m_type)
 		self.m_totalScore = max(0,(self.m_currentScore - (self.m_currentRate * self.m_agent.GetEmotionalFactor()) - self.m_activityEffect))
 		self.CalculateEffect()
@@ -113,7 +112,7 @@ class Hunger(BioProperty):
 	
 	def CalculateEffect(self):
 		if self.IsHabit(Global.g_timer.GetHour()):
-			Global.Logger.LogDebug("hungeria "+str(self.m_eatActivity.IsRunning())+" "+str( self.m_eatActivity.m_status)+"\n")
+			Global.Logger.LogDebug("hunger "+str(self.m_eatActivity.IsRunning())+" "+str( self.m_eatActivity.m_status)+"\n")
 			if ((self.m_lastEatHour == -1) or (((Global.g_timer.GetHour() - self.m_lastEatHour) % 24) > 2)) and self.m_totalScore < self.m_threshold[Common.HUNGER_LIMIT_UP] and self.m_relatedActivity == None and not self.m_eatActivity.IsRunning() and not self.m_eatActivity.m_status == Common.ACT_STATUS_GOTO:
 				self.TryTriggerRelatedActivity()
 		
@@ -177,7 +176,6 @@ class Thirst(BioProperty):
 			self.TryTriggerRelatedActivity()
 		
 		if (self.m_relatedActivity != None and self.m_relatedActivity.IsRunning()):
-			Global.Logger.LogDebug("hokofa "+Fmt(index)+" "+Fmt(self.m_effect[index][Common.EFFECT_NEW_VALUE])+" "+Fmt(self.m_relatedActivity.m_duration)+"\n")
 			return self.m_effect[index][Common.EFFECT_NEW_VALUE] / self.m_relatedActivity.m_duration
 		
 		return 0
@@ -364,16 +362,10 @@ class Sleepy(BioProperty):
 		self.m_curRate = self.m_rate[Common.AGENT_ASLEEP if self.m_agent.IsAsleep() else Common.AGENT_AWAKE]
 		self.m_totalScore = self.m_specialEffect + self.m_curRate
 		
-		# Global.Logger.LogDebug("selubeg "+str(self.m_totalScore)+"\n")
 		self.m_totalScore = Common.clamp(self.m_totalScore,0,10)
-		# Global.Logger.LogDebug("selabeg "+str(self.m_totalScore)+"\n")
 		randVal = (random.random() * 2) + 1
 		
 		self.m_constraint = self.m_totalScore + (((( -randVal if self.m_totalScore > 2 else -1) if self.IsHabit(Common.AGENT_AWAKE,Global.g_timer.GetHour()) else randVal)if self.m_agent.IsAsleep() else (randVal if (self.m_totalScore < 8 and self.IsHabit(Common.AGENT_ASLEEP,Global.g_timer.GetHour())) else 0)) / Timer.MINUTE_IN_HOUR)
-		
-		
-		# self.m_constraint = self.m_totalScore + ((((-) if self.m_totalScore > 2 else -1 ) if self.IsHabit(Common.AGENT_AWAKE,Timer.GetInstance().GetHour()) else (random.random() * 3)) if self.m_agent.IsAsleep() else ((random.random()*3) if self.m_totalScore < 8 and  else 0))
-		
 		
 		if ((self.m_constraint >= 10 and self.IsHabit(Common.AGENT_ASLEEP,Global.g_timer.GetHour())) or (self.IsHabit(Common.AGENT_ASLEEP,Global.g_timer.GetHour()) and self.m_constraint >= 8)) and self.m_relatedActivity == None:
 			self.TryTriggerRelatedActivity()
@@ -394,7 +386,6 @@ class Sleepy(BioProperty):
 		pass
 	
 	def GetScore(self):
-		# Global.Logger.LogDebug("selibeg "+str(self.m_totalScore)+"\n")
 		return self.m_totalScore
 	
 	def PrintProperty(self):

@@ -78,9 +78,6 @@ class Room:
 		Global.Logger.LogDebug("init room "+self.m_name+"\n")
 	
 	def SetLightAndTemperatureTable(self, tableLight, tableTemperature):
-		Global.Logger.LogDebug("liksato "+str(tableLight)+"\n")
-		Global.Logger.LogDebug("etmpato "+str(tableTemperature)+"\n")
-		Global.Logger.DumpDebug()
 		self.m_tableLight = tableLight
 		self.m_tableTemperature = tableTemperature
 	
@@ -127,25 +124,15 @@ class Room:
 		return (self.m_curve.Contains(point) == rh.Geometry.PointContainment.Inside)
 	
 	def CheckAndAddItem(self, item):
-		# print "vojo"
-		# print item
-		# print item.m_targetPoint
-		# print("Room "+self.m_name+" check item "+str(item.m_id))
-		# Global.Logger.LogDebug("Room "+self.m_name+" check item "+item.m_id+" "+str(item.m_type)+" "+str(item.m_targetPoint))
-		# Global.Logger.LogDebug(" containment "+str(self.IsInRoom(item.m_targetPoint)))
 		if self.IsInRoom(item.m_targetPoint):
 			self.m_items.append(item)
 			Global.Logger.LogDebug("Add "+item.m_id+" inside "+self.m_name+"\n")
 			Global.Logger.DumpDebug()
 			return True
-		# Global.Logger.LogDebug(" outside\n")
-		# Global.Logger.DumpDebug()
 		return False
 	
 	def HasItem(self, itemType):
 		items = itemType.split(";")
-		# Global.Logger.LogDebug("Checking item "+str(itemType)+" in room "+self.m_name+" itemlength +"+str(len(self.m_items))+"\n")
-		# Global.Logger.LogDebug("bleki "+str(self.m_items))
 		for item in items:
 			foundItem = next((roomItem for roomItem in self.m_items if roomItem.m_type == item), None)
 			if foundItem != None:
@@ -154,10 +141,8 @@ class Room:
 
 	def FindItem(self, itemType):
 		items = itemType.split(";")
-		# Global.Logger.LogDebug("Checking item "+str(itemType)+" in room "+self.m_name+" itemlength +"+str(len(self.m_items))+"\n")
 		for item in items:
-			foundItem = filter(lambda roomItem: roomItem.m_type == item, self.m_items)# [(roomItem for roomItem in self.m_items if roomItem.m_type == item)]
-			# Global.Logger.LogDebug("bleki "+str(foundItem)+"\n")
+			foundItem = filter(lambda roomItem: roomItem.m_type == item, self.m_items)
 			if len(foundItem) > 0:
 				return True, foundItem
 		return False, None
@@ -173,19 +158,16 @@ class Room:
 			return False, None
 		
 		for item in items:
-			Global.Logger.LogDebug("Hatsuka "+item.m_id+" "+str(item.m_available))
+			Global.Logger.LogDebug("HasDevice "+item.m_id+" "+str(item.m_available))
 			if item.m_available:
 				return hasItem, item.m_id
 		
 		return False, None
 	
 	def HasAndActive(self, itemType):
-		# Global.Logger.LogDebug("hagger "+itemType+"\n")
 		hasItem, items = self.FindItem(itemType)
 		if hasItem:
-			# Global.Logger.LogDebug("tems "+str(items)+"\n")
 			for item in items:
-				# Global.Logger.LogDebug("teng "+str(item)+"\n")
 				if item.m_usageStartTime > 0:
 					return True, True, item.m_id
 		return hasItem, False, (item.m_id if hasItem else None)
@@ -200,7 +182,7 @@ class Room:
 		return []
 		
 	def SetLampTurn(self, agent, lampId, turnOn):
-		Global.Logger.LogDebug("Selamput "+agent.m_role+" room "+self.m_name+" "+str(lampId)+" "+str(turnOn)+"\n")
+		Global.Logger.LogDebug("Set lamp "+agent.m_role+" room "+self.m_name+" "+str(lampId)+" "+str(turnOn)+"\n")
 		for lamp in self.m_lamps:
 			if lamp[0] == lampId:
 				lamp[1] = turnOn
@@ -215,9 +197,6 @@ class Room:
 				break
 	
 	def CheckResource(self, resource, amount):
-		# Global.Logger.LogDebug("RKey "+str(self.m_resource.keys())+"\n");
-		# Global.Logger.LogDebug("RAmount "+resource+" "+str(amount)+"\n")
-		# Global.Logger.LogDebug("Res "+str(self.m_resource)+"\n")
 		return (resource in self.m_resource.keys()) and (amount <= self.m_resource[resource][0])
 	
 	def GetResourceAmount(self, resource):
@@ -226,11 +205,6 @@ class Room:
 		return False, 0
 	
 	def IsGeneralForResource(self, resourceType, type2 = False):
-		# Global.Logger.LogDebug("Check general room "+self.m_name+" res "+resourceType)
-		# Global.Logger.LogDebug("my res "+str(self.m_resource.keys())+"\n")
-		# Global.Logger.LogDebug("is in "+str(resourceType in self.m_resource.keys())+"\n")
-		# if (resourceType in self.m_resource.keys()):
-			# Global.Logger.LogDebug("is gen "+str(self.m_resource[resourceType][1])+"\n")
 		if type2:
 			return (resourceType in self.m_resource.keys()) and (self.m_resource[resourceType][1] == Common.RES_GENERAL_TYPE2)
 		return (resourceType in self.m_resource.keys()) and (self.m_resource[resourceType][1] != Common.RES_NOGENERAL)
@@ -273,14 +247,13 @@ class Room:
 		self.m_light = self.m_tableLight[index] if len(self.m_tableLight) > 0 else 65
 		
 		hasLight, active, lightDevice = self.HasAndActive("Lamp")
-		Global.Logger.LogDebug("ulam "+str(lightDevice)+"\n")
+		Global.Logger.LogDebug("Light device "+str(lightDevice)+"\n")
 		if hasLight and active:
 			self.m_light += next(trgt for trgt in Agent.Agent.s_possibleTarget if trgt.m_id == lightDevice).m_envEffect[Common.EFFECT_LIGHT]
 		
 		hasFan, active, fanDevice = self.HasAndActive("Fan")
 		if hasFan and active:
 			self.m_temperature += next(trgt for trgt in Agent.Agent.s_possibleTarget if trgt.m_id == fanDevice).m_envEffect[Common.EFFECT_TEMPERATURE]
-		# Global.Logger.LogDebug(" afterfan "+str(self.m_temperature)+"\n")
 	
 	def CountAgentInRoom(self):
 		count = 0
@@ -320,7 +293,6 @@ class House:
 		self.m_weekLog = -1
 	
 	def loadHouseEnergy(self):
-		#cFPath = ghenv.Component.OnPingDocument().FilePath
 		sourceFilePath	= os.path.dirname(os.path.abspath(__file__))
 		sourceDirPath	= sourceFilePath[0:sourceFilePath.rfind('\\')+1]
 		filename = sourceDirPath+'\\res\\energy.csv'
