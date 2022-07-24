@@ -1,0 +1,24 @@
+Daya obyek
+Daya KP01 menjadi 0.07 kw/j
+Daya WM01 menjadi 0.16 kw/j
+
+Folder Data agen_270622
+agen01
+LightThreshold menjadi 65
+A42 -> Effect: daya WM01 menjadi 0.16
+A140, A02, A05, A06, A10, A11, A12, A18, A19, A20, A26, P06, A27, A29, A180, A24, A42, A179, A43, A56, A45, A61, A79, A60, A63, P43, P44, A191, A73, A130, A131, A132, A133, A134, A137, A138, A139, A71, A191,B01, B02, B03 -> PostActivity ditambahkan L2
+
+agen02
+LightThreshold menjadi 65 (yang sebelumnya 60 menjadi 65 semua) dan 80 (A55)
+A42 -> Effect: daya WM01 menjadi 0.16
+
+agen03
+LightThreshold menjadi 100
+
+agen04
+LightThreshold menjadi 65, 80 (A65), 100 (A44, A141)
+A42 -> Effect: daya WM01 menjadi 0.16
+
+agen05
+LightThreshold menjadi 65, 80 (A65) 
+A42 -> Effect: daya WM01 menjadi 0.16

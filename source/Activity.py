@@ -72,7 +72,10 @@ class Activity:
 		self.m_bioEffect = [bioEffectRun]
 		self.m_bioStandard = bioStandard
 		
+		# Global.Logger.LogDebug("emo "+str(params[Common.TABLE_ACTIVITY_EMO_EFFECT])+"\n")
+		# Global.Logger.DumpDebug(10)
 		self.m_emotionalEffect = [float(emo) for emo in params[Common.TABLE_ACTIVITY_EMO_EFFECT].split(";")]
+		# Global.Logger.LogDebug("emodone\n")
 		self.m_emotionalStandard = self.m_emotionalEffect[Common.EMO_EFFECT_STD]
 		
 		startTime = -1
@@ -592,7 +595,7 @@ class Activity:
 			elif effect[1] == 10:
 				self.ApplyEffect(agent, agent.m_currentRoom, effect[0], (-agent.GetProperty("Thirst").m_currentEffectScore * self.m_duration * effect[2]))
 			elif effect[1] == 11:
-				self.ApplyEffect(agent, agent.m_currentRoom, effect[0], effect[2] * self.m_duration)
+				self.ApplyEffect(agent, agent.m_currentRoom, effect[0], effect[2] * (self.self.m_realDuration if self.m_auto else self.m_duration))
 			
 			if effect[1] != 1:
 				room = agent.m_currentRoom if effect in agent.m_currentRoom.m_resource.keys() else Global.g_myHouse.FindGeneralRoomForResource(effect[0])

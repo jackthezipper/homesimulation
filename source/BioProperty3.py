@@ -76,7 +76,7 @@ class Hunger(BioProperty):
 		# self.m_constraint = 0
 		self.m_relatedActivityId = "A119"
 		self.m_eatActivity = self.m_agent.GetActivityById("B02")
-		self.m_energyStorage = self.m_threshold[Common.HUNGER_LIMIT_DOWN] * 0.05  / 60#self.m_agent.GetActivityById(self.m_relatedActivityId).m_duration
+		self.m_energyStorage = 0#self.m_threshold[Common.HUNGER_LIMIT_DOWN] * 0.05  / 60#self.m_agent.GetActivityById(self.m_relatedActivityId).m_duration
 		self.K_COLUMN_NAME = ["Hari", "MAKAN", "Energy Storage","Tingkat Lapar Terkini", "Laju Lapar", "Efek Aktivitas", "Pengaruh Emosi", "Total Lapar 1 jam berikutnya", "Kebiasaan", "Constraint Efek Makan", "Konversi Kalori ke Poin", "Konversi Poin ke mL(URINASI)"]
 	
 	def CalculateScore(self):
