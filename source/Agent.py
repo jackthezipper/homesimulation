@@ -85,6 +85,7 @@ class Agent:
 	
 	def __init__(self,position,m_targetPoint,index,role = "ayah",state = STATE_IDLE):
 		self.m_activityTableLog = []
+		self.m_activityTableLogDaily = []
 		self.m_shouldLogActivityTable = False
 		self.m_prevFrameActivity = ""
 		self.m_actScore = []
@@ -513,6 +514,9 @@ class Agent:
 				property.PostUpdateActivityCalculation()
 				
 				propertyRecord.extend(property.ProcessOutput())
+			
+			if not self.m_shouldLogActivityTable:
+				self.CloneLastActivityTableEntry()
 			
 			self.AddFisioToActTableLog()
 			self.AddMiscToActTableLog()
@@ -955,6 +959,7 @@ class Agent:
 		if curFloor != -1 and nextFloor != -1:
 			if curFloor == nextFloor:
 				stair = None
+				self.needStair = False
 			else:
 				self.needStair = True
 				stairIndex = "STAIR_"+str(curFloor)
@@ -1531,6 +1536,7 @@ class Agent:
 				self.m_activityList[act].m_status = Common.ACT_STATUS_NONE
 	
 	def UpdatePendingEffect(self):
+		Global.Logger.LogDebug("Call UpdatePendingEffect "+str(Activity.Activity.s_pendingEffect)+"\n")
 		for effect in Activity.Activity.s_pendingEffect:
 			Global.Logger.LogDebug("UpdatePendingEffect "+effect[0].m_name+" "+effect[1]+" "+str(effect[2])+" "+str(effect[3]))
 			effect[3] -= 1
@@ -1541,8 +1547,7 @@ class Agent:
 					generalRoom = Global.g_myHouse.FindGeneralRoomForResource(effect[1])
 					if generalRoom != None:
 						generalRoom.m_resource[effect[1]][0] += effect[2]
-			
-			Activity.Activity.s_pendingEffect.remove(effect)
+				Activity.Activity.s_pendingEffect.remove(effect)
 	
 	def CheckPostActivity(self):
 		Global.Logger.LogDebug("Checkpostact\n")
@@ -1688,7 +1693,7 @@ class Agent:
 		Global.Logger.DumpDebug(10)
 	
 	def ExportActivityTableLog(self):
-		outputFilePath = reportPath+self.m_role+"_activity_table.csv"
+		outputFilePath = reportPath+self.m_role+"_activity_table_full.csv"
 		
 		columnName1 = [""] * 10
 		columnName1.append("Activity Calculation")
@@ -1807,7 +1812,7 @@ class Agent:
 			"Total",
 			"CCE",
 			"Energy Storage",
-			"Tingkat Lapar Terkini",
+			"Tingkat Kalori yang Dibutuhkan Saat Ini",
 			"Laju Lapar",
 			"Efek Aktivitas",
 			"Pengaruh Emosi",
@@ -1906,7 +1911,18 @@ class Agent:
 			outputWriter.writerow(columnName3)
 			outputWriter.writerow(columnName4)
 			for record in self.m_activityTableLog:
-				outputWriter.writerow(record[1:])
+				outputWriter.writerow(record[2:])
+		
+		outputFilePath2 = reportPath+self.m_role+"_activity_table.csv"
+		with open(outputFilePath2, mode='w+') as outputFile:
+			outputWriter = csv.writer(outputFile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
+			outputWriter.writerow(columnName1)
+			outputWriter.writerow(columnName2)
+			outputWriter.writerow(columnName3)
+			outputWriter.writerow(columnName4)
+			for record in self.m_activityTableLog:
+				if record[Common.ACT_TABLE_LOG_INDEX] == 0:
+					outputWriter.writerow(record[2:])
 		
 	
 	def IsMultiValid(self, actId):
@@ -1987,13 +2003,29 @@ class Agent:
 		
 	def AddActivityTableEntry(self, key):
 		self.m_activityTableLog.append([""] * Common.ACT_TABLE_LOG_TOTAL)
-		self.m_activityTableLog[-1][0] = key
+		self.m_activityTableLog[-1][Common.ACT_TABLE_LOG_KEY] = key
+		self.m_activityTableLog[-1][Common.ACT_TABLE_LOG_INDEX] = 0
 		self.m_shouldLogActivityTable = True
 	
+	def CloneLastActivityTableEntry(self):
+		newEntry = list(self.m_activityTableLog[-1])
+		newEntry[Common.ACT_TABLE_LOG_INDEX] += 1
+		newEntry[Common.ACT_TABLE_LOG_TIME] = Global.g_timer.GetFullFormattedTime()
+		self.m_activityTableLog.append(newEntry)
+	
 	def PutActTableLogValue(self, value, pos, force = False, id = -1):
-		if not self.m_shouldLogActivityTable and not force:
-			return
-		self.m_activityTableLog[id][pos] = value
+		# if not self.m_shouldLogActivityTable and not force:
+			# return
+		if force:
+			key = self.m_activityTableLog[id][Common.ACT_TABLE_LOG_KEY]
+			checkIndex = id if id != -1 else len(self.m_activityTableLog) - 1
+			while(checkIndex >= 0):
+				self.m_activityTableLog[checkIndex][pos] = value
+				if self.m_activityTableLog[checkIndex][Common.ACT_TABLE_LOG_INDEX] == 0:
+					break
+				checkIndex -= 1
+		else:
+			self.m_activityTableLog[id][pos] = value
 	
 	def FindActTableLogIdx(self, key):
 		for i in range(0, len(self.m_activityTableLog)):
@@ -2002,8 +2034,8 @@ class Agent:
 		return -1
 	
 	def AddFisioToActTableLog(self):
-		if not self.m_shouldLogActivityTable:
-			return
+		# if not self.m_shouldLogActivityTable:
+			# return
 		act = self.GetActivityById(self.m_activityTableLog[-1][Common.ACT_TABLE_LOG_SWITCH_TO])
 		propertyCalc = self.GetProperty("Hunger").GetCalcParam()
 		if not act.m_isBioActivity:

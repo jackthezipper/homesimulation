@@ -58,6 +58,14 @@ class Map():
 	def AddMaze(self,top,mz):
 		self.topPos.append(top)
 		self.maze.append(mz)
+		Global.Logger.LogDebug("Add maze "+str(len(self.maze))+"\n")
+		for i in range(0,len(self.maze[0])):
+			line = ""
+			for j in range(0, len(self.maze)):
+				line += maze[j][i]+" "
+			line += "\n"
+			Global.Logger.LogDebug(line)
+		Global.Logger.DumpDebug(10)
 	
 	def AddWeight(self,weight):
 		self.additionalWeight.append(weight)

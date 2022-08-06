@@ -219,11 +219,15 @@ class Room:
 	
 	def GetLightInfo(self):
 		index = Global.g_timer.m_time / Timer.MINUTE_IN_HOUR
+		if len(self.m_tableLight) > 0 and index >= len(self.m_tableLight):
+			index = len(self.m_tableLight) - 1
 		baseLight = self.m_tableLight[index] if len(self.m_tableLight) > 0 else 65
 		return [baseLight, (self.m_light - baseLight), self.m_light]
 	
 	def GetTemperatureInfo(self):
 		index = Global.g_timer.m_time / Timer.MINUTE_IN_HOUR
+		if len(self.m_tableTemperature) > 0 and index >= len(self.m_tableTemperature):
+			index = len(self.m_tableTemperature) - 1
 		baseTemperature = self.m_tableTemperature[index] if len(self.m_tableTemperature) > 0 else 21
 		return [baseTemperature, (self.m_temperature - baseTemperature), self.m_temperature]
 	
@@ -231,6 +235,8 @@ class Room:
 		Global.HouseLog("Log for room: "+self.m_name+"\n")
 		Global.HouseLog("Floor Status: "+str(self.m_value)+"\n")
 		index = Global.g_timer.m_time / Timer.MINUTE_IN_HOUR
+		if len(self.m_tableLight) > 0 and index >= len(self.m_tableLight):
+			index = len(self.m_tableLight) - 1
 		baseLight = self.m_tableLight[index] if len(self.m_tableLight) > 0 else 65
 		baseTemperature = self.m_tableTemperature[index] if len(self.m_tableTemperature) > 0 else 21
 		Global.HouseLog("Light: Base="+str(baseLight)+" LampEffect="+str(self.m_light - baseLight)+" Total="+str(self.m_light)+"\n")

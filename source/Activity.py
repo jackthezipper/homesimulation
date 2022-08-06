@@ -264,12 +264,22 @@ class Activity:
 			agentObj.m_passingDoor = None
 	
 	def IsDone(self):
-		return (self.m_duration != -1 and (self.m_runningTime >= self.m_duration)) or self.m_forceStop
+		nextActOK = True
+		if self.m_next != "-":
+			nextActOK = False
+			timeDiff = Global.g_timer.GetTodayTime() - self.m_agent.GetActivityById(self.m_next).m_startTime
+			if timeDiff >= 0 and timeDiff < 10:
+				curDay = Global.g_timer.GetDay()
+				for routine in self.m_routine[1]:
+					if routine > 0 and routine == curDay:
+						nextActOK = True
+						break
+		return (self.m_duration != -1 and (self.m_runningTime >= self.m_duration)) or (not self.m_isBioActivity and self.m_duration == -1 and nextActOK ) or self.m_forceStop
 	
 	def ForceStop(self):
 		self.m_forceStop = True
-		if not self.m_isBioActivity:
-			self.m_repeatCount +=1
+		# if not self.m_isBioActivity:
+			# self.m_repeatCount +=1
 		if self.m_status == Common.ACT_STATUS_RUN:
 			self.m_alreadyDoIt = True
 	
@@ -286,6 +296,7 @@ class Activity:
 		self.m_runningTime = 0
 		Global.Logger.LogDebug("Stop act "+self.m_ID+" "+str(self.m_status)+" "+str(self.m_lastRunningTime)+" "+str(self.m_runningTime)+"\n")
 		self.m_status = Common.ACT_STATUS_NONE
+		self.m_quota += 1
 		# pass
 
 	def GetDescription(self):
@@ -572,7 +583,9 @@ class Activity:
 			elif effect[1] == 3:
 				self.ApplyEffect(agent, agent.m_currentRoom, effect[0], (effect[2] * agent.m_currentRoom.m_resource[effect[0]]))
 			elif effect[1] == 4:
-				Activity.s_pendingEffect.append([agent.m_currentRoom, effect[0], effect[2], (self.m_realDuration - self.m_duration)])
+				effectToAppend = [agent.m_currentRoom, effect[0], effect[2], (self.m_realDuration - self.m_duration)]
+				Global.Logger.LogDebug("Append to pending from 4 "+str(effectToAppend)+"\n")
+				Activity.s_pendingEffect.append(effectToAppend)
 			elif effect[1] == 5:
 				self.ApplyEffect(agent, agent.m_currentRoom, effect[0], effect[2], True)
 			elif effect[1] == 6:
@@ -586,7 +599,9 @@ class Activity:
 				if effect[2] == 0:
 					self.ApplyEffect(agent, agent.m_currentRoom, effect[0], self.m_prevResValue)
 				else:
-					Activity.s_pendingEffect.append([agent.m_currentRoom, effect[0], self.m_prevResValue, (effect[2] - self.m_duration)])
+					effectToAppend = [agent.m_currentRoom, effect[0], self.m_prevResValue, (effect[2] - self.m_duration)]
+					Global.Logger.LogDebug("Append to pending from 7 "+str(effectToAppend)+"\n")
+					Activity.s_pendingEffect.append(effectToAppend)
 			elif effect[1] == 8:
 				s_savedEffect = Global.g_myHouse.GetResourceAmount(effect[0])
 				self.ApplyEffect(agent, agent.m_currentRoom, effect[0], effect[2], True)
@@ -595,7 +610,7 @@ class Activity:
 			elif effect[1] == 10:
 				self.ApplyEffect(agent, agent.m_currentRoom, effect[0], (-agent.GetProperty("Thirst").m_currentEffectScore * self.m_duration * effect[2]))
 			elif effect[1] == 11:
-				self.ApplyEffect(agent, agent.m_currentRoom, effect[0], effect[2] * (self.self.m_realDuration if self.m_auto else self.m_duration))
+				self.ApplyEffect(agent, agent.m_currentRoom, effect[0], effect[2] * (self.m_realDuration if self.m_auto else self.m_duration))
 			
 			if effect[1] != 1:
 				room = agent.m_currentRoom if effect in agent.m_currentRoom.m_resource.keys() else Global.g_myHouse.FindGeneralRoomForResource(effect[0])
@@ -617,7 +632,7 @@ class Activity:
 			if not ok:
 				generalRoom = Global.g_myHouse.FindGeneralRoomForResource(res[0], res[0] == "Food")#,int(self.m_requiredResource[self.m_targetRoom][1]))
 				if generalRoom != None:
-					ok = ok or generalRoom.CheckResource(res[0],int(res[1]))
+					ok = ok or generalRoom.CheckResource(res[0],float(res[1]))
 					enough, amount = generalRoom.GetResourceAmount(res[0])
 			
 			if not ok:
