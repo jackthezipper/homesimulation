@@ -290,7 +290,7 @@ class Energy(BioProperty):
 			return
 		self.m_energyStorage = self.m_agent.GetProperty("Hunger").m_energyStorage
 		self.m_curPointEnergy = self.m_energyStorage + self.m_pointEnergy
-		self.m_currentScore = self.m_energyStorage + self.m_totalScore
+		self.m_currentScore = self.m_energyStorage# + self.m_totalScore
 		self.m_activityEffect = self.m_agent.m_weight * self.m_agent.GetActivityEffect(self.m_type)
 		self.m_scoreActAndEmo = self.m_currentScore - (self.m_rate[Common.AGENT_ASLEEP if self.m_agent.IsAsleep() else Common.AGENT_AWAKE] * self.m_agent.GetEmotionalFactor()) + self.m_activityEffect
 		self.m_eatEffect = self.m_agent.GetProperty("Hunger").m_constraintEffectScore
@@ -369,8 +369,11 @@ class Sleepy(BioProperty):
 		
 		self.m_totalScore = Common.clamp(self.m_totalScore,0,10)
 		randVal = (random.random() * 2) + 1
+		isNoon = Global.g_timer.GetHour() > 8 and Global.g_timer.GetHour() < 17
 		
-		self.m_constraint = self.m_totalScore + (((( -randVal if self.m_totalScore > 2 else -1) if self.IsHabit(Common.AGENT_AWAKE,Global.g_timer.GetHour()) else randVal)if self.m_agent.IsAsleep() else (randVal if (self.m_totalScore < 8 and self.IsHabit(Common.AGENT_ASLEEP,Global.g_timer.GetHour())) else 0)) / Timer.MINUTE_IN_HOUR)
+		# self.m_constraint = self.m_totalScore + (((( -randVal if self.m_totalScore > 2 else -1) if self.IsHabit(Common.AGENT_AWAKE,Global.g_timer.GetHour()) else randVal)if self.m_agent.IsAsleep() else (randVal if (self.m_totalScore < 8 and self.IsHabit(Common.AGENT_ASLEEP,Global.g_timer.GetHour())) else 0)) / Timer.MINUTE_IN_HOUR)
+		
+		self.m_constraint = self.m_totalScore + ( ( ( ( (-6) if self.m_totalScore > 4 else (-2)) if isNoon else ( (-3) if self.m_totalScore > 2 else (-1))) if self.IsHabit(Common.AGENT_AWAKE,Global.g_timer.GetHour()) else (1) ) if self.m_agent.IsAsleep() else ( ( ( (4) if self.m_totalScore < 8 else ( (10 - self.m_totalScore) if self.m_totalScore > 10 else (0) ) ) if isNoon else ((2) if self.m_totalScore < 8 else ( (10 - self.m_totalScore) if self.m_totalScore > 10 else (0) )) ) if self.IsHabit(Common.AGENT_ASLEEP,Global.g_timer.GetHour()) else (0)) )
 		
 		if ((self.m_constraint >= 10 and self.IsHabit(Common.AGENT_ASLEEP,Global.g_timer.GetHour())) or (self.IsHabit(Common.AGENT_ASLEEP,Global.g_timer.GetHour()) and self.m_constraint >= 8)) and self.m_relatedActivity == None:
 			self.TryTriggerRelatedActivity()
