@@ -152,7 +152,7 @@ class Agent:
 		self.m_activityLog = []
 		self.m_weekActivityLog = -1
 		self.LoadBioProperty(Config.IC_FILE_NAME)
-		self.m_bioActivityToTrigger = "" if self.m_currentActivity == None else self.m_currentActivity.m_ID
+		self.m_bioActivityToTrigger = "" if self.m_currentActivity == None or not self.m_currentActivity.m_isBioActivity else self.m_currentActivity.m_ID
 		self.m_wasAsleep = True
 		self.m_pendingActivity = None
 		self.m_lastActivity = None
@@ -177,6 +177,7 @@ class Agent:
 		self.m_passingDoor = None
 		self.m_socialValue = {}
 		self.m_pauseMovement = False
+		self.m_dbgTest = 0
 	
 	def SetActivity(self, activity):
 		self.m_currentActivity = activity
@@ -485,6 +486,10 @@ class Agent:
 		
 		self.m_elapsedAdjustTimer += dt
 		if self.m_elapsedAdjustTimer >= self.m_timeAdjuster:
+			# self.m_dbgTest += 1
+			# if self.m_dbgTest == 5:# or self.m_dbgTest == 25 or self.m_dbgTest == 45 or self.m_dbgTest == 65:
+				# self.TestEntry()
+				# Global.Logger.DumpDebug(10)
 			self.m_shouldUpdate = True
 			self.Log("Time: Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
 			self.m_elapsedAdjustTimer -= self.m_timeAdjuster
@@ -602,6 +607,7 @@ class Agent:
 		
 		if self.m_bioActivityToTrigger != "" and not inStair and (self.m_currentActivity == None or (((not self.m_currentActivity.m_isBioActivity) or (self.m_currentActivity.IsDone() and self.m_currentActivity.m_ID != self.m_bioActivityToTrigger) or self.m_currentActivity.m_status == Common.ACT_STATUS_SUSPEND)) and (self.m_currentActivity.m_currentInteractAgent == None or not self.m_currentActivity.m_currentInteractAgent.m_following)):
 			isActivityDone = False
+			isSetNext = False
 			if self.m_currentActivity == None or self.m_currentActivity.IsRunning():
 				self.m_prevActivity = self.m_currentActivity
 			if self.m_currentActivity != None and (self.m_currentActivity.IsDone() or self.m_currentActivity.m_status == Common.ACT_STATUS_SUSPEND):
@@ -621,6 +627,7 @@ class Agent:
 				self.ClearSuspendForNextActivity(self.m_currentActivity.m_ID)
 				if (isActivityDone and self.m_currentActivity.m_next != "-"):
 					Global.Logger.LogDebug("set activity "+self.m_role+" by 8\n")
+					isSetNext = True
 					self.SetActivity(self.GetActivityById(self.m_currentActivity.m_next))
 				self.m_lastActivity = self.m_currentActivity.m_ID
 				for property in self.m_bioProperty:
@@ -646,7 +653,8 @@ class Agent:
 				self.SetState(STATE_IDLE)
 			
 			Global.Logger.LogDebug("set activity "+self.m_role+" by 7\n")
-			self.SetActivity(self.GetActivityById(self.m_bioActivityToTrigger))
+			if not isSetNext or not self.m_currentActivity.m_isBioActivity:
+				self.SetActivity(self.GetActivityById(self.m_bioActivityToTrigger))
 			Global.Logger.LogDebug("goto 5\n")
 			self.m_currentActivity.GoTo(self)
 			self.ActivityLog("Switch activity to "+self.m_currentActivity.m_ID+" at Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
@@ -972,8 +980,8 @@ class Agent:
 			Global.Logger.LogDebug("no stair\n")
 		
 		path = []
-		pStart = TranslateToGridPos(start,self.m_myFloorIndex)
-		pEnd = TranslateToGridPos(end,self.m_myFloorIndex)
+		pStart = TranslateToGridPos(start,curFloor)
+		pEnd = TranslateToGridPos(end,curFloor)
 		if pStart == pEnd:
 			path.append(start)
 			path.append(end)
@@ -982,7 +990,7 @@ class Agent:
 			Global.Logger.LogDebug(self.m_role+" pos start "+str(pStart)+" "+str(start))
 			Global.Logger.LogDebug(self.m_role+" pos end "+str(pEnd)+" "+str(end))
 			Global.Logger.DumpDebug()
-			path = PathFinding.astarv3(pStart,pEnd,self.m_myIndex,self.m_myFloorIndex)
+			path = PathFinding.astarv3(pStart,pEnd,self.m_myIndex,curFloor)
 		
 		#No path found. Wait a moment
 		if path == None:
@@ -1423,7 +1431,7 @@ class Agent:
 					if ep.target.m_id == stops:
 						if ep.target.m_type == "Lamp":
 							self.m_targetRoom.SetLampTurn(self, stops, True)
-						elif ep.target.m_type == "Fan":
+						elif ep.target.m_type == "Fan" or ep.target.m_type == "AC":
 							ep.target.StartUsage(self.m_currentActivity.m_ID, agent = self.m_role)
 						path = self.GeneratePath(start,ep.pos, exactEnd=True)
 						if first and (path == None or len(path) == 0) and (oldPath != None and len(oldPath) > 0):
@@ -1585,7 +1593,7 @@ class Agent:
 							deviceObj.StopUsage(self.m_role)
 		
 			if not self.m_targetRoom.IsInRoom(self.pos):
-				hasFan, active, fanDevice = room.HasAndActive("Fan")
+				hasFan, active, fanDevice = room.HasAndActive("Fan;AC")
 				if hasFan and active:
 					fanObj = next((entry for entry in Agent.s_entryPointList if entry.target.m_id == fanDevice), None)
 					self.Log("Post Activity: Turn OFF Fan "+fanDevice+"\n")
@@ -2098,7 +2106,22 @@ class Agent:
 		self.PutActTableLogValue(str(self.m_emotionalTotal), Common.ACT_TABLE_LOG_EMO_CCE)
 		self.PutActTableLogValue(str(self.m_currentAbility), Common.ACT_TABLE_LOG_ABILITY)
 		
-		
+	def TestEntry(self):
+		Global.Logger.LogDebug("Testentry "+self.m_role+"\n")
+		if self.m_role == "agen01":
+			Global.Logger.LogDebug("Do Testentry "+self.m_role+"\n")
+			testPoint1 = Point3d(1545,9.8,0)
+			testPoint2 = Point3d(1566,12.6,0)
+			for ep in Agent.s_entryPointList:
+				if ep.m_floorIndex == 0:
+					path = self.GeneratePath(ep.pos,testPoint1)
+				else:
+					path = self.GeneratePath(ep.pos,testPoint2)
+				
+				if path == None or len(path) == 0:
+					Global.Logger.LogDebug("path fail for entry "+str(ep.pos)+"\n")
+				else:
+					Global.Logger.LogDebug("path ok for entry "+str(ep.pos)+"\n")
 #-----------------------------------------------------------------------------------------------------------------------------------------
 def LoadSocialization():
 	Global.Logger.LogDebug("Load social\n")

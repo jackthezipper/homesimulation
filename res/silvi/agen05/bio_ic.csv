@@ -1,4 +1,4 @@
-Current Activity,A184,,,,
+Current Activity,A185,,,,
 Ability,10,,,,
 Weight,55,,,,
 EmotionNorm,-0.417,,,,
@@ -9,7 +9,7 @@ NonIndependentAct,-,,,,
 Property,Current,Rate,Habit,Effect,Custom
 Hunger,1438.3,2157.4|24|0.5:0.25:0.125,06-9;12-15,719.13;1797.81,-
 Dirty,2,10|24|0.03:0.015,15-18,10,-
-Thirst,2,10|9|1:0.25,06-09;12-18,10:10;0:0;5:5,-
+Thirst,2,10|9|1:0.25,06-09;12-18,10:10;8:8;5:5,-
 Energy,2157.4,2157.8|24|0.1:0.0125,-,-,-
 Exhausted,0,10|12|1:-0.5,-,-,-
 Sleepy,0,10|15|0.05:-1,03-06|18-21,-,-

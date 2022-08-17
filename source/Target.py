@@ -96,7 +96,7 @@ class Target:
 		if putLog:
 			Global.HouseLog("Stopping device "+self.m_id+" by "+agent+" Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
 		
-		if self.m_activatorAgent != "Auto" and self.m_activatedByAct != "Auto" and self.m_type != "Lamp" and self.m_type != "Fan":
+		if self.m_activatorAgent != "Auto" and self.m_activatedByAct != "Auto" and self.m_type != "Lamp" and self.m_type != "Fan" and self.m_type != "AC":
 			agtObj = next((agt for agt in Agent.Agent.agentList if agt.m_role == self.m_activatorAgent), None)
 			if agtObj != None:
 				act = agtObj.GetActivityById(self.m_activatedByAct)

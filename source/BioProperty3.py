@@ -161,6 +161,7 @@ class Thirst(BioProperty):
 		self.m_effect = effect
 		self.m_totalScore = current
 		self.m_currentEffectScore = 0
+		self.m_lastEffectScore = self.m_currentEffectScore
 		self.m_mlUrinate = 0
 		self.m_relatedActivityId = "B03"
 		self.K_COLUMN_NAME = ["MINUM", "Tingkat Haus Terkini", "Laju Haus", "Efek Aktivitas", "Pengaruh Emosi", "Total Haus 1 jam berikutnya", "Kebiasaan", "Efek Minum", "Konversi poin ke mL (URINASI)"]
@@ -181,6 +182,7 @@ class Thirst(BioProperty):
 			self.TryTriggerRelatedActivity()
 		
 		if (self.m_relatedActivity != None and self.m_relatedActivity.IsRunning()):
+			Global.Logger.LogDebug("Dunking "+str(index)+" "+str(self.m_relatedActivity.m_duration)+" "+str(self.m_effect)+" "+str(self.m_effect[index][Common.EFFECT_NEW_VALUE])+" "+str(self.m_effect[index][Common.EFFECT_NEW_VALUE] / self.m_relatedActivity.m_duration)+"\n")
 			return self.m_effect[index][Common.EFFECT_NEW_VALUE] / self.m_relatedActivity.m_duration
 		
 		return 0
@@ -192,6 +194,7 @@ class Thirst(BioProperty):
 			return
 		self.m_totalScore = Common.clamp((self.m_currentScore + (self.m_rate[Common.AGENT_ASLEEP if self.m_agent.IsAsleep() else Common.AGENT_AWAKE] * self.m_agent.GetEmotionalFactor()) + self.m_agent.GetActivityEffect(self.m_type)),0,10)
 		self.m_mlUrinate = 15 * self.m_currentEffectScore
+		self.m_lastEffectScore = self.m_currentEffectScore
 		self.m_currentEffectScore = self.CalculateEffect()
 		self.PrintProperty()
 	
@@ -417,7 +420,7 @@ class Defecate(BioProperty):
 		self.m_tick = 0
 		self.m_tickStart = False
 		self.m_inColonEdge = 0
-		self.m_gotoRectum = 0
+		self.m_rateToRectum = 0
 		self.m_eatEffect = 0
 		self.m_rateIntestineToColon = 0
 		self.m_agent = agent

@@ -257,7 +257,7 @@ class Room:
 		if hasLight and active:
 			self.m_light += next(trgt for trgt in Agent.Agent.s_possibleTarget if trgt.m_id == lightDevice).m_envEffect[Common.EFFECT_LIGHT]
 		
-		hasFan, active, fanDevice = self.HasAndActive("Fan")
+		hasFan, active, fanDevice = self.HasAndActive("Fan;AC")
 		if hasFan and active:
 			self.m_temperature += next(trgt for trgt in Agent.Agent.s_possibleTarget if trgt.m_id == fanDevice).m_envEffect[Common.EFFECT_TEMPERATURE]
 	
@@ -289,7 +289,6 @@ class House:
 	def __init__(self):
 		self.m_energies = []
 		self.m_resources = [0 for i in range(0,CommonEnum.RES_TOTAL)]
-		self.loadHouseEnergy()
 		self.m_rooms = []
 		self.m_envObj = {}
 		self.m_energyUsage = []
@@ -297,15 +296,6 @@ class House:
 		self.m_log = []
 		self.m_lastLog = -1
 		self.m_weekLog = -1
-	
-	def loadHouseEnergy(self):
-		sourceFilePath	= os.path.dirname(os.path.abspath(__file__))
-		sourceDirPath	= sourceFilePath[0:sourceFilePath.rfind('\\')+1]
-		filename = sourceDirPath+'\\res\\energy.csv'
-		with open(filename) as csvfile:
-			reader = csv.reader(csvfile)
-			for row in reader:
-				self.m_energies.append(Energy(row[TMPL_ENERGY_TYPE],row[TMPL_ENERGY_SUPPLY],row[TMPL_ENERGY_PRICE]))
 	
 	def GetResourceAmount(self, resourceType):
 		amount = 0

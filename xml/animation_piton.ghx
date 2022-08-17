@@ -10,7 +10,7 @@
       <Revision>2</Revision>
     </item>
   </items>
-  <chunks count="2">
+  <chunks count="1">
     <chunk name="Definition">
       <items count="1">
         <item name="plugin_version" type_name="gh_version" type_code="80">
@@ -48,10 +48,10 @@
             <chunk name="Projection">
               <items count="2">
                 <item name="Target" type_name="gh_drawing_point" type_code="30">
-                  <X>-145</X>
-                  <Y>68</Y>
+                  <X>-1178</X>
+                  <Y>-585</Y>
                 </item>
-                <item name="Zoom" type_name="gh_single" type_code="5">1</item>
+                <item name="Zoom" type_name="gh_single" type_code="5">1.38408291</item>
               </items>
             </chunk>
             <chunk name="Views">
@@ -5038,8 +5038,8 @@ def TranslateToGridPos(topPos,pos):
     return gridX,gridY</item>
                     <item name="Description" type_name="gh_string" type_code="10">GhPython provides a Python script component</item>
                     <item name="EditorLocation" type_name="gh_drawing_point" type_code="30">
-                      <X>1277</X>
-                      <Y>18</Y>
+                      <X>1222</X>
+                      <Y>41</Y>
                     </item>
                     <item name="EditorSize" type_name="gh_drawing_size" type_code="32">
                       <W>636</W>
@@ -5055,7 +5055,7 @@ def TranslateToGridPos(topPos,pos):
                   </items>
                   <chunks count="2">
                     <chunk name="Attributes">
-                      <items count="2">
+                      <items count="3">
                         <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                           <X>1426</X>
                           <Y>700</Y>
@@ -5066,6 +5066,7 @@ def TranslateToGridPos(topPos,pos):
                           <X>1534</X>
                           <Y>792</Y>
                         </item>
+                        <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                       </items>
                     </chunk>
                     <chunk name="ParameterData">
@@ -5105,7 +5106,7 @@ def TranslateToGridPos(topPos,pos):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="2">
+                              <items count="3">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>1428</X>
                                   <Y>702</Y>
@@ -5116,6 +5117,7 @@ def TranslateToGridPos(topPos,pos):
                                   <X>1475</X>
                                   <Y>712</Y>
                                 </item>
+                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -5136,7 +5138,7 @@ def TranslateToGridPos(topPos,pos):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="2">
+                              <items count="3">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>1428</X>
                                   <Y>722</Y>
@@ -5147,6 +5149,7 @@ def TranslateToGridPos(topPos,pos):
                                   <X>1475</X>
                                   <Y>732</Y>
                                 </item>
+                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -5168,7 +5171,7 @@ def TranslateToGridPos(topPos,pos):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="2">
+                              <items count="3">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>1428</X>
                                   <Y>742</Y>
@@ -5179,6 +5182,7 @@ def TranslateToGridPos(topPos,pos):
                                   <X>1475</X>
                                   <Y>752</Y>
                                 </item>
+                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -5200,7 +5204,7 @@ def TranslateToGridPos(topPos,pos):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="2">
+                              <items count="3">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>1428</X>
                                   <Y>762</Y>
@@ -5211,6 +5215,7 @@ def TranslateToGridPos(topPos,pos):
                                   <X>1475</X>
                                   <Y>772</Y>
                                 </item>
+                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -5232,7 +5237,7 @@ def TranslateToGridPos(topPos,pos):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="2">
+                              <items count="3">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>1428</X>
                                   <Y>782</Y>
@@ -5243,6 +5248,7 @@ def TranslateToGridPos(topPos,pos):
                                   <X>1475</X>
                                   <Y>792</Y>
                                 </item>
+                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -5264,7 +5270,7 @@ def TranslateToGridPos(topPos,pos):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="2">
+                              <items count="3">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>1428</X>
                                   <Y>802</Y>
@@ -5275,6 +5281,7 @@ def TranslateToGridPos(topPos,pos):
                                   <X>1475</X>
                                   <Y>812</Y>
                                 </item>
+                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -5296,7 +5303,7 @@ def TranslateToGridPos(topPos,pos):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="2">
+                              <items count="3">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>1428</X>
                                   <Y>822</Y>
@@ -5307,6 +5314,7 @@ def TranslateToGridPos(topPos,pos):
                                   <X>1475</X>
                                   <Y>832</Y>
                                 </item>
+                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -5327,7 +5335,7 @@ def TranslateToGridPos(topPos,pos):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="2">
+                              <items count="3">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>1428</X>
                                   <Y>842</Y>
@@ -5338,6 +5346,7 @@ def TranslateToGridPos(topPos,pos):
                                   <X>1475</X>
                                   <Y>852</Y>
                                 </item>
+                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -5358,7 +5367,7 @@ def TranslateToGridPos(topPos,pos):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="2">
+                              <items count="3">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>1428</X>
                                   <Y>862</Y>
@@ -5369,6 +5378,7 @@ def TranslateToGridPos(topPos,pos):
                                   <X>1475</X>
                                   <Y>872</Y>
                                 </item>
+                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -5384,7 +5394,7 @@ def TranslateToGridPos(topPos,pos):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="2">
+                              <items count="3">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>1549</X>
                                   <Y>702</Y>
@@ -5395,6 +5405,7 @@ def TranslateToGridPos(topPos,pos):
                                   <X>1585</X>
                                   <Y>717</Y>
                                 </item>
+                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -5410,7 +5421,7 @@ def TranslateToGridPos(topPos,pos):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="2">
+                              <items count="3">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>1549</X>
                                   <Y>732</Y>
@@ -5421,6 +5432,7 @@ def TranslateToGridPos(topPos,pos):
                                   <X>1585</X>
                                   <Y>747</Y>
                                 </item>
+                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -5436,7 +5448,7 @@ def TranslateToGridPos(topPos,pos):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="2">
+                              <items count="3">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>1549</X>
                                   <Y>762</Y>
@@ -5447,6 +5459,7 @@ def TranslateToGridPos(topPos,pos):
                                   <X>1585</X>
                                   <Y>777</Y>
                                 </item>
+                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -5462,7 +5475,7 @@ def TranslateToGridPos(topPos,pos):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="2">
+                              <items count="3">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>1549</X>
                                   <Y>792</Y>
@@ -5473,6 +5486,7 @@ def TranslateToGridPos(topPos,pos):
                                   <X>1585</X>
                                   <Y>807</Y>
                                 </item>
+                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -5488,7 +5502,7 @@ def TranslateToGridPos(topPos,pos):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="2">
+                              <items count="3">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>1549</X>
                                   <Y>822</Y>
@@ -5499,6 +5513,7 @@ def TranslateToGridPos(topPos,pos):
                                   <X>1585</X>
                                   <Y>837</Y>
                                 </item>
+                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -5514,7 +5529,7 @@ def TranslateToGridPos(topPos,pos):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="2">
+                              <items count="3">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>1549</X>
                                   <Y>852</Y>
@@ -5525,6 +5540,7 @@ def TranslateToGridPos(topPos,pos):
                                   <X>1585</X>
                                   <Y>867</Y>
                                 </item>
+                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -6317,6 +6333,13 @@ class MyComponent(component):
         self.possibleTarget = self.possibleTarget + curTargets
         self.entryPoint = self.entryPoint + curEntries
         Global.g_myHouse.m_rooms = self.m_rooms
+        Global.Logger.LogDebug("ferarti\n")
+        for i in range(0,len(curGrids[0])):
+            s = ""
+            for  j in range (0, len(curGrids)):
+                s += (str(curGrids[j][i])+" ")
+            s+="\n"
+            Global.Logger.LogDebug(s)
         Global.Logger.DumpDebug()
         
     def LoadLightAndTemperatureTable(self):
@@ -6487,8 +6510,8 @@ class MyComponent(component):
 </item>
                     <item name="Description" type_name="gh_string" type_code="10">GhPython provides a Python script component</item>
                     <item name="EditorLocation" type_name="gh_drawing_point" type_code="30">
-                      <X>-48</X>
-                      <Y>86</Y>
+                      <X>78</X>
+                      <Y>78</Y>
                     </item>
                     <item name="EditorSize" type_name="gh_drawing_size" type_code="32">
                       <W>904</W>
@@ -6504,7 +6527,7 @@ class MyComponent(component):
                   </items>
                   <chunks count="2">
                     <chunk name="Attributes">
-                      <items count="3">
+                      <items count="2">
                         <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                           <X>693</X>
                           <Y>734</Y>
@@ -6515,7 +6538,6 @@ class MyComponent(component):
                           <X>768</X>
                           <Y>788</Y>
                         </item>
-                        <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                       </items>
                     </chunk>
                     <chunk name="ParameterData">
@@ -6550,7 +6572,7 @@ class MyComponent(component):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="3">
+                              <items count="2">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>695</X>
                                   <Y>736</Y>
@@ -6561,7 +6583,6 @@ class MyComponent(component):
                                   <X>725.5</X>
                                   <Y>748.875</Y>
                                 </item>
-                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -6581,7 +6602,7 @@ class MyComponent(component):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="3">
+                              <items count="2">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>695</X>
                                   <Y>761</Y>
@@ -6592,7 +6613,6 @@ class MyComponent(component):
                                   <X>725.5</X>
                                   <Y>774.625</Y>
                                 </item>
-                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -6613,7 +6633,7 @@ class MyComponent(component):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="3">
+                              <items count="2">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>695</X>
                                   <Y>787</Y>
@@ -6624,7 +6644,6 @@ class MyComponent(component):
                                   <X>725.5</X>
                                   <Y>800.375</Y>
                                 </item>
-                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -6645,7 +6664,7 @@ class MyComponent(component):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="3">
+                              <items count="2">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>695</X>
                                   <Y>813</Y>
@@ -6656,7 +6675,6 @@ class MyComponent(component):
                                   <X>725.5</X>
                                   <Y>826.125</Y>
                                 </item>
-                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -6672,7 +6690,7 @@ class MyComponent(component):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="3">
+                              <items count="2">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>783</X>
                                   <Y>736</Y>
@@ -6683,7 +6701,6 @@ class MyComponent(component):
                                   <X>830</X>
                                   <Y>746.3</Y>
                                 </item>
-                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -6699,7 +6716,7 @@ class MyComponent(component):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="3">
+                              <items count="2">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>783</X>
                                   <Y>756</Y>
@@ -6710,7 +6727,6 @@ class MyComponent(component):
                                   <X>830</X>
                                   <Y>766.9</Y>
                                 </item>
-                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -6726,7 +6742,7 @@ class MyComponent(component):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="3">
+                              <items count="2">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>783</X>
                                   <Y>777</Y>
@@ -6737,7 +6753,6 @@ class MyComponent(component):
                                   <X>830</X>
                                   <Y>787.5</Y>
                                 </item>
-                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -6753,7 +6768,7 @@ class MyComponent(component):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="3">
+                              <items count="2">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>783</X>
                                   <Y>797</Y>
@@ -6764,7 +6779,6 @@ class MyComponent(component):
                                   <X>830</X>
                                   <Y>808.1</Y>
                                 </item>
-                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -6780,7 +6794,7 @@ class MyComponent(component):
                           </items>
                           <chunks count="1">
                             <chunk name="Attributes">
-                              <items count="3">
+                              <items count="2">
                                 <item name="Bounds" type_name="gh_drawing_rectanglef" type_code="35">
                                   <X>783</X>
                                   <Y>818</Y>
@@ -6791,7 +6805,6 @@ class MyComponent(component):
                                   <X>830</X>
                                   <Y>828.7</Y>
                                 </item>
-                                <item name="Selected" type_name="gh_bool" type_code="1">true</item>
                               </items>
                             </chunk>
                           </chunks>
@@ -6805,13 +6818,6 @@ class MyComponent(component):
           </chunks>
         </chunk>
       </chunks>
-    </chunk>
-    <chunk name="Thumbnail">
-      <items count="1">
-        <item name="Thumbnail" type_name="gh_drawing_bitmap" type_code="37">
-          <bitmap length="10028">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</bitmap>
-        </item>
-      </items>
     </chunk>
   </chunks>
 </Archive>

@@ -50,6 +50,7 @@ class Activity:
 	s_multiAgent = {}
 	s_pendingEffect = []
 	def __init__(self, params, agent):
+		Global.Logger.LogDebug("pampara "+str(params)+" "+agent.m_role+"\n")
 		self.m_ID = params[Common.TABLE_ACTIVITY_ID]
 		self.m_auto = int(params[Common.TABLE_ACTIVITY_AUTO]) == 1
 		
@@ -268,10 +269,12 @@ class Activity:
 		if self.m_next != "-":
 			nextActOK = False
 			timeDiff = Global.g_timer.GetTodayTime() - self.m_agent.GetActivityById(self.m_next).m_startTime
+			Global.Logger.LogDebug("Check nexti "+self.m_ID+" "+str(Global.g_timer.GetTodayTime())+" "+str(self.m_agent.GetActivityById(self.m_next).m_startTime)+" "+self.m_agent.GetActivityById(self.m_next).m_ID+" "+str(timeDiff)+"\n")
 			if timeDiff >= 0 and timeDiff < 10:
-				curDay = Global.g_timer.GetDay()
+				curDay = (Global.g_timer.GetDay() % self.m_routine[0]) + 1
+				Global.Logger.LogDebug("curday "+str(curDay)+" "+str(self.m_routine)+"\n")
 				for routine in self.m_routine[1]:
-					if routine > 0 and routine == curDay:
+					if routine >= 0 and routine == curDay:
 						nextActOK = True
 						break
 		return (self.m_duration != -1 and (self.m_runningTime >= self.m_duration)) or (not self.m_isBioActivity and self.m_duration == -1 and nextActOK ) or self.m_forceStop
@@ -463,7 +466,7 @@ class Activity:
 					Global.Logger.LogDebug("Temperature "+self.m_terms[i][self.m_targetRoom] + " "+str(agent.m_targetRoom.m_temperature)+"\n")
 					agent.Log("Check temperature: Require = "+self.m_terms[i][self.m_targetRoom]+" Current = "+str(agent.m_targetRoom.m_temperature))
 					if agent.m_targetRoom.m_temperature > float(self.m_terms[i][self.m_targetRoom]):
-						hasFan, active, fanObj = agent.m_targetRoom.HasAndActive("Fan")
+						hasFan, active, fanObj = agent.m_targetRoom.HasAndActive("Fan;AC")
 						if hasFan:
 							if (not active):
 								stopPlaces.append(fanObj)
@@ -608,7 +611,7 @@ class Activity:
 			elif effect[1] == 9:
 				self.ApplyEffect(agent, agent.m_currentRoom, effect[0], s_savedEffect, True)
 			elif effect[1] == 10:
-				self.ApplyEffect(agent, agent.m_currentRoom, effect[0], (-agent.GetProperty("Thirst").m_currentEffectScore * self.m_duration * effect[2]))
+				self.ApplyEffect(agent, agent.m_currentRoom, effect[0], (-agent.GetProperty("Thirst").m_lastEffectScore * self.m_duration * effect[2]))
 			elif effect[1] == 11:
 				self.ApplyEffect(agent, agent.m_currentRoom, effect[0], effect[2] * (self.m_realDuration if self.m_auto else self.m_duration))
 			
