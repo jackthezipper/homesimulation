@@ -1,4 +1,3 @@
-import CommonEnum
 import Common
 import Global
 import Agent

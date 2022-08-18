@@ -8,14 +8,9 @@ import re
 #import custom file
 import Target
 import PathFinding
-import Schedule
-Schedule = reload(Schedule)
 import csv
 import Activity
 Activity = reload(Activity)
-import CommonEnum
-import Term
-Term = reload(Term)
 import Global
 Global = reload(Global)
 import EntryPoint
@@ -97,7 +92,6 @@ class Agent:
 		self.m_preState = state
 		self.initialPos = position
 		self.hasNewTarget = False
-		self.waitTime = (Schedule.SCHEDULE[index][0][1] * TIMEFACTOR)
 		self.myPath = None
 		self.m_pathIndex = 0
 		self.m_target = None
@@ -874,6 +868,12 @@ class Agent:
 								self.SetState(STATE_IDLE)
 							if self.m_currentActivity != None and not self.m_currentActivity.IsDone():
 								self.m_pendingActivity = self.m_currentActivity
+								self.m_pendingActivity.Pause()
+								if self.m_target != None:
+									self.m_target.SetAvailable(True, self.m_role)
+									if not self.m_pendingActivity.m_auto and self.m_target.m_powerCons > 0:
+										self.m_target.StopUsage(self.m_role)
+									self.m_target = None
 							self.SetActivity(traceAct)
 					if lastActID != self.m_currentActivity.m_ID:
 						self.SetState(STATE_WAIT)
@@ -938,7 +938,7 @@ class Agent:
 			targetCoord = self.m_targetRoom.GetTargetCoord(self.m_roomCoordIndex)
 			self.SetUseCoordRoom(True)
 			self.entryPoint = EntryPoint.EntryPoint(targetCoord,self.m_targetRoom.m_floorIndex)
-			self.entryPoint.target = Target.Target(self.m_targetRoom.m_floorIndex,CommonEnum.RF_NONE, "-", targetCoord,"TMP_CENTER")
+			self.entryPoint.target = Target.Target(self.m_targetRoom.m_floorIndex,Common.RF_NONE, "-", targetCoord,"TMP_CENTER")
 			self.m_myFloorIndex = PathFinding.Map.FindPointInFloor(self.pos)
 		else:
 			epList = []
@@ -1072,7 +1072,7 @@ class Agent:
 					start = self.pos
 					if self.entryPoint.pos != self.pos and self.entryPoint.target.m_targetPoint == self.pos:
 						start = self.entryPoint.pos
-					self.FindTargetAndEntryPointForObject(CommonEnum.CP_ROOM)
+					self.FindTargetAndEntryPointForObject(Common.CP_ROOM)
 					
 					self.needStair = (self.m_targetRoom.m_floorIndex != self.m_myFloorIndex)
 					Global.Logger.LogDebug("RoomName "+self.m_targetRoom.m_name+" Coord "+str(self.m_targetRoom.GetTargetCoord(self.m_roomCoordIndex))+"\n")
@@ -1517,12 +1517,12 @@ class Agent:
 	def FindTargetAndEntryPointForObject(self, ID):
 		if self.m_state != STATE_MOVE or self.m_state != STATE_MOVE_PA:
 			self.oldEntryPoint = self.entryPoint
-		if ID == CommonEnum.CP_ROOM:
+		if ID == Common.CP_ROOM:
 			self.m_roomCoordIndex = self.m_targetRoom.GetAvailableCoord()
 			targetCoord = self.m_targetRoom.GetTargetCoord(self.m_roomCoordIndex)
 			self.SetUseCoordRoom(True)
 			self.entryPoint = EntryPoint.EntryPoint(targetCoord,self.m_targetRoom.m_floorIndex)
-			self.entryPoint.target = Target.Target(self.m_targetRoom.m_floorIndex,CommonEnum.RF_NONE, "-", targetCoord,"TMP_CENTER")
+			self.entryPoint.target = Target.Target(self.m_targetRoom.m_floorIndex,Common.RF_NONE, "-", targetCoord,"TMP_CENTER")
 		else:
 			self.entryPoint = next(entry for entry in Agent.s_entryPointList if entry.target.m_id == ID)
 		Global.Logger.LogDebug(self.m_role+" find entry for "+ID+" "+str(self.entryPoint.pos)+"\n")

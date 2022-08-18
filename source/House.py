@@ -1,5 +1,4 @@
 import time
-import CommonEnum
 import csv
 import os
 
@@ -288,7 +287,6 @@ reportPath			= sourceDirPath+"report\\"+sc.sticky["MapName"]+"\\"
 class House:
 	def __init__(self):
 		self.m_energies = []
-		self.m_resources = [0 for i in range(0,CommonEnum.RES_TOTAL)]
 		self.m_rooms = []
 		self.m_envObj = {}
 		self.m_energyUsage = []
@@ -321,6 +319,19 @@ class House:
 		return roomWithResource
 	
 	def RegisterEnergyUsage(self, usage):
+		if usage[0] == Common.ENERGY_TYPE_ELECTRICITY and len(self.m_energyUsage) > 0:
+			for i in range(len(self.m_energyUsage) - 1, -1, -1):
+				if self.m_energyUsage[i][0] == Common.ENERGY_TYPE_ELECTRICITY and self.m_energyUsage[i][1] == usage[1]:
+					merged = False
+					if self.m_energyUsage[i][5] >= usage[5]:
+						self.m_energyUsage[i][5] = usage[5]
+						merged = True
+					if self.m_energyUsage[i][6] >= usage[5]:
+						self.m_energyUsage[i][6] = usage[6]
+						self.m_energyUsage[i][3] = usage[3]
+						merged = True
+					if merged:
+						return
 		self.m_energyUsage.append(usage)
 	
 	def ReportEnergyUsage(self):
