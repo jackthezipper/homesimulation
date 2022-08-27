@@ -50,7 +50,6 @@ class Activity:
 	s_multiAgent = {}
 	s_pendingEffect = []
 	def __init__(self, params, agent):
-		Global.Logger.LogDebug("pampara "+str(params)+" "+agent.m_role+"\n")
 		self.m_ID = params[Common.TABLE_ACTIVITY_ID]
 		self.m_auto = int(params[Common.TABLE_ACTIVITY_AUTO]) == 1
 		
@@ -80,10 +79,22 @@ class Activity:
 		self.m_emotionalStandard = self.m_emotionalEffect[Common.EMO_EFFECT_STD]
 		
 		startTime = -1
-		match = re.match(r'(\d+):(\d+)', params[Common.TABLE_ACTIVITY_START])
-		if match != None:
-			startTime = int(match.group(1))*Timer.MINUTE_IN_HOUR + int(match.group(2))
+		startLimitDown = -1
+		startLimitUp = -1
+		if params[Common.TABLE_ACTIVITY_START] != "-":
+			timeSplit = params[Common.TABLE_ACTIVITY_START].split("|")
+			match = re.match(r'(\d+):(\d+)', timeSplit[0])
+			if match != None:
+				startTime = int(match.group(1))*Timer.MINUTE_IN_HOUR + int(match.group(2))
+			match = re.match(r'(\d+):(\d+)', timeSplit[1])
+			if match != None:
+				startLimitDown = int(match.group(1))*Timer.MINUTE_IN_HOUR + int(match.group(2))
+			match = re.match(r'(\d+):(\d+)', timeSplit[2])
+			if match != None:
+				startLimitUp = int(match.group(1))*Timer.MINUTE_IN_HOUR + int(match.group(2))
 		self.m_startTime = startTime
+		self.m_startLimitDown = startLimitDown
+		self.m_startLimitUp = startLimitUp
 		
 		self.m_description = params[Common.TABLE_ACTIVITY_DESC]
 		self.m_status = Common.ACT_STATUS_NONE
@@ -391,6 +402,17 @@ class Activity:
 		if self.m_isIncidental:
 			Global.Logger.LogDebug("canstart fail incidental\n")
 			return False
+		
+		curTime = Global.g_timer.GetTodayTime()
+		if self.m_startTime != -1:
+			if self.m_startLimitDown < self.m_startLimitUp:
+				if curTime < self.m_startLimitDown or curTime > self.m_startLimitUp:
+					Global.Logger.LogDebug("canstart fail time limit 1\n")
+					return False
+			else:
+				if curTime > self.m_startLimitDown and curTime < self.m_startLimitUp:
+					Global.Logger.LogDebug("canstart fail time limit 2\n")
+					return False
 		
 		return True
 	

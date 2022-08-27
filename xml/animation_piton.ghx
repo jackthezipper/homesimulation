@@ -6286,13 +6286,6 @@ class MyComponent(component):
         self.possibleTarget = self.possibleTarget + curTargets
         self.entryPoint = self.entryPoint + curEntries
         Global.g_myHouse.m_rooms = self.m_rooms
-        Global.Logger.LogDebug("ferarti\n")
-        for i in range(0,len(curGrids[0])):
-            s = ""
-            for  j in range (0, len(curGrids)):
-                s += (str(curGrids[j][i])+" ")
-            s+="\n"
-            Global.Logger.LogDebug(s)
         Global.Logger.DumpDebug()
         
     def LoadLightAndTemperatureTable(self):

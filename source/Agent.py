@@ -171,7 +171,6 @@ class Agent:
 		self.m_passingDoor = None
 		self.m_socialValue = {}
 		self.m_pauseMovement = False
-		self.m_dbgTest = 0
 	
 	def SetActivity(self, activity):
 		self.m_currentActivity = activity
@@ -480,10 +479,6 @@ class Agent:
 		
 		self.m_elapsedAdjustTimer += dt
 		if self.m_elapsedAdjustTimer >= self.m_timeAdjuster:
-			# self.m_dbgTest += 1
-			# if self.m_dbgTest == 5:# or self.m_dbgTest == 25 or self.m_dbgTest == 45 or self.m_dbgTest == 65:
-				# self.TestEntry()
-				# Global.Logger.DumpDebug(10)
 			self.m_shouldUpdate = True
 			self.Log("Time: Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
 			self.m_elapsedAdjustTimer -= self.m_timeAdjuster
@@ -2106,22 +2101,7 @@ class Agent:
 		self.PutActTableLogValue(str(self.m_emotionalTotal), Common.ACT_TABLE_LOG_EMO_CCE)
 		self.PutActTableLogValue(str(self.m_currentAbility), Common.ACT_TABLE_LOG_ABILITY)
 		
-	def TestEntry(self):
-		Global.Logger.LogDebug("Testentry "+self.m_role+"\n")
-		if self.m_role == "agen01":
-			Global.Logger.LogDebug("Do Testentry "+self.m_role+"\n")
-			testPoint1 = Point3d(1545,9.8,0)
-			testPoint2 = Point3d(1566,12.6,0)
-			for ep in Agent.s_entryPointList:
-				if ep.m_floorIndex == 0:
-					path = self.GeneratePath(ep.pos,testPoint1)
-				else:
-					path = self.GeneratePath(ep.pos,testPoint2)
-				
-				if path == None or len(path) == 0:
-					Global.Logger.LogDebug("path fail for entry "+str(ep.pos)+"\n")
-				else:
-					Global.Logger.LogDebug("path ok for entry "+str(ep.pos)+"\n")
+		
 #-----------------------------------------------------------------------------------------------------------------------------------------
 def LoadSocialization():
 	Global.Logger.LogDebug("Load social\n")
