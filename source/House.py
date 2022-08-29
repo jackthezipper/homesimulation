@@ -412,17 +412,17 @@ class House:
 				return ["-", "-", "-", "-", 0]
 			data = deviceData[-1]
 			duration = data[6] - data[5]
-			return [duration*data[7]/60, data[2], data[1], data[4], totalUsage]
+			return [Fmt(duration*data[7]/60), data[2], data[1], data[4], Fmt(totalUsage)]
 		elif type == Common.ENERGY_TYPE_WATER:
 			for uData in usageData:
 				totalUsage += uData[5]
 			data = usageData[-1]
-			return [-data[5], data[1], "-", data[2], -totalUsage]
+			return [Fmt(-data[5]), data[1], "-", data[2], Fmt(-totalUsage)]
 		elif type == Common.ENERGY_TYPE_GAS:
 			for uData in usageData:
 				totalUsage += uData[4]
 			data = usageData[-1]
-			return [-data[4], data[1], "-", data[2], -totalUsage]
+			return [Fmt(-data[4]), data[1], "-", data[2], Fmt(-totalUsage)]
 		return []
 	
 	def StopAllUsage(self):
