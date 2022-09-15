@@ -62,8 +62,6 @@ TIMEFACTOR = 1000 #to multiply waitTime
 # sourceFilePath	= ghenv.Component.OnPingDocument().FilePath
 sourceFilePath	= os.path.dirname(os.path.abspath(__file__))
 sourceDirPath	= sourceFilePath[0:sourceFilePath.rfind('\\')+1]
-resPath			= sourceDirPath+"res\\"+sc.sticky["MapName"]+"\\"
-reportPath		= sourceDirPath+"report\\"+sc.sticky["MapName"]+"\\"
 
 def Fmt(val):
 	return "{:.3f}".format(float(val))
@@ -72,13 +70,18 @@ PROPERTY_CODE = ["Hu","Di","Th","En","Ex","Sl","De","Ur"]
 
 #---------------------------------------------------------------------------------------
 class Agent:
+	"""
+	Class to hold agent properties and simulate agent behavior
+	"""
 	s_possibleTarget = []
 	s_entryPointList = []
 	hasErr = False
 	agentList = []
 	s_scaleSpeed = 8.0
+	resPath = 	"-"#sourceDirPath+"res\\"+sc.sticky["MapName"]+"\\"
 	
 	def __init__(self,position,m_targetPoint,index,role = "ayah",state = STATE_IDLE):
+		Agent.resPath = sourceDirPath+"res\\"+sc.sticky["MapName"]+"\\"
 		self.m_activityTableLog = []
 		self.m_activityTableLogDaily = []
 		self.m_shouldLogActivityTable = False
@@ -137,8 +140,8 @@ class Agent:
 		self.m_badMoodRate = 0.002
 		self.m_goodMoodRate = 0.003
 		self.m_currentAbility = 0
-		dbFile = resPath+self.m_role+"\\"+Config.ACTIVITY_DB_FILE
-		matrixFile = resPath+self.m_role+"\\"+Config.ACTIVITY_MATRIX_FILE
+		dbFile = Agent.resPath+self.m_role+"\\"+Config.ACTIVITY_DB_FILE
+		matrixFile = Agent.resPath+self.m_role+"\\"+Config.ACTIVITY_MATRIX_FILE
 		self.m_activityList = Activity.GenerateActivity(dbFile, matrixFile, self)
 		self.m_currentActivity = None
 		self.m_currentRoom = None
@@ -191,6 +194,7 @@ class Agent:
 			self.m_activityList[act].m_bioStandard[7] /= (urinateBase / 10)
 	
 	def LoadBioProperty(self, filename):
+		Agent.resPath = sourceDirPath+"res\\"+sc.sticky["MapName"]+"\\"
 		Global.Logger.LogDebug("load bio "+self.m_role+"\n")
 		for room in Global.g_myHouse.m_rooms:
 			if room.IsInRoom(self.pos):
@@ -198,7 +202,7 @@ class Agent:
 				self.m_targetRoom = self.m_currentRoom
 				break
 		sourceFilePath	= os.path.dirname(os.path.abspath(__file__))
-		inputFilePath = resPath+self.m_role+"\\"+filename
+		inputFilePath = Agent.resPath+self.m_role+"\\"+filename
 		# inputFilePath	= sourceFilePath[0:sourceFilePath.rfind('\\')+1]+"input_file\\"+filename
 		with open(inputFilePath) as csvfile:
 			reader = csv.reader(csvfile)
@@ -576,7 +580,7 @@ class Agent:
 		if self.m_currentActivity != None:
 			self.m_prevFrameActivity = self.m_currentActivity.m_ID
 		self.m_actScore = []
-		Global.Logger.LogDebug("Current Activity "+self.m_role+" "+("None" if self.m_currentActivity == None else self.m_currentActivity.m_ID)+" lon "+str(len(self.m_activityList))+" viona "+self.m_bioActivityToTrigger+"\n")
+		Global.Logger.LogDebug("Current Activity "+self.m_role+" "+("None" if self.m_currentActivity == None else self.m_currentActivity.m_ID)+" lenActList "+str(len(self.m_activityList))+" biotrigger "+self.m_bioActivityToTrigger+"\n")
 		self.Log("Current Activity "+("None" if self.m_currentActivity == None else self.m_currentActivity.m_ID)+"\n")
 		if self.m_currentActivity == None:
 			self.Log("No activity!!!\n")
@@ -1464,7 +1468,11 @@ class Agent:
 							if (path == None or len(path) == 0):
 								path = self.GeneratePath(oldPath[self.m_pathIndex - 1],ep.pos, insertCurPos = not recalculatePath)
 						else:
-							path = self.GeneratePath(oldPath[self.m_pathIndex - 2],ep.pos, insertCurPos = not recalculatePath)
+							idx = 1
+							while oldPath[self.m_pathIndex - idx].Equals(oldPath[self.m_pathIndex - idx - 1]):
+								idx += 1
+							
+							path = self.GeneratePath(oldPath[self.m_pathIndex - idx - 1],ep.pos, insertCurPos = not recalculatePath)
 						
 					newPath.extend(path)
 					start = ep.pos
@@ -1653,6 +1661,7 @@ class Agent:
 			self.m_currentActivity.m_currentInteractAgent.ForceStartActivity(self.m_currentActivity.m_followerActivity)
 	
 	def WriteBioReport(self):
+		reportPath = sourceDirPath+"report\\"+sc.sticky["MapName"]+"\\"
 		columnName = []
 		for property in self.m_bioProperty:
 			if property == None:
@@ -1683,6 +1692,7 @@ class Agent:
 		self.m_activityLog[self.m_weekActivityLog].append(logText)
 	
 	def ExportLog(self):
+		reportPath = sourceDirPath+"report\\"+sc.sticky["MapName"]+"\\"
 		for (i,weekLog) in enumerate(self.m_log):
 			outputFilePath = reportPath+self.m_role+"_log_week_"+str(i)+".txt"
 			with open(outputFilePath, mode='w+') as outputFile:
@@ -1696,6 +1706,7 @@ class Agent:
 		Global.Logger.DumpDebug(10)
 	
 	def ExportActivityTableLog(self):
+		reportPath = sourceDirPath+"report\\"+sc.sticky["MapName"]+"\\"
 		outputFilePath = reportPath+self.m_role+"_activity_table_full.csv"
 		
 		columnName1 = [""] * 10
@@ -1815,7 +1826,7 @@ class Agent:
 			"Total",
 			"CCE",
 			"Energy Storage",
-			"Tingkat Kalori yang Dibutuhkan Saat Ini",
+			"Tingkat Lapar Terkini",
 			"Laju Lapar",
 			"Efek Aktivitas",
 			"Pengaruh Emosi",
@@ -2105,7 +2116,8 @@ class Agent:
 #-----------------------------------------------------------------------------------------------------------------------------------------
 def LoadSocialization():
 	Global.Logger.LogDebug("Load social\n")
-	socialFile = resPath+"social.csv"
+	resPath1 = sourceDirPath+"res\\"+sc.sticky["MapName"]+"\\"
+	socialFile = resPath1+"social.csv"
 	with open(socialFile) as csvfile:
 		reader = csv.reader(csvfile)
 		roles = []

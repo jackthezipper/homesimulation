@@ -1,6 +1,7 @@
 import csv
 import os
 import re
+import scriptcontext as sc
 
 import Common
 Common = reload(Common)
@@ -47,6 +48,9 @@ EFFECT_SUSPEND	= EFFECT_RUN + 1
 
 SUSPEND_TIME = [1, 6, 12, 24, 168]
 class Activity:
+	"""
+	Class to hold activity properties and behavior.
+	"""
 	s_multiAgent = {}
 	s_pendingEffect = []
 	def __init__(self, params, agent):
@@ -72,10 +76,7 @@ class Activity:
 		self.m_bioEffect = [bioEffectRun]
 		self.m_bioStandard = bioStandard
 		
-		# Global.Logger.LogDebug("emo "+str(params[Common.TABLE_ACTIVITY_EMO_EFFECT])+"\n")
-		# Global.Logger.DumpDebug(10)
 		self.m_emotionalEffect = [float(emo) for emo in params[Common.TABLE_ACTIVITY_EMO_EFFECT].split(";")]
-		# Global.Logger.LogDebug("emodone\n")
 		self.m_emotionalStandard = self.m_emotionalEffect[Common.EMO_EFFECT_STD]
 		
 		startTime = -1
@@ -601,7 +602,7 @@ class Activity:
 					agent.PutActTableLogValue(str(self.m_lastRunningTime), Common.ACT_TABLE_LOG_HR_ELECTRICITY_START + idx*3 + 1, force = True)
 					agent.PutActTableLogValue(str(powerUsage * self.m_lastRunningTime), Common.ACT_TABLE_LOG_HR_ELECTRICITY_START + idx*3 + 2, force = True)
 						
-					Global.Logger.LogDebug("RegisterUsage by effect "+object.m_id+" larunta "+str(self.m_lastRunningTime)+" end "+str(Global.g_timer.m_time)+"\n")
+					Global.Logger.LogDebug("RegisterUsage by effect "+object.m_id+" lastruntime "+str(self.m_lastRunningTime)+" end "+str(Global.g_timer.m_time)+"\n")
 					Global.HouseLog("Stopping device "+object.m_id+" by "+agent.m_role+" Day "+str(Global.g_timer.GetDay())+" at "+Global.g_timer.GetFormattedHour()+"\n")
 			elif effect[1] == 2:
 				self.ApplyEffect(agent, agent.m_currentRoom, effect[0], (10.0 - (Global.g_myHouse.GetResourceAmount(effect[0]))))
@@ -714,7 +715,8 @@ class Activity:
 		return interactAgent
 	
 def LoadMultiAgent():
-	multiAgentFile = Agent.resPath+"multi_agent.csv"
+	resPath = Agent.sourceDirPath+"res\\"+sc.sticky["MapName"]+"\\"
+	multiAgentFile = resPath+"multi_agent.csv"
 	with open(multiAgentFile) as csvfile:
 		reader = csv.reader(csvfile)
 		for row in reader:

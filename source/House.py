@@ -17,41 +17,13 @@ SCALE_TIME = 1
 ENERGY_USER			= 0
 ENERGY_RATE			= ENERGY_USER + 1
 ENERGY_STARTTIME	= ENERGY_RATE + 1
-class Energy:
-	def __init__(self,type,supply,price):
-		self.m_energyType = type
-		self.m_maxSupply = supply
-		self.m_price = price
-		self.m_currentUser = []
-		self.m_totalUsage = 0;
-	
-	def startUse(self,user,rate):
-		startTime = int(time.time() * 1000)
-		currentUse = self.getCurrentUsage()
-		if (currentUse + rate) > self.m_maxSupply:
-			return False
-		self.m_currentUser.Append((user,rate,startTime))
-		return True
-	
-	def doneUse(self,user):
-		elm = next(item for item in self.m_currentUser if item[ENERGY_USER] == user)
-		curTime = int(time.time() * 1000)
-		self.m_totalUsage += ((elm[ENERGY_STARTTIME] - curTime) * elm[ENERGY_RATE] * SCALE_TIME)
-		self.m_currentUser.remove(elm)
-	
-	def getCurrentUsage(self):
-		currentUse = 0
-		for elm in m_currentUser:
-			currentUse += elm[ENERGY_RATE]
-		return currentUse
-	
-	def getCurrentMoneySpent(self):
-		totalUsage = self.m_totalUsage + self.getCurrentUsage()
-		return totalUsage * self.m_price
-	
-	def resetUsage(self):
-		self.m_totalUsage = 0;
-		self.m_currentUser = []
+
+"""
+Contains implementation of house and rooms
+"""
+
+def Fmt(val):
+	return "{:.3f}".format(float(val))
 
 #--------------------------------------------------------------------------------------------------------------
 #-------------Room Class---------------------------------------------------------------------------------------
@@ -282,7 +254,6 @@ TMPL_ENERGY_PRICE	= TMPL_ENERGY_SUPPLY + 1
 
 sourceFilePath	= os.path.dirname(os.path.abspath(__file__))
 sourceDirPath	= sourceFilePath[0:sourceFilePath.rfind('\\')+1]
-reportPath			= sourceDirPath+"report\\"+sc.sticky["MapName"]+"\\"
 
 class House:
 	def __init__(self):
@@ -339,6 +310,7 @@ class House:
 			Global.Logger.LogDebug("usage "+str(usage)+"\n")
 	
 	def ExportEnergyUsageReport(self):
+		reportPath = sourceDirPath+"report\\"+sc.sticky["MapName"]+"\\"
 		self.StopAllUsage()
 		electricityUsage = filter(lambda usage: usage[0] == Common.ENERGY_TYPE_ELECTRICITY, self.m_energyUsage)
 		outputFilePath = reportPath+"electricity_report.csv"
@@ -436,6 +408,7 @@ class House:
 		self.m_log[self.m_weekLog].append(log)
 	
 	def ExportLog(self):
+		reportPath = sourceDirPath+"report\\"+sc.sticky["MapName"]+"\\"
 		for (i,weeklog) in enumerate(self.m_log):
 			outputFilePath = reportPath+"house_log_week_"+str(i)+".txt"
 			with open(outputFilePath, mode='w+') as outputFile:

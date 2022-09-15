@@ -16,7 +16,11 @@ PANEL_OBJ			= 0
 PANEL_ROT_CENTER	= PANEL_OBJ + 1
 PANEL_ROT_DIR		= PANEL_ROT_CENTER + 1
 
+
 class Door:
+	"""
+	Class for simulating door behavior
+	"""
 	def __init__(self, panels, frameBB, room, status = DOOR_OPEN):
 		self.m_panels = panels
 		self.m_frameBB = frameBB #doorframe bounding box

@@ -3,6 +3,9 @@ import Global
 import Agent
 
 class Target:
+	"""
+	Class for target point
+	"""
 	s_unNamedCount = 0
 	def __init__(self,fIndex, type, envEffect, tp = None, id = None, powerCons = 0, active = False, autoTrigger = "-"):
 		if id == None:

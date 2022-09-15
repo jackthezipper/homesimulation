@@ -1,3 +1,6 @@
+"""
+Contain several configuration for simulation
+"""
 TOTAL_SIMULATION_DAY		= 2
 IC_FILE_NAME				= "bio_ic.csv"
 OUTPUT_FILE_NAME			= "output.csv"

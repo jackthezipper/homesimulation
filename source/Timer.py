@@ -14,6 +14,9 @@ TIMEFACTOR		= 1000 #to multiply waitTime
 K_ADJUSTER = TIMEFACTOR / TIMECONVERSION
 
 class Timer():
+	"""
+	Class for timer implementation
+	"""
 	s_timerInstance = None
 	def __init__(self, format = Common.FORMAT_TIME_HOUR):
 		self.m_format = format

@@ -1,4 +1,7 @@
 class EntryPoint:
+	"""
+	Class for entry point
+	"""
 	def __init__(self,position,fIndex):
 		self.pos = position
 		self.target = None

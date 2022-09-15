@@ -9,18 +9,21 @@ House = reload(House)
 import Timer
 Timer = reload(Timer)
 
-
+"""
+Holder for generic thing that used across simulation component, such as house and timer instance
+"""
 sourceFilePath	= os.path.dirname(os.path.abspath(__file__))
 sourceDirPath	= sourceFilePath[0:sourceFilePath.rfind('\\')+1]
-resPath			= sourceDirPath+"res\\"+sc.sticky["MapName"]+"\\"
+resPath			= "-"#sourceDirPath+"res\\"+sc.sticky["MapName"]+"\\"
 
 g_timer = Timer.GetInstance()
 class Logger:
 	s_debugStr = []
-	s_debugActive = True
+	s_debugActive = False
 	
 	s_agentLog = {}
 	s_dumpRequest = 0
+	s_resPath = "-"
 	
 	@staticmethod
 	def RegisterAgentLog(agentList):
@@ -50,7 +53,10 @@ class Logger:
 		Logger.s_dumpRequest += req
 		if not Logger.s_debugActive or Logger.s_dumpRequest < 10:
 			return
-		dFile = open(resPath+"dmp-"+str(g_timer.GetDay())+".txt","a+")
+		if Logger.s_resPath == "-":
+			Logger.s_resPath = sourceDirPath+"res\\"+sc.sticky["MapName"]+"\\"
+		
+		dFile = open(Logger.s_resPath+"dmp-"+str(g_timer.GetDay())+".txt","a+")
 		for debugStr in Logger.s_debugStr:
 			dFile.write(debugStr)
 		dFile.close()

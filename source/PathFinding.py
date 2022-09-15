@@ -16,10 +16,10 @@ OVERLAP_LIMIT = 6
 
 import os
 import scriptcontext as sc
-sourceFilePath	= os.path.dirname(os.path.abspath(__file__))
-sourceDirPath	= sourceFilePath[0:sourceFilePath.rfind('\\')+1]
-resPath			= sourceDirPath+"res\\"+sc.sticky["MapName"]+"\\"
 
+"""
+Contains pathfinding logic for agent movement, implented using A* algorithm
+"""
 class Node():
 	"""A node class for A* Pathfinding"""
 

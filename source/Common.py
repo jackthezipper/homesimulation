@@ -1,3 +1,6 @@
+"""
+Constants that used across simulation component
+"""
 EFFECT_NEW_LIMIT		= 0
 EFFECT_NEW_VALUE		= EFFECT_NEW_LIMIT + 1
 

@@ -8,6 +8,9 @@ import Agent
 import Activity
 import Global
 
+"""
+Contains eight kind fisiology properties
+"""
 BIOPROPERTY = {
 "Hunger" : Common.BIOLOGICAL_PROPERTY_HUNGER,
 "Dirty" : Common.BIOLOGICAL_PROPERTY_DIRTY,
